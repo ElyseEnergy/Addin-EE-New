@@ -252,18 +252,33 @@
 
     ' 12. Protection modifiée de la feuille
     ' Déprotéger la feuille si besoin
-        Set ws = finalDestination.Worksheet
+    Set ws = finalDestination.Worksheet
     If ws.ProtectContents Then ws.Unprotect Password:="elyse"
+
+    ' Sauvegarder l'état de verrouillage initial
+    Dim lockedCells As Collection
+    Set lockedCells = New Collection
+    Dim cell As Range
+    For Each cell In ws.UsedRange
+        If cell.Locked Then
+            lockedCells.Add cell.Address
+        End If
+    Next cell
 
     ' Déverrouiller toutes les cellules d'abord
     ws.Cells.Locked = False
     
     ' 11. Mettre en forme le tableau final
-
     Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     tbl.TableStyle = "TableStyleMedium9" ' ou un autre style de ton choix
     
-    ' Verrouiller uniquement les cellules du tableau
+    ' Restaurer l'état de verrouillage initial
+    Dim cellAddress As Variant
+    For Each cellAddress In lockedCells
+        ws.Range(cellAddress).Locked = True
+    Next cellAddress
+    
+    ' Verrouiller les cellules du tableau
     tblRange.Locked = True
     
     ' Protéger la feuille à la toute fin avec les options souhaitées
