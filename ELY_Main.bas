@@ -18,12 +18,12 @@
     Dim categoryManager As New CategoryManager
 
     ' Initialiser la feuille PQ_DATA si besoin
-    If wsPQData Is Nothing Then InitializePQData
+    If wsPQData Is Nothing Then Utilities.InitializePQData
 
     ' 1. Charger la table des marques et demander le choix
-    lastCol = GetLastColumn(wsPQData)
-    LoadQuery "01_ELY_Brands", wsPQData, wsPQData.Cells(1, lastCol + 1)
-    Set selectedBrands = ChooseMultipleValuesFromTableWithAll(wsPQData, "Table_01_ELY_Brands", "Brand", "Choisissez une ou plusieurs marques (ex: 1,3,5 ou *) :")
+    lastCol = Utilities.GetLastColumn(wsPQData)
+    LoadQueries.LoadQuery "01_ELY_Brands", wsPQData, wsPQData.Cells(1, lastCol + 1)
+    Set selectedBrands = LoadQueries.ChooseMultipleValuesFromTableWithAll(wsPQData, "Table_01_ELY_Brands", "Brand", "Choisissez une ou plusieurs marques (ex: 1,3,5 ou *) :")
     If selectedBrands Is Nothing Or selectedBrands.Count = 0 Then
         MsgBox "Aucune marque sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
@@ -36,8 +36,8 @@
     On Error GoTo 0
 
     ' 3. Charger la table des fiches SANS filtre (toutes les fiches)
-    lastCol = GetLastColumn(wsPQData)
-    LoadQuery "02_ELY_List_filtered", wsPQData, wsPQData.Cells(1, lastCol + 1)
+    lastCol = Utilities.GetLastColumn(wsPQData)
+    LoadQueries.LoadQuery "02_ELY_List_filtered", wsPQData, wsPQData.Cells(1, lastCol + 1)
 
     ' 4. Proposer la sélection à l'utilisateur sur les fiches filtrées par la marque
     Set lo = wsPQData.ListObjects("Table_02_ELY_List_filtered")
@@ -63,7 +63,7 @@
     End If
 
     ' 5. Sélection multiple des fiches techniques (avec *)
-    Set selectedFicheIds = ChooseMultipleValuesFromListWithAll(idList, nameList, "Choisissez une ou plusieurs fiches (ex: 1,2,5 ou *) :")
+    Set selectedFicheIds = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, nameList, "Choisissez une ou plusieurs fiches (ex: 1,2,5 ou *) :")
     If selectedFicheIds Is Nothing Or selectedFicheIds.Count = 0 Then
         MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
@@ -76,10 +76,10 @@
     previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
     previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
 
-    ' Extrait les 3 premières lignes pour l'aperçu normal
+    ' Extrait les 3 premières lignes pour l'aperçu normal (max 4 colonnes, 10 caractères)
     previewNormal = previewNormal & "| "
-    For i = 1 To nbChamps
-        previewNormal = previewNormal & lo.HeaderRowRange.Cells(1, i).Value & " | "
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        previewNormal = previewNormal & Left(lo.HeaderRowRange.Cells(1, i).Value, 10) & " | "
     Next i
     previewNormal = previewNormal & vbCrLf
     Dim idx As Long, j As Long
@@ -90,8 +90,8 @@
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
                 previewNormal = previewNormal & "| "
-                For i = 1 To nbChamps
-                    previewNormal = previewNormal & lo.DataBodyRange.Rows(j).Cells(1, i).Value & " | "
+                For i = 1 To WorksheetFunction.Min(4, nbChamps)
+                    previewNormal = previewNormal & Left(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10) & " | "
                 Next i
                 previewNormal = previewNormal & vbCrLf
                 Exit For
@@ -100,16 +100,16 @@
         idx = idx + 1
     Next v
 
-    ' Extrait les 3 premières fiches pour l'aperçu transposé
+    ' Extrait les 3 premières fiches pour l'aperçu transposé (max 4 champs, 10 caractères)
     previewTransposed = previewTransposed & "(en-têtes en ligne, fiches en colonnes)" & vbCrLf
-    For i = 1 To nbChamps
-        previewTransposed = previewTransposed & lo.HeaderRowRange.Cells(1, i).Value & ": "
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        previewTransposed = previewTransposed & Left(lo.HeaderRowRange.Cells(1, i).Value, 10) & ": "
         idx = 1
         For Each v In selectedFicheIds
             If idx > previewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    previewTransposed = previewTransposed & lo.DataBodyRange.Rows(j).Cells(1, i).Value & ", "
+                    previewTransposed = previewTransposed & Left(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10) & ", "
                     Exit For
                 End If
             Next j

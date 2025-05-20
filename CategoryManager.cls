@@ -72,14 +72,6 @@ Public Function GetUtilities() As Collection
     Set GetUtilities = m_utilities
 End Function
 
-Public Function GetCategoryByName(categoryName As String) As CategoryInfo
-    On Error Resume Next
-    GetCategoryByName = m_technologies(categoryName)
-    If Err.Number = 0 Then Exit Function
-    
-    GetCategoryByName = m_utilities(categoryName)
-    On Error GoTo 0
-End Function
 
 Public Function GetAllCategories() As Collection
     Dim allCategories As New Collection
