@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<ns0:customUI xmlns:ns0="http://schemas.microsoft.com/office/2006/01/customui">
+<ns0:customUI xmlns:ns0="http://schemas.microsoft.com/office/2006/01/customui" onLoad="Ribbon_Load">
     <ns0:ribbon startFromScratch="false">
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
                 <ns0:group id="grpTechnologies" label="Engineering">
-                    <ns0:menu id="menuTechnologies" label="Technologies" imageMso="CreateForm" size="large">
+                    <ns0:menu id="menuTechnologies" label="Technologies" imageMso="CreateForm" size="large" getVisible="GetTechnologiesVisibility">
                         <ns0:button id="btnCompression" label="Compression" onAction="OnCompression"/>
                         <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="OnCO2General"/>
                         <ns0:button id="btnCO2Capture" label="CO2 - Capture" onAction="OnCO2Capture"/>
@@ -16,7 +16,7 @@
                         <ns0:button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="OnSAFBtJ"/>
                         <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="OnSAFMtJ"/>
                     </ns0:menu>
-                    <ns0:menu id="menuUtilities" label="Utilities" imageMso="CreateQueryFromWizard" size="large">
+                    <ns0:menu id="menuUtilities" label="Utilities" imageMso="CreateQueryFromWizard" size="large" getVisible="GetUtilitiesVisibility">
                         <ns0:button id="btnChiller" label="Chiller" onAction="OnChiller"/>
                         <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater"/>
                         <ns0:button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd"/>
