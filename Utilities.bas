@@ -16,3 +16,12 @@ End Sub
 Function GetLastColumn(ws As Worksheet) As Long
     GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column +1
 End Function
+
+' --- Utility function for smart truncation ---
+Function TruncateWithEllipsis(text As String, maxLen As Integer) As String
+    If Len(text) > maxLen Then
+        TruncateWithEllipsis = Left(text, maxLen - 3) & "..."
+    Else
+        TruncateWithEllipsis = text
+    End If
+End Function
