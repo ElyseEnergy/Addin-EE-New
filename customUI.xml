@@ -1,0 +1,31 @@
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon>
+    <tabs>
+      <tab id="tabEngineering" label="Engineering">
+        <group id="grpTechnologies" label="Engineering">
+          <menu id="menuTechnologies" label="Technologies" imageMso="TableInsertTable">
+            <button id="btnCompression" label="Compression" onAction="OnCompression"/>
+            <button id="btnCO2General" label="CO2 - General Parameters" onAction="OnCO2General"/>
+            <button id="btnCO2Capture" label="CO2 - Capture" onAction="OnCO2Capture"/>
+            <button id="btnH2General" label="H2 - General Parameters" onAction="OnH2General"/>
+            <button id="btnH2ELY" label="H2 - Water Electrolysis (ELY)" onAction="ELY_Main"/>
+            <button id="btnMeOHCO2" label="MeOH - CO2-to-Methanol Synthesis" onAction="OnMeOHCO2"/>
+            <button id="btnMeOHBiomass" label="MeOH - Biomass" onAction="OnMeOHBiomass"/>
+            <button id="btnGasi" label="Gasification Synthesis" onAction="OnGasi"/>
+            <button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="OnSAFBtJ"/>
+            <button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="OnSAFMtJ"/>
+          </menu>
+          <menu id="menuUtilities" label="Utilities" imageMso="TableInsertTable">
+            <button id="btnChiller" label="Chiller" onAction="OnChiller"/>
+            <button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater"/>
+            <button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd"/>
+            <button id="btnOtherUtil" label="Other Utilities" onAction="OnOtherUtil"/>
+            <button id="btnPowerLoss" label="Power Losses" onAction="OnPowerLoss"/>
+            <button id="btnWastewater" label="Wastewater Treatment" onAction="OnWastewater"/>
+            <button id="btnWaterTreat" label="Water Treatment" onAction="OnWaterTreat"/>
+          </menu>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI> 

@@ -9,10 +9,16 @@
     Dim cellId As Range, cellBrand As Range, cellName As Range
     Dim foundRow As Range
     Dim v As Variant
+    Dim modeTransposed As Boolean
+    Dim previewNormal As String, previewTransposed As String
+    Dim nbFiches As Long, nbChamps As Long
+    Dim previewRows As Long: previewRows = 3
+    Dim previewCols As Long
+    Dim okPlage As Boolean
 
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then InitializePQData
-    
+
     ' 1. Charger la table des marques et demander le choix
     lastCol = GetLastColumn(wsPQData)
     LoadQuery "01_ELY_Brands", wsPQData, wsPQData.Cells(1, lastCol + 1)
@@ -21,7 +27,7 @@
         MsgBox "Aucune marque sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
     End If
-    
+
     ' 2. Supprimer la table existante si elle existe
     On Error Resume Next
     Set lo = wsPQData.ListObjects("Table_02_ELY_List_filtered")
@@ -62,51 +68,159 @@
         Exit Sub
     End If
 
-    ' 6. Demander où charger la fiche finale
-    Set finalDestination = Application.InputBox("Sélectionnez la cellule où charger la fiche finale", "Destination", Type:=8)
-    If finalDestination Is Nothing Then
-        MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
+    ' 6. Préparer les exemples pour l'inputbox de mode
+    nbFiches = selectedFicheIds.Count
+    nbChamps = lo.ListColumns.Count
+    previewCols = WorksheetFunction.Min(nbFiches, previewRows)
+    previewNormal = \"Mode NORMAL (tableau classique) :\" & vbCrLf
+    previewTransposed = \"Mode TRANSPOSE (fiches en colonnes) :\" & vbCrLf
+
+    ' Extrait les 3 premières lignes pour l'aperçu normal
+    previewNormal = previewNormal & \"| \"
+    For i = 1 To nbChamps
+        previewNormal = previewNormal & lo.HeaderRowRange.Cells(1, i).Value & \" | \"
+    Next i
+    previewNormal = previewNormal & vbCrLf
+    Dim idx As Long, j As Long
+    idx = 1
+    For Each v In selectedFicheIds
+        If idx > previewRows Then Exit For
+        ' Trouver la ligne correspondante
+        For j = 1 To lo.DataBodyRange.Rows.Count
+            If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                previewNormal = previewNormal & \"| \"
+                For i = 1 To nbChamps
+                    previewNormal = previewNormal & lo.DataBodyRange.Rows(j).Cells(1, i).Value & \" | \"
+                Next i
+                previewNormal = previewNormal & vbCrLf
+                Exit For
+            End If
+        Next j
+        idx = idx + 1
+    Next v
+
+    ' Extrait les 3 premières fiches pour l'aperçu transposé
+    previewTransposed = previewTransposed & \"(en-têtes en ligne, fiches en colonnes)\" & vbCrLf
+    For i = 1 To nbChamps
+        previewTransposed = previewTransposed & lo.HeaderRowRange.Cells(1, i).Value & \": \"
+        idx = 1
+        For Each v In selectedFicheIds
+            If idx > previewRows Then Exit For
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    previewTransposed = previewTransposed & lo.DataBodyRange.Rows(j).Cells(1, i).Value & \", \"
+                    Exit For
+                End If
+            Next j
+            idx = idx + 1
+        Next v
+        previewTransposed = previewTransposed & vbCrLf
+    Next i
+
+    ' 7. Demander le mode à l'utilisateur
+    Dim modePrompt As String
+    modePrompt = \"Comment souhaitez-vous coller les fiches ?\" & vbCrLf & vbCrLf & previewNormal & vbCrLf & previewTransposed & vbCrLf & \"Tapez 1 pour NORMAL, 2 pour TRANSPOSE\"
+    userChoice = InputBox(modePrompt, \"Choix du mode de collage\", \"1\")
+    If userChoice = \"2\" Then
+        modeTransposed = True
+    ElseIf userChoice = \"1\" Then
+        modeTransposed = False
+    Else
+        MsgBox \"Choix invalide. Opération annulée.\", vbExclamation
         Exit Sub
     End If
 
-    ' 7. Copier les lignes correspondant aux ids choisis (transposé, avec formats)
-    Dim firstRow As Boolean
-    Dim currentRowOffset As Long
-    Dim colCount As Long
-    Dim destCell As Range
-    Dim srcCell As Range
-    Dim destRow As Long, destCol As Long
-    firstRow = True
-    currentRowOffset = 0
-    colCount = lo.ListColumns.Count
-    For Each v In selectedFicheIds
-        Set foundRow = Nothing
-        i = 1
-        For Each cellId In lo.ListColumns("id").DataBodyRange
-            If cellId.Value = v Then
-                Set foundRow = lo.DataBodyRange.Rows(i)
-                Exit For
-            End If
-            i = i + 1
-        Next cellId
-        If Not foundRow Is Nothing Then
-            If firstRow Then
-                ' Coller les en-têtes en colonne (transposé)
-                For destRow = 1 To colCount
-                    finalDestination.Offset(destRow - 1, 0).Value = lo.HeaderRowRange.Cells(1, destRow).Value
-                    ' Appliquer le format de la colonne source à la cellule de destination
-                    finalDestination.Offset(destRow - 1, 0).NumberFormat = lo.DataBodyRange.Columns(destRow).Cells(1, 1).NumberFormat
-                Next destRow
-                firstRow = False
-            End If
-            ' Coller la ligne de données en colonne (transposé)
-            For destRow = 1 To colCount
-                finalDestination.Offset(destRow - 1, currentRowOffset + 1).Value = foundRow.Cells(1, destRow).Value
-                ' Appliquer le format de la colonne source à la cellule de destination
-                finalDestination.Offset(destRow - 1, currentRowOffset + 1).NumberFormat = foundRow.Cells(1, destRow).NumberFormat
-            Next destRow
-            currentRowOffset = currentRowOffset + 1
-        End If
-    Next v
-End Sub
+    ' 8. Calculer la taille nécessaire et informer l'utilisateur
+    Dim nbRows As Long, nbCols As Long
+    If modeTransposed Then
+        nbRows = nbChamps
+        nbCols = nbFiches + 1 ' +1 pour les en-têtes
+    Else
+        nbRows = nbFiches + 1 ' +1 pour les en-têtes
+        nbCols = nbChamps
+    End If
+    MsgBox \"La plage nécessaire sera de \" & nbRows & \" lignes x \" & nbCols & \" colonnes.\", vbInformation
 
+    ' 9. Demander la cellule de destination et vérifier la place
+    Do
+        Set finalDestination = Application.InputBox(\"Sélectionnez la cellule où charger les fiches (\" & nbRows & \" x \" & nbCols & \")\", \"Destination\", Type:=8)
+        If finalDestination Is Nothing Then
+            MsgBox \"Aucune destination sélectionnée. Opération annulée.\", vbExclamation
+            Exit Sub
+        End If
+        okPlage = True
+        For i = 0 To nbRows - 1
+            For j = 0 To nbCols - 1
+                If Not IsEmpty(finalDestination.Offset(i, j)) Then
+                    okPlage = False
+                    Exit For
+                End If
+            Next j
+            If Not okPlage Then Exit For
+        Next i
+        If Not okPlage Then
+            MsgBox \"La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.\", vbExclamation
+        End If
+    Loop Until okPlage
+
+    ' 10. Coller les données selon le mode choisi, appliquer les formats et créer un tableau
+    Dim tblRange As Range
+    If modeTransposed Then
+        ' Coller en transposé
+        For i = 1 To nbChamps
+            finalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, i).Value
+            finalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        Next i
+        Dim currentCol As Long: currentCol = 1
+        For Each v In selectedFicheIds
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    For i = 1 To nbChamps
+                        finalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
+                        finalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    Next i
+                    Exit For
+                End If
+            Next j
+            currentCol = currentCol + 1
+        Next v
+        Set tblRange = finalDestination.Resize(nbRows, nbCols)
+    Else
+        ' Coller en normal
+        For i = 1 To nbChamps
+            finalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, i).Value
+            finalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        Next i
+        Dim currentRow As Long: currentRow = 1
+        For Each v In selectedFicheIds
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    For i = 1 To nbChamps
+                        finalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
+                        finalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    Next i
+                    Exit For
+                End If
+            Next j
+            currentRow = currentRow + 1
+        Next v
+        Set tblRange = finalDestination.Resize(nbRows, nbCols)
+    End If
+
+    ' 11. Mettre en forme le tableau final
+    Dim ws As Worksheet
+    Set ws = finalDestination.Worksheet
+    Dim tbl As ListObject
+    On Error Resume Next
+    Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    On Error GoTo 0
+    If Not tbl Is Nothing Then
+        tbl.TableStyle = \"TableStyleMedium9\" ' ou un autre style de ton choix
+    End If
+
+    ' 12. Protéger la feuille et verrouiller les cellules du tableau
+    tblRange.Locked = True
+    ws.Protect Password:=\"elyse\", AllowFiltering:=True, AllowSorting:=True, AllowUsingPivotTables:=True
+    MsgBox \"Collage terminé et protégé !\", vbInformation
+
+End Sub
