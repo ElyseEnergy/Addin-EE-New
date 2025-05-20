@@ -28,6 +28,34 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         Exit Function
     End If
     
+    ' Si un filtre est appliqué, proposer la sélection des fiches correspondantes
+    If loadInfo.Category.FilterLevel <> "Pas de filtrage" Then
+        Dim lo As ListObject
+        Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+        Dim idList As New Collection
+        Dim displayList As New Collection
+        Dim i As Long, v As Variant
+        Dim displayColIndex As Long
+        displayColIndex = 2 ' Afficher la colonne 2 (nom)
+        ' Parcourir les lignes et ne garder que celles correspondant au(x) filtre(s) choisi(s)
+        For i = 1 To lo.DataBodyRange.Rows.Count
+            For Each v In loadInfo.SelectedValues
+                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.Category.FilterLevel).Index).Value = v Then
+                    idList.Add lo.DataBodyRange.Rows(i).Columns(1).Value
+                    displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
+                End If
+            Next v
+        Next i
+        ' Proposer la sélection des fiches parmi displayList
+        Dim finalSelection As Collection
+        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
+        If finalSelection Is Nothing Or finalSelection.Count = 0 Then
+            ProcessDataLoad = False
+            Exit Function
+        End If
+        Set loadInfo.SelectedValues = finalSelection
+    End If
+    
     ' 4. Gérer le mode d'affichage
     loadInfo.ModeTransposed = GetDisplayMode(loadInfo)
     If loadInfo.ModeTransposed = -1 Then ' Code d'erreur
@@ -305,6 +333,11 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
     
+    ' Déprotéger la feuille de destination avant tout collage
+    Dim ws As Worksheet
+    Set ws = loadInfo.FinalDestination.Worksheet
+    ws.Unprotect
+    
     If loadInfo.ModeTransposed Then
         ' Coller en transposé
         For i = 1 To lo.ListColumns.Count
@@ -356,8 +389,51 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     tbl.TableStyle = "TableStyleMedium9"
     
-    ' Verrouiller les cellules du tableau
-    tblRange.Locked = True
+    ' Protéger finement la feuille : seules les valeurs du tableau et les anciennes cellules verrouillées sont protégées
+    ProtectSheetWithTable tblRange
     
     PasteData = True
-End Function 
+End Function
+
+' Protège la feuille en ne verrouillant que les cellules du tableau et celles déjà verrouillées
+Private Sub ProtectSheetWithTable(tblRange As Range)
+    Dim ws As Worksheet
+    Set ws = tblRange.Worksheet
+
+    ' Mémoriser les cellules déjà verrouillées
+    Dim lockedCells As Collection
+    Set lockedCells = New Collection
+    Dim cell As Range
+    For Each cell In ws.UsedRange
+        If cell.Locked Then
+            lockedCells.Add cell.Address
+        End If
+    Next cell
+
+    ' Déprotéger la feuille
+    ws.Unprotect
+
+    ' Verrouiller les cellules du tableau
+    tblRange.Locked = True
+
+    ' Reprotéger les anciennes cellules verrouillées
+    If lockedCells.Count > 0 Then
+        Dim addr As Variant
+        For Each addr In lockedCells
+            ws.Range(addr).Locked = True
+        Next addr
+    End If
+
+    ' Protéger la feuille (autoriser tout sauf la modification des valeurs, sans mot de passe)
+    ws.Protect Password:="", _
+               AllowFormattingCells:=True, _
+               AllowFormattingColumns:=True, _
+               AllowFormattingRows:=True, _
+               AllowInsertingColumns:=True, _
+               AllowInsertingRows:=True, _
+               AllowDeletingColumns:=True, _
+               AllowDeletingRows:=True, _
+               AllowSorting:=True, _
+               AllowFiltering:=True, _
+               AllowUsingPivotTables:=True
+End Sub 

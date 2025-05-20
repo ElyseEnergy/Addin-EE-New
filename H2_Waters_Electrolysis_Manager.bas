@@ -22,29 +22,5 @@ Public Sub ProcessH2Electrolysis()
         Exit Sub
     End If
     
-    ' Protéger la feuille
-    ProtectSheet
+    ' Plus besoin de protéger la feuille ici, c'est géré dans DataLoaderManager
 End Sub
-
-' Gère la protection de la feuille
-Private Sub ProtectSheet()
-    Dim ws As Worksheet
-    Set ws = ActiveSheet
-    
-    ' Déprotéger la feuille
-    ws.Unprotect
-    
-    ' Verrouiller toutes les cellules
-    ws.Cells.Locked = True
-    
-    ' Déverrouiller les cellules non vides
-    Dim cell As Range
-    For Each cell In ws.UsedRange
-        If Not IsEmpty(cell) Then
-            cell.Locked = False
-        End If
-    Next cell
-    
-    ' Protéger la feuille
-    ws.Protect
-End Sub 
