@@ -1,13 +1,14 @@
 ﻿Sub ELY_Main()
     Dim lastCol As Long
     Dim selectedBrands As Collection
-    Dim selectedFicheId As String
+    Dim selectedFicheIds As Collection
     Dim finalDestination As Range
     Dim lo As ListObject
     Dim idList As Collection, nameList As Collection
     Dim i As Long, userChoice As String
     Dim cellId As Range, cellBrand As Range, cellName As Range
     Dim foundRow As Range
+    Dim v As Variant
 
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then InitializePQData
@@ -54,48 +55,42 @@
         Exit Sub
     End If
 
-    Dim listPrompt As String
-    listPrompt = "Choisissez la fiche :" & vbCrLf
-    For i = 1 To nameList.Count
-        listPrompt = listPrompt & i & ". " & nameList(i) & vbCrLf
-    Next i
-    userChoice = InputBox(listPrompt, "Sélection", "1")
-    If userChoice = "" Then Exit Sub
-    If IsNumeric(userChoice) Then
-        If CInt(userChoice) >= 1 And CInt(userChoice) <= idList.Count Then
-            selectedFicheId = idList(CInt(userChoice))
-        Else
-            MsgBox "Choix invalide.", vbExclamation
-            Exit Sub
-        End If
-    Else
-        MsgBox "Choix invalide.", vbExclamation
+    ' 5. Sélection multiple des fiches techniques
+    Set selectedFicheIds = ChooseMultipleValuesFromList(idList, nameList, "Choisissez une ou plusieurs fiches (ex: 1,2,5) :")
+    If selectedFicheIds Is Nothing Or selectedFicheIds.Count = 0 Then
+        MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
     End If
-    
-    ' 5. Demander où charger la fiche finale
+
+    ' 6. Demander où charger la fiche finale
     Set finalDestination = Application.InputBox("Sélectionnez la cellule où charger la fiche finale", "Destination", Type:=8)
     If finalDestination Is Nothing Then
         MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
     End If
-    
-    ' 6. Copier la ligne correspondant à l'id choisi (et les en-têtes)
-    Set foundRow = Nothing
-    i = 1
-    For Each cellId In lo.ListColumns("id").DataBodyRange
-        If cellId.Value = selectedFicheId Then
-            Set foundRow = cellId.EntireRow
-            Exit For
-        End If
-        i = i + 1
-    Next cellId
 
-    If Not foundRow Is Nothing Then
-        lo.HeaderRowRange.Copy Destination:=finalDestination
-        foundRow.Copy Destination:=finalDestination.Offset(1, 0)
-    Else
-        MsgBox "Impossible de trouver la fiche sélectionnée.", vbExclamation
-    End If
+    ' 7. Copier les lignes correspondant aux ids choisis (et les en-têtes)
+    Dim firstRow As Boolean
+    firstRow = True
+    For Each v In selectedFicheIds
+        Set foundRow = Nothing
+        i = 1
+        For Each cellId In lo.ListColumns("id").DataBodyRange
+            If cellId.Value = v Then
+                Set foundRow = cellId.EntireRow
+                Exit For
+            End If
+            i = i + 1
+        Next cellId
+        If Not foundRow Is Nothing Then
+            If firstRow Then
+                lo.HeaderRowRange.Copy Destination:=finalDestination
+                foundRow.Copy Destination:=finalDestination.Offset(1, 0)
+                firstRow = False
+            Else
+                foundRow.Copy Destination:=finalDestination.Offset(finalDestination.CurrentRegion.Rows.Count, 0)
+            End If
+        End If
+    Next v
 End Sub
 

@@ -184,3 +184,27 @@ Function ChooseMultipleValuesFromTable(ws As Worksheet, tableName As String, col
     Next i
     Set ChooseMultipleValuesFromTable = selectedValues
 End Function
+
+Function ChooseMultipleValuesFromList(idList As Collection, displayList As Collection, prompt As String) As Collection
+    Dim i As Long
+    Dim userChoice As String
+    Dim selectedIndexes As Variant
+    Dim selectedValues As New Collection
+    Dim listPrompt As String
+
+    listPrompt = prompt & vbCrLf
+    For i = 1 To displayList.Count
+        listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
+    Next i
+    userChoice = InputBox(listPrompt, "Sélection", "1")
+    If userChoice = "" Then Exit Function
+    selectedIndexes = Split(userChoice, ",")
+    For i = LBound(selectedIndexes) To UBound(selectedIndexes)
+        Dim idx As Long
+        idx = Val(Trim(selectedIndexes(i)))
+        If idx >= 1 And idx <= idList.Count Then
+            selectedValues.Add idList(idx)
+        End If
+    Next i
+    Set ChooseMultipleValuesFromList = selectedValues
+End Function
