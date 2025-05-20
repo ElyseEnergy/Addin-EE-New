@@ -15,6 +15,7 @@
     Dim previewRows As Long: previewRows = 3
     Dim previewCols As Long
     Dim okPlage As Boolean
+    Dim categoryManager As New CategoryManager
 
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then InitializePQData
@@ -72,13 +73,13 @@
     nbFiches = selectedFicheIds.Count
     nbChamps = lo.ListColumns.Count
     previewCols = WorksheetFunction.Min(nbFiches, previewRows)
-    previewNormal = \"Mode NORMAL (tableau classique) :\" & vbCrLf
-    previewTransposed = \"Mode TRANSPOSE (fiches en colonnes) :\" & vbCrLf
+    previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
+    previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
 
     ' Extrait les 3 premières lignes pour l'aperçu normal
-    previewNormal = previewNormal & \"| \"
+    previewNormal = previewNormal & "| "
     For i = 1 To nbChamps
-        previewNormal = previewNormal & lo.HeaderRowRange.Cells(1, i).Value & \" | \"
+        previewNormal = previewNormal & lo.HeaderRowRange.Cells(1, i).Value & " | "
     Next i
     previewNormal = previewNormal & vbCrLf
     Dim idx As Long, j As Long
@@ -88,9 +89,9 @@
         ' Trouver la ligne correspondante
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                previewNormal = previewNormal & \"| \"
+                previewNormal = previewNormal & "| "
                 For i = 1 To nbChamps
-                    previewNormal = previewNormal & lo.DataBodyRange.Rows(j).Cells(1, i).Value & \" | \"
+                    previewNormal = previewNormal & lo.DataBodyRange.Rows(j).Cells(1, i).Value & " | "
                 Next i
                 previewNormal = previewNormal & vbCrLf
                 Exit For
@@ -100,15 +101,15 @@
     Next v
 
     ' Extrait les 3 premières fiches pour l'aperçu transposé
-    previewTransposed = previewTransposed & \"(en-têtes en ligne, fiches en colonnes)\" & vbCrLf
+    previewTransposed = previewTransposed & "(en-têtes en ligne, fiches en colonnes)" & vbCrLf
     For i = 1 To nbChamps
-        previewTransposed = previewTransposed & lo.HeaderRowRange.Cells(1, i).Value & \": \"
+        previewTransposed = previewTransposed & lo.HeaderRowRange.Cells(1, i).Value & ": "
         idx = 1
         For Each v In selectedFicheIds
             If idx > previewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    previewTransposed = previewTransposed & lo.DataBodyRange.Rows(j).Cells(1, i).Value & \", \"
+                    previewTransposed = previewTransposed & lo.DataBodyRange.Rows(j).Cells(1, i).Value & ", "
                     Exit For
                 End If
             Next j
@@ -119,14 +120,14 @@
 
     ' 7. Demander le mode à l'utilisateur
     Dim modePrompt As String
-    modePrompt = \"Comment souhaitez-vous coller les fiches ?\" & vbCrLf & vbCrLf & previewNormal & vbCrLf & previewTransposed & vbCrLf & \"Tapez 1 pour NORMAL, 2 pour TRANSPOSE\"
-    userChoice = InputBox(modePrompt, \"Choix du mode de collage\", \"1\")
-    If userChoice = \"2\" Then
+    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & previewNormal & vbCrLf & previewTransposed & vbCrLf & "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
+    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
+    If userChoice = "2" Then
         modeTransposed = True
-    ElseIf userChoice = \"1\" Then
+    ElseIf userChoice = "1" Then
         modeTransposed = False
     Else
-        MsgBox \"Choix invalide. Opération annulée.\", vbExclamation
+        MsgBox "Choix invalide. Opération annulée.", vbExclamation
         Exit Sub
     End If
 
@@ -139,13 +140,13 @@
         nbRows = nbFiches + 1 ' +1 pour les en-têtes
         nbCols = nbChamps
     End If
-    MsgBox \"La plage nécessaire sera de \" & nbRows & \" lignes x \" & nbCols & \" colonnes.\", vbInformation
+    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation
 
     ' 9. Demander la cellule de destination et vérifier la place
     Do
-        Set finalDestination = Application.InputBox(\"Sélectionnez la cellule où charger les fiches (\" & nbRows & \" x \" & nbCols & \")\", \"Destination\", Type:=8)
+        Set finalDestination = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", "Destination", Type:=8)
         If finalDestination Is Nothing Then
-            MsgBox \"Aucune destination sélectionnée. Opération annulée.\", vbExclamation
+            MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
             Exit Sub
         End If
         okPlage = True
@@ -159,7 +160,7 @@
             If Not okPlage Then Exit For
         Next i
         If Not okPlage Then
-            MsgBox \"La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.\", vbExclamation
+            MsgBox "La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.", vbExclamation
         End If
     Loop Until okPlage
 
@@ -215,12 +216,12 @@
     Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     On Error GoTo 0
     If Not tbl Is Nothing Then
-        tbl.TableStyle = \"TableStyleMedium9\" ' ou un autre style de ton choix
+        tbl.TableStyle = "TableStyleMedium9" ' ou un autre style de ton choix
     End If
 
     ' 12. Protéger la feuille et verrouiller les cellules du tableau
     tblRange.Locked = True
-    ws.Protect Password:=\"elyse\", AllowFiltering:=True, AllowSorting:=True, AllowUsingPivotTables:=True
-    MsgBox \"Collage terminé et protégé !\", vbInformation
+    ws.Protect Password:="elyse", AllowFiltering:=True, AllowSorting:=True, AllowUsingPivotTables:=True
+    MsgBox "Collage terminé et protégé !", vbInformation
 
 End Sub
