@@ -16,28 +16,58 @@
     Dim previewCols As Long
     Dim okPlage As Boolean
     Dim categoryManager As New categoryManager
+    Dim dict As Object
+    Dim arrBrands() As String
+    Dim j As Long
 
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
 
-    ' 1. Charger la table des marques et demander le choix
-    lastCol = Utilities.GetLastColumn(wsPQData)
-    LoadQueries.LoadQuery "01_ELY_Brands", wsPQData, wsPQData.Cells(1, lastCol + 1)
-    Set selectedBrands = LoadQueries.ChooseMultipleValuesFromTableWithAll(wsPQData, "Table_01_ELY_Brands", "Brand", "Choisissez a brand or brands (ex: 1,3,5 or *) :")
-    If selectedBrands Is Nothing Or selectedBrands.Count = 0 Then
-        MsgBox "No brand selected. Operation cancelled.", vbExclamation
-        Exit Sub
-    End If
-
-    ' 2. Supprimer la table existante si elle existe
-    On Error Resume Next
-    Set lo = wsPQData.ListObjects("Table_02_ELY_List_filtered")
-    If Not lo Is Nothing Then lo.Delete
-    On Error GoTo 0
-
-    ' 3. Charger la table des fiches SANS filtre (toutes les fiches)
+    ' 1. Charger la table des fiches et extraire les marques uniques
     lastCol = Utilities.GetLastColumn(wsPQData)
     LoadQueries.LoadQuery "02_ELY_List_filtered", wsPQData, wsPQData.Cells(1, lastCol + 1)
+    
+    ' Créer un dictionnaire pour stocker les marques uniques
+    Set dict = CreateObject("Scripting.Dictionary")
+    Set lo = wsPQData.ListObjects("Table_02_ELY_List_filtered")
+    
+    ' Extraire les marques uniques
+    For Each cellBrand In lo.ListColumns("Brand").DataBodyRange
+        If Not dict.exists(cellBrand.Value) Then
+            dict.Add cellBrand.Value, 1
+        End If
+    Next cellBrand
+    
+    ' Convertir le dictionnaire en tableau et trier
+    ReDim arrBrands(1 To dict.Count)
+    i = 1
+    For Each v In dict.keys
+        arrBrands(i) = v
+        i = i + 1
+    Next v
+    
+    ' Trier le tableau
+    For i = 1 To UBound(arrBrands) - 1
+        For j = i + 1 To UBound(arrBrands)
+            If arrBrands(i) > arrBrands(j) Then
+                Dim temp As String
+                temp = arrBrands(i)
+                arrBrands(i) = arrBrands(j)
+                arrBrands(j) = temp
+            End If
+        Next j
+    Next i
+    
+    ' Présenter les marques à l'utilisateur
+    Set selectedBrands = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrBrands, "Choisissez une ou plusieurs marques (ex: 1,3,5 ou *) :")
+    If (TypeName(selectedBrands) <> "Collection") Then
+        MsgBox "Aucune marque sélectionnée. Opération annulée.", vbExclamation
+        Exit Sub
+    End If
+    If selectedBrands.Count = 0 Then
+        MsgBox "Aucune marque sélectionnée. Opération annulée.", vbExclamation
+        Exit Sub
+    End If
 
     ' 4. Proposer la sélection à l'utilisateur sur les fiches filtrées par la marque
     Set lo = wsPQData.ListObjects("Table_02_ELY_List_filtered")
@@ -64,8 +94,12 @@
 
     ' 5. Sélection multiple des fiches techniques (avec *)
     Set selectedFicheIds = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, nameList, "Choisissez a fiche or fiches (ex: 1,2,5 or *) :")
-    If selectedFicheIds Is Nothing Or selectedFicheIds.Count = 0 Then
-        MsgBox "No fiche selected. Operation cancelled.", vbExclamation
+    If (TypeName(selectedFicheIds) <> "Collection") Then
+        MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+        Exit Sub
+    End If
+    If selectedFicheIds.Count = 0 Then
+        MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
     End If
 
