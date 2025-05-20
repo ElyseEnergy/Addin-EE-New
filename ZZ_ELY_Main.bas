@@ -1,6 +1,6 @@
 ﻿Sub ELY_Main()
     Dim lastCol As Long
-    Dim selectedBrand As String
+    Dim selectedBrands As Collection
     Dim selectedFicheId As String
     Dim finalDestination As Range
     Dim lo As ListObject
@@ -15,8 +15,8 @@
     ' 1. Charger la table des marques et demander le choix
     lastCol = GetLastColumn(wsPQData)
     LoadQuery "01_ELY_Brands", wsPQData, wsPQData.Cells(1, lastCol + 1)
-    selectedBrand = ChooseUniqueValueFromTable(wsPQData, "Table_01_ELY_Brands", "Brand", "Choisissez une marque d'électrolyseur :")
-    If selectedBrand = "" Then
+    Set selectedBrands = ChooseMultipleValuesFromTable(wsPQData, "Table_01_ELY_Brands", "Brand", "Choisissez une ou plusieurs marques (ex: 1,3,5) :")
+    If selectedBrands Is Nothing Or selectedBrands.Count = 0 Then
         MsgBox "Aucune marque sélectionnée. Opération annulée.", vbExclamation
         Exit Sub
     End If
@@ -37,12 +37,15 @@
     Set nameList = New Collection
     i = 1
     For Each cellBrand In lo.ListColumns("Brand").DataBodyRange
-        If cellBrand.Value = selectedBrand Then
-            Set cellId = lo.ListColumns("id").DataBodyRange.Cells(i, 1)
-            Set cellName = lo.ListColumns("Name").DataBodyRange.Cells(i, 1)
-            idList.Add cellId.Value
-            nameList.Add cellName.Value
-        End If
+        For Each v In selectedBrands
+            If cellBrand.Value = v Then
+                Set cellId = lo.ListColumns("id").DataBodyRange.Cells(i, 1)
+                Set cellName = lo.ListColumns("Name").DataBodyRange.Cells(i, 1)
+                idList.Add cellId.Value
+                nameList.Add cellName.Value
+                Exit For
+            End If
+        Next v
         i = i + 1
     Next cellBrand
 

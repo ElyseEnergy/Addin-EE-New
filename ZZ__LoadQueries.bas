@@ -143,3 +143,44 @@ Function ChooseValueFromTableWithDisplay(ws As Worksheet, tableName As String, v
         End If
     End If
 End Function
+
+Function ChooseMultipleValuesFromTable(ws As Worksheet, tableName As String, colName As String, prompt As String) As Collection
+    Dim lo As ListObject
+    Dim cell As Range
+    Dim values As Collection
+    Dim userChoice As String
+    Dim i As Long
+    Set values = New Collection
+    On Error Resume Next
+    Set lo = ws.ListObjects(tableName)
+    On Error GoTo 0
+    If lo Is Nothing Then Exit Function
+    ' Collecter les valeurs uniques
+    For Each cell In lo.ListColumns(colName).DataBodyRange
+        If cell.Value <> "" Then
+            On Error Resume Next
+            values.Add cell.Value, CStr(cell.Value)
+            On Error GoTo 0
+        End If
+    Next cell
+    If values.Count = 0 Then Exit Function
+    ' Construire la liste pour l'InputBox
+    Dim listPrompt As String
+    listPrompt = prompt & vbCrLf
+    For i = 1 To values.Count
+        listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
+    Next i
+    userChoice = InputBox(listPrompt, "Sélection", "1")
+    If userChoice = "" Then Exit Function
+    Dim selectedIndexes As Variant
+    selectedIndexes = Split(userChoice, ",")
+    Dim selectedValues As New Collection
+    For i = LBound(selectedIndexes) To UBound(selectedIndexes)
+        Dim idx As Long
+        idx = Val(Trim(selectedIndexes(i)))
+        If idx >= 1 And idx <= values.Count Then
+            selectedValues.Add values(idx)
+        End If
+    Next i
+    Set ChooseMultipleValuesFromTable = selectedValues
+End Function
