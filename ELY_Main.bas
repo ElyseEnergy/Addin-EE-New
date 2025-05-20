@@ -261,10 +261,30 @@
         tbl.TableStyle = "TableStyleMedium9" ' ou un autre style de ton choix
     End If
 
-    ' 12. Protéger la feuille et verrouiller les cellules du tableau
+    ' 12. Protection modifiée de la feuille
+    ' Déprotéger la feuille si besoin
+    If ws.ProtectContents Then ws.Unprotect Password:="elyse"
+
+    ' Déverrouiller toutes les cellules d'abord
+    ws.Cells.Locked = False
+    
+    ' Verrouiller uniquement les cellules du tableau
     tblRange.Locked = True
-    ws.Protect Password:="elyse", AllowFiltering:=True, AllowSorting:=True, AllowUsingPivotTables:=True
-    MsgBox "Collage terminé et protégé !", vbInformation
+    
+    ' Protéger la feuille à la toute fin avec les options souhaitées
+    ws.Protect Password:="elyse", _
+        AllowFormattingCells:=True, _
+        AllowFormattingColumns:=True, _
+        AllowFormattingRows:=True, _
+        AllowInsertingColumns:=True, _
+        AllowInsertingRows:=True, _
+        AllowDeletingColumns:=True, _
+        AllowDeletingRows:=True, _
+        AllowSorting:=True, _
+        AllowFiltering:=True, _
+        AllowUsingPivotTables:=True
+
+    MsgBox "Collage terminé ! Les données sont protégées mais vous pouvez modifier la mise en forme.", vbInformation
 
 End Sub
 
