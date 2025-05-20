@@ -1,0 +1,363 @@
+' Module: DataLoaderManager
+' Gère le chargement et l'affichage des données pour toutes les catégories
+Option Explicit
+
+
+
+' Fonction principale de traitement
+Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
+    ' Initialiser la feuille PQ_DATA si besoin
+    If wsPQData Is Nothing Then Utilities.InitializePQData
+    
+    ' 1. Vérifier/Créer la requête PQ
+    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
+        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
+        ProcessDataLoad = False
+        Exit Function
+    End If
+    
+    ' 2. Charger les données
+    Dim lastCol As Long
+    lastCol = Utilities.GetLastColumn(wsPQData)
+    LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+    
+    ' 3. Gérer la sélection des valeurs
+    Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
+    If loadInfo.SelectedValues Is Nothing Then
+        ProcessDataLoad = False
+        Exit Function
+    End If
+    
+    ' 4. Gérer le mode d'affichage
+    loadInfo.ModeTransposed = GetDisplayMode(loadInfo)
+    If loadInfo.ModeTransposed = -1 Then ' Code d'erreur
+        ProcessDataLoad = False
+        Exit Function
+    End If
+    
+    ' 5. Gérer la destination
+    Set loadInfo.FinalDestination = GetDestination(loadInfo)
+    If loadInfo.FinalDestination Is Nothing Then
+        ProcessDataLoad = False
+        Exit Function
+    End If
+    
+    ' 6. Coller les données
+    If Not PasteData(loadInfo) Then
+        ProcessDataLoad = False
+        Exit Function
+    End If
+    
+    ProcessDataLoad = True
+End Function
+
+' Récupère les valeurs sélectionnées selon le niveau de filtrage
+Private Function GetSelectedValues(category As CategoryInfo) As Collection
+    Dim lo As ListObject
+    Dim dict As Object
+    Dim arrValues() As String
+    Dim i As Long, j As Long
+    Dim cell As Range
+    Dim v As Variant
+    
+    Set lo = wsPQData.ListObjects("Table_" & category.PowerQueryName)
+    
+    ' Si pas de filtrage, retourner toutes les fiches
+    If category.FilterLevel = "Pas de filtrage" Then
+        Set GetSelectedValues = New Collection
+        For i = 1 To lo.DataBodyRange.Rows.Count
+            GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
+        Next i
+        Exit Function
+    End If
+    
+    ' Créer un dictionnaire pour stocker les valeurs uniques
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    ' Extraire les valeurs uniques
+    For Each cell In lo.ListColumns(category.FilterLevel).DataBodyRange
+        If Not dict.Exists(cell.Value) Then
+            dict.Add cell.Value, 1
+        End If
+    Next cell
+    
+    ' Convertir le dictionnaire en tableau et trier
+    ReDim arrValues(1 To dict.Count)
+    i = 1
+    For Each v In dict.Keys
+        arrValues(i) = v
+        i = i + 1
+    Next v
+    
+    ' Trier le tableau
+    For i = 1 To UBound(arrValues) - 1
+        For j = i + 1 To UBound(arrValues)
+            If arrValues(i) > arrValues(j) Then
+                Dim temp As String
+                temp = arrValues(i)
+                arrValues(i) = arrValues(j)
+                arrValues(j) = temp
+            End If
+        Next j
+    Next i
+    
+    ' Présenter les valeurs à l'utilisateur
+    Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
+        "Choisissez une ou plusieurs " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
+    
+    ' Vérifier la sélection
+    If (TypeName(GetSelectedValues) <> "Collection") Or (GetSelectedValues.Count = 0) Then
+        MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
+        Set GetSelectedValues = Nothing
+        Exit Function
+    End If
+End Function
+
+' Gère le mode d'affichage (normal/transposé)
+Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
+    Dim lo As ListObject
+    Dim nbFiches As Long, nbChamps As Long
+    Dim previewNormal As String, previewTransposed As String
+    Dim userChoice As String
+    Dim i As Long, j As Long, idx As Long
+    Dim colWidths() As Integer, rowWidths() As Integer
+    Dim v As Variant
+    
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+    nbFiches = loadInfo.SelectedValues.Count
+    nbChamps = lo.ListColumns.Count
+    
+    ' Préparer les exemples pour l'inputbox de mode
+    previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
+    previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
+    
+    ' Générer les prévisualisations
+    GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
+    
+    ' Demander le mode à l'utilisateur
+    Dim modePrompt As String
+    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
+                 previewNormal & vbCrLf & previewTransposed & vbCrLf & _
+                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
+    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
+    
+    If userChoice = "2" Then
+        GetDisplayMode = True
+    ElseIf userChoice = "1" Then
+        GetDisplayMode = False
+    Else
+        GetDisplayMode = -1
+    End If
+End Function
+
+' Génère les prévisualisations pour les deux modes
+Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
+                           ByRef previewNormal As String, ByRef previewTransposed As String)
+    Dim i As Long, j As Long, idx As Long
+    Dim colWidths() As Integer, rowWidths() As Integer
+    Dim v As Variant
+    Dim nbChamps As Long: nbChamps = lo.ListColumns.Count
+    
+    ' --- Aligned NORMAL preview generation ---
+    ReDim colWidths(1 To WorksheetFunction.Min(4, nbChamps))
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        colWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
+    Next i
+    
+    idx = 1
+    For Each v In loadInfo.SelectedValues
+        If idx > loadInfo.PreviewRows Then Exit For
+        For j = 1 To lo.DataBodyRange.Rows.Count
+            If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                For i = 1 To WorksheetFunction.Min(4, nbChamps)
+                    Dim val As String
+                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
+                    If Len(val) > colWidths(i) Then colWidths(i) = Len(val)
+                Next i
+                Exit For
+            End If
+        Next j
+        idx = idx + 1
+    Next v
+    
+    ' Générer la prévisualisation normale
+    previewNormal = previewNormal & "| "
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        Dim head As String
+        head = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
+        previewNormal = previewNormal & head & Space(colWidths(i) - Len(head)) & " | "
+    Next i
+    previewNormal = previewNormal & vbCrLf
+    
+    idx = 1
+    For Each v In loadInfo.SelectedValues
+        If idx > loadInfo.PreviewRows Then Exit For
+        For j = 1 To lo.DataBodyRange.Rows.Count
+            If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                previewNormal = previewNormal & "| "
+                For i = 1 To WorksheetFunction.Min(4, nbChamps)
+                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
+                    previewNormal = previewNormal & val & Space(colWidths(i) - Len(val)) & " | "
+                Next i
+                previewNormal = previewNormal & vbCrLf
+                Exit For
+            End If
+        Next j
+        idx = idx + 1
+    Next v
+    
+    ' --- Aligned TRANSPOSED preview generation ---
+    ReDim rowWidths(1 To WorksheetFunction.Min(4, nbChamps))
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        rowWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
+        idx = 1
+        For Each v In loadInfo.SelectedValues
+            If idx > loadInfo.PreviewRows Then Exit For
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
+                    If Len(val) > rowWidths(i) Then rowWidths(i) = Len(val)
+                    Exit For
+                End If
+            Next j
+            idx = idx + 1
+        Next v
+    Next i
+    
+    previewTransposed = previewTransposed & "(headers in row, sheets in columns)" & vbCrLf
+    For i = 1 To WorksheetFunction.Min(4, nbChamps)
+        Dim headT As String
+        headT = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
+        previewTransposed = previewTransposed & headT & Space(rowWidths(i) - Len(headT)) & ": "
+        idx = 1
+        For Each v In loadInfo.SelectedValues
+            If idx > loadInfo.PreviewRows Then Exit For
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    Dim valT As String
+                    valT = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
+                    previewTransposed = previewTransposed & valT & Space(rowWidths(i) - Len(valT)) & ", "
+                    Exit For
+                End If
+            Next j
+            idx = idx + 1
+        Next v
+        previewTransposed = previewTransposed & vbCrLf
+    Next i
+End Sub
+
+' Gère la sélection de la destination
+Private Function GetDestination(loadInfo As DataLoadInfo) As Range
+    Dim lo As ListObject
+    Dim nbRows As Long, nbCols As Long
+    Dim okPlage As Boolean
+    Dim i As Long, j As Long
+    
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+    
+    ' Calculer la taille nécessaire
+    If loadInfo.ModeTransposed Then
+        nbRows = lo.ListColumns.Count
+        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+    Else
+        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbCols = lo.ListColumns.Count
+    End If
+    
+    ' Informer l'utilisateur
+    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation
+    
+    ' Demander la cellule de destination et vérifier la place
+    Do
+        Set GetDestination = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & _
+            nbRows & " x " & nbCols & ")", "Destination", Type:=8)
+            
+        If GetDestination Is Nothing Then
+            MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
+            Set GetDestination = Nothing
+            Exit Function
+        End If
+        
+        okPlage = True
+        For i = 0 To nbRows - 1
+            For j = 0 To nbCols - 1
+                If Not IsEmpty(GetDestination.Offset(i, j)) Then
+                    okPlage = False
+                    Exit For
+                End If
+            Next j
+            If Not okPlage Then Exit For
+        Next i
+        
+        If Not okPlage Then
+            MsgBox "La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.", vbExclamation
+        End If
+    Loop Until okPlage
+End Function
+
+' Colle les données selon le mode choisi
+Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
+    Dim lo As ListObject
+    Dim tblRange As Range
+    Dim i As Long, j As Long
+    Dim v As Variant
+    Dim currentCol As Long, currentRow As Long
+    
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+    
+    If loadInfo.ModeTransposed Then
+        ' Coller en transposé
+        For i = 1 To lo.ListColumns.Count
+            loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, i).Value
+            loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        Next i
+        
+        currentCol = 1
+        For Each v In loadInfo.SelectedValues
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    For i = 1 To lo.ListColumns.Count
+                        loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
+                        loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    Next i
+                    Exit For
+                End If
+            Next j
+            currentCol = currentCol + 1
+        Next v
+        
+        Set tblRange = loadInfo.FinalDestination.Resize(lo.ListColumns.Count, loadInfo.SelectedValues.Count + 1)
+    Else
+        ' Coller en normal
+        For i = 1 To lo.ListColumns.Count
+            loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, i).Value
+            loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        Next i
+        
+        currentRow = 1
+        For Each v In loadInfo.SelectedValues
+            For j = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    For i = 1 To lo.ListColumns.Count
+                        loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
+                        loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    Next i
+                    Exit For
+                End If
+            Next j
+            currentRow = currentRow + 1
+        Next v
+        
+        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, lo.ListColumns.Count)
+    End If
+    
+    ' Mettre en forme le tableau final
+    Dim tbl As ListObject
+    Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    tbl.TableStyle = "TableStyleMedium9"
+    
+    ' Verrouiller les cellules du tableau
+    tblRange.Locked = True
+    
+    PasteData = True
+End Function 
