@@ -2,12 +2,34 @@
 ' Gère toutes les catégories et leurs configurations
 Option Explicit
 
+' Liste des requêtes PowerQuery générées :
+' Technologies :
+' - PQ_Compression_Data
+' - PQ_CO2_general_parameters_Data
+' - PQ_H2_general_parameters_Data
+' - PQ_CO2_Capture_Data
+' - PQ_H2_waters_electrolysis_Data
+' - PQ_MeOH_CO2_to_Methanol_Synthesis_Data
+' - PQ_MeOH_Biomass_Gasification_Synthesis_Data
+' - PQ_SAF_MtJ_Synthesis_Data
+' - PQ_SAF_BtJ_e_BtJ_Synthesis_Data
+'
+' Utilities :
+' - PQ_Utility_Chiller_Data
+' - PQ_Utility_Cooling_Water_Production_Data
+' - PQ_Utility_Heat_Production_Data
+' - PQ_Utility_Other_utilities_Data
+' - PQ_Utility_Power_losses_Data
+' - PQ_Utility_WasteWater_Treatment_Data
+' - PQ_Utility_Water_Treatment_Data
+
 ' Type pour stocker les informations de catégorie
 Private Type CategoryInfo
     CategoryName As String        ' Technologies ou Utilities
     FilterLevel As String         ' Niveau de filtrage (Molecule Type, Brand, Type, etc.)
     DisplayName As String         ' Nom d'affichage pour l'utilisateur
     URL As String                 ' URL complète
+    PowerQueryName As String      ' Nom de la requête PowerQuery
 End Type
 
 ' Collections privées pour stocker les catégories
@@ -51,6 +73,7 @@ Private Sub AddTechnology(name As String, filterLevel As String, path As String)
     cat.FilterLevel = filterLevel
     cat.DisplayName = name
     cat.URL = ENV.RAGIC_BASE_URL & path & ENV.RAGIC_API_PARAMS
+    cat.PowerQueryName = "PQ_" & Replace(name, " ", "_") & "_Data"
     m_technologies.Add cat, name
 End Sub
 
@@ -60,6 +83,7 @@ Private Sub AddUtility(name As String, path As String)
     cat.FilterLevel = "Pas de filtrage"
     cat.DisplayName = name
     cat.URL = ENV.RAGIC_BASE_URL & path & ENV.RAGIC_API_PARAMS
+    cat.PowerQueryName = "PQ_Utility_" & Replace(name, " ", "_") & "_Data"
     m_utilities.Add cat, name
 End Sub
 
