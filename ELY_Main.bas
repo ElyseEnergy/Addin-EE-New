@@ -250,23 +250,18 @@
         Set tblRange = finalDestination.Resize(nbRows, nbCols)
     End If
 
-    ' 11. Mettre en forme le tableau final
-    Dim ws As Worksheet
-    Set ws = finalDestination.Worksheet
-    Dim tbl As ListObject
-    On Error Resume Next
-    Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
-    On Error GoTo 0
-    If Not tbl Is Nothing Then
-        tbl.TableStyle = "TableStyleMedium9" ' ou un autre style de ton choix
-    End If
-
     ' 12. Protection modifiée de la feuille
     ' Déprotéger la feuille si besoin
+        Set ws = finalDestination.Worksheet
     If ws.ProtectContents Then ws.Unprotect Password:="elyse"
 
     ' Déverrouiller toutes les cellules d'abord
     ws.Cells.Locked = False
+    
+    ' 11. Mettre en forme le tableau final
+
+    Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    tbl.TableStyle = "TableStyleMedium9" ' ou un autre style de ton choix
     
     ' Verrouiller uniquement les cellules du tableau
     tblRange.Locked = True
@@ -287,5 +282,7 @@
     MsgBox "Collage terminé ! Les données sont protégées mais vous pouvez modifier la mise en forme.", vbInformation
 
 End Sub
+
+
 
 
