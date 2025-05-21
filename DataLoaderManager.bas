@@ -57,11 +57,13 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     End If
     
     ' 4. Gérer le mode d'affichage
-    loadInfo.ModeTransposed = GetDisplayMode(loadInfo)
-    If loadInfo.ModeTransposed = -1 Then ' Code d'erreur
+    Dim displayModeResult As Variant
+    displayModeResult = GetDisplayMode(loadInfo)
+    If displayModeResult = -999 Then ' Code d'erreur spécifique
         ProcessDataLoad = False
         Exit Function
     End If
+    loadInfo.ModeTransposed = displayModeResult
     
     ' 5. Gérer la destination
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
@@ -215,7 +217,8 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     
     ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
-      ' Demander le mode à l'utilisateur
+    
+    ' Demander le mode à l'utilisateur
     Dim modePrompt As String
     modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
                  previewNormal & vbCrLf & previewTransposed & vbCrLf & _
@@ -225,7 +228,7 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     ' Si l'utilisateur a cliqué sur Annuler
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         MsgBox "Opération annulée", vbInformation
-        GetDisplayMode = -1
+        GetDisplayMode = -999 ' Code d'erreur spécifique
         Exit Function
     End If
     
@@ -236,7 +239,7 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
         GetDisplayMode = False
     Else
         MsgBox "Veuillez entrer 1 ou 2", vbExclamation
-        GetDisplayMode = -1
+        GetDisplayMode = -999 ' Code d'erreur spécifique
     End If
 End Function
 
@@ -398,17 +401,27 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Set ws = loadInfo.FinalDestination.Worksheet
     ws.Unprotect
     
+    Debug.Print "=== DÉBUT PASTEDATA ===" & vbCrLf & _
+                "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
+                "Catégorie: " & loadInfo.category.DisplayName & vbCrLf & _
+                "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
+                "Nombre de valeurs sélectionnées: " & loadInfo.selectedValues.Count
+    
     If loadInfo.ModeTransposed Then
+        Debug.Print "--- Début collage transposé ---"
         ' Coller en transposé
         For i = 1 To lo.ListColumns.Count
+            Debug.Print "Colonne " & i & ": " & lo.HeaderRowRange.Cells(1, i).Value
             loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, i).Value
             loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
         Next i
         
         currentCol = 1
         For Each v In loadInfo.selectedValues
+            Debug.Print "Traitement colonne " & currentCol & ", valeur=" & v
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    Debug.Print "  Trouvé à la ligne " & j
                     For i = 1 To lo.ListColumns.Count
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
@@ -420,17 +433,22 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next v
         
         Set tblRange = loadInfo.FinalDestination.Resize(lo.ListColumns.Count, loadInfo.selectedValues.Count + 1)
+        Debug.Print "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     Else
+        Debug.Print "--- Début collage normal ---"
         ' Coller en normal
         For i = 1 To lo.ListColumns.Count
+            Debug.Print "Colonne " & i & ": " & lo.HeaderRowRange.Cells(1, i).Value
             loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, i).Value
             loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
         Next i
         
         currentRow = 1
         For Each v In loadInfo.selectedValues
+            Debug.Print "Traitement ligne " & currentRow & ", valeur=" & v
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
+                    Debug.Print "  Trouvé à la ligne " & j
                     For i = 1 To lo.ListColumns.Count
                         loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
                         loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
@@ -442,15 +460,23 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next v
         
         Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, lo.ListColumns.Count)
+        Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     End If
     
     ' Vérification de la validité de la plage
+    Debug.Print "=== VÉRIFICATIONS ==="
+    Debug.Print "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count
+    Debug.Print "Cellules fusionnées: " & tblRange.MergeCells
+    Debug.Print "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count
+    
     If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
+        Debug.Print "ERREUR: Plage trop petite"
         MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
         PasteData = False
         Exit Function
     End If
     If tblRange.MergeCells Then
+        Debug.Print "ERREUR: Cellules fusionnées détectées"
         MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
         PasteData = False
         Exit Function
@@ -459,6 +485,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Dim tbl As ListObject
         For Each tbl In tblRange.Worksheet.ListObjects
             If Not Intersect(tblRange, tbl.Range) Is Nothing Then
+                Debug.Print "ERREUR: Intersection avec tableau existant - " & tbl.Name
                 MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
                 PasteData = False
                 Exit Function
@@ -466,13 +493,25 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next tbl
     End If
     
+    Debug.Print "=== CRÉATION DU TABLEAU ==="
     ' Mettre en forme le tableau final
+    On Error Resume Next
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    If Err.Number <> 0 Then
+        Debug.Print "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")"
+        On Error GoTo 0
+        PasteData = False
+        Exit Function
+    End If
+    On Error GoTo 0
+    
     tbl.name = GetUniqueTableName(loadInfo.category.displayName)
     tbl.TableStyle = "TableStyleMedium9"
+    Debug.Print "Tableau créé avec succès: " & tbl.Name
     
     ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
     ProtectSheetWithTable tblRange.Worksheet
+    Debug.Print "=== FIN PASTEDATA ==="
 
     PasteData = True
 End Function
