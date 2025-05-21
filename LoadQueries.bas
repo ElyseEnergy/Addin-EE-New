@@ -89,7 +89,9 @@ Function ChooseUniqueValueFromTable(ws As Worksheet, tableName As String, colNam
     listPrompt = prompt & vbCrLf
     For i = 1 To values.Count
         listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
-    Next i    userChoice = InputBox(listPrompt, "Sélection", "1")
+    Next i
+    
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     
     ' Gestion du bouton Annuler ou entrée vide
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
@@ -144,7 +146,8 @@ Function ChooseValueFromTableWithDisplay(ws As Worksheet, tableName As String, v
     For i = 1 To displays.Count
         listPrompt = listPrompt & i & ". " & displays(i) & vbCrLf
     Next i
-      userChoice = InputBox(listPrompt, "Sélection", "1")
+    
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     
     ' Gestion du bouton Annuler ou entrée vide
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
@@ -190,7 +193,9 @@ Function ChooseMultipleValuesFromTable(ws As Worksheet, tableName As String, col
     listPrompt = prompt & vbCrLf
     For i = 1 To values.Count
         listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
-    Next i    userChoice = InputBox(listPrompt, "Sélection", "1")
+    Next i
+    
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     
     ' Gestion du bouton Annuler ou entrée vide
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
@@ -232,6 +237,7 @@ Function ChooseMultipleValuesFromList(idList As Collection, displayList As Colle
     For i = 1 To displayList.Count
         listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
     Next i
+    
     userChoice = InputBox(listPrompt, "Sélection", "1")
     If userChoice = "" Then Exit Function
     selectedIndexes = Split(userChoice, ",")
@@ -271,7 +277,9 @@ End Function
         listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
         For i = 1 To values.Count
             listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
-        Next i        userChoice = InputBox(listPrompt, "Sélection", "1")
+        Next i
+    
+        userChoice = InputBox(listPrompt, "Sélection", "1")
         
         ' Gestion du bouton Annuler ou entrée vide
         If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
@@ -324,6 +332,7 @@ End Function
         For i = 1 To displayList.Count
             listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
         Next i
+    
         userChoice = InputBox(listPrompt, "Sélection", "1")
         If userChoice = "" Then Exit Function
         If Trim(userChoice) = "*" Then
@@ -342,5 +351,58 @@ End Function
         End If
         Set ChooseMultipleValuesFromListWithAll = selectedValues
     End Function
+
+Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
+        Dim i As Long
+        Dim userChoice As String
+        Dim listPrompt As String
+        
+        ' Construire la liste pour l'InputBox
+        listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
+        For i = 1 To UBound(values)
+            listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
+        Next i
     
-    
+        userChoice = InputBox(listPrompt, "Sélection", "1")
+        
+        ' Gestion du bouton Annuler ou entrée vide
+        If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
+            Exit Function
+        End If
+        
+        Dim selectedValues As New Collection
+        userChoice = Trim(userChoice)
+        
+        ' Cas spécial : sélection de toutes les valeurs avec *
+        If userChoice = "*" Then
+            For i = 1 To UBound(values)
+                selectedValues.Add values(i)
+            Next i
+        Else
+            ' Sélection de valeurs spécifiques
+            Dim selectedIndexes As Variant
+            selectedIndexes = Split(userChoice, ",")
+            Dim hasValidSelection As Boolean
+            hasValidSelection = False
+            
+            For i = LBound(selectedIndexes) To UBound(selectedIndexes)
+                Dim idx As Long
+                idx = Val(Trim(selectedIndexes(i)))
+                If idx >= 1 And idx <= UBound(values) Then
+                    selectedValues.Add values(idx)
+                    hasValidSelection = True
+                End If
+            Next i
+            
+            ' Si aucune sélection valide n'a été trouvée
+            If Not hasValidSelection Then
+                MsgBox "Veuillez entrer des numéros valides entre 1 et " & UBound(values) & vbCrLf & _
+                       "Ou * pour sélectionner toutes les valeurs" & vbCrLf & _
+                       "Exemple: 1,2,3", vbExclamation
+                Exit Function
+            End If
+        End If
+        
+        Set ChooseMultipleValuesFromArrayWithAll = selectedValues
+    End Function
+
