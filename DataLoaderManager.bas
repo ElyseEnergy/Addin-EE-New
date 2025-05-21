@@ -224,9 +224,9 @@ End Function
 ' Gère le mode d'affichage (normal/transposé)
 Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim lo As ListObject
-    Dim nbFiches As Long, nbChamps As Long
+    Dim nbFiches As Long, nbChamps As Long    
     Dim previewNormal As String, previewTransposed As String
-    Dim userChoice As String
+    Dim userChoice As Double
     Dim i As Long, j As Long, idx As Long
     Dim colWidths() As Integer, rowWidths() As Integer
     Dim v As Variant
@@ -238,30 +238,30 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     ' Préparer les exemples pour l'inputbox de mode
     previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
     previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
-    
-    ' Générer les prévisualisations
+      ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
-      ' Demander le mode à l'utilisateur
+    
+    ' Afficher d'abord les prévisualisations dans une MsgBox
+    MsgBox "Prévisualisations des modes disponibles :" & vbCrLf & vbCrLf & _
+           previewNormal & vbCrLf & previewTransposed, _
+           vbInformation, "Aperçu des modes"
+           
+    ' Puis demander le choix avec une InputBox simple
     Dim modePrompt As String
-    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
-                 previewNormal & vbCrLf & previewTransposed & vbCrLf & _
+    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & _
                  "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
-    
-    On Error Resume Next
     userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
-    On Error GoTo 0
-    
-    ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
-    If userChoice = False Then
+      ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
+    If userChoice = 0 Then
         MsgBox "Opération annulée", vbInformation
         GetDisplayMode = -999 ' Code d'erreur spécifique
         Exit Function
     End If
     
     ' Vérifier la validité de la réponse
-    If userChoice = "2" Then
+    If userChoice = 2 Then
         GetDisplayMode = True
-    ElseIf userChoice = "1" Then
+    ElseIf userChoice = 1 Then
         GetDisplayMode = False
     Else
         MsgBox "Veuillez entrer 1 ou 2", vbExclamation
@@ -383,25 +383,54 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         nbCols = lo.ListColumns.Count
     End If
       ' Informer l'utilisateur
-    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation
-      ' Demander la cellule de destination et vérifier la place
+    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation      ' Demander la cellule de destination et vérifier la place
     Do
-        Dim result As Variant
-        On Error Resume Next
-        result = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & _
-            nbRows & " x " & nbCols & ")", "Destination", Type:=8)
-        Dim errorOccurred As Boolean
-        errorOccurred = (Err.Number <> 0)
-        On Error GoTo 0
+        Dim selectedRange As Range
         
-        ' Si l'utilisateur a cliqué sur Annuler ou une erreur s'est produite
-        If errorOccurred Or TypeName(result) = "Boolean" Then
-            MsgBox "Opération annulée", vbInformation
+        ' Activer Excel pour la sélection
+        Application.Interactive = True
+        Application.ScreenUpdating = True
+        
+        ' Demander à l'utilisateur de sélectionner une cellule
+        On Error GoTo ErrorHandler
+        Set selectedRange = Application.InputBox( _
+            Prompt:="Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", _
+            Title:="Destination", _
+            Type:=8)
+            
+        ' Vérifier si une plage valide a été sélectionnée
+        If selectedRange Is Nothing Then
+            MsgBox "Aucune cellule sélectionnée. Opération annulée.", vbInformation
             Set GetDestination = Nothing
             Exit Function
         End If
         
-        Set GetDestination = result
+        ' S'assurer que c'est une seule cellule
+        If selectedRange.Cells.Count > 1 Then
+            MsgBox "Veuillez sélectionner une seule cellule.", vbExclamation
+            GoTo ContinueLoop
+        End If
+        
+        Set GetDestination = selectedRange
+        GoTo CheckSpace
+        
+ErrorHandler:
+        If Err.Number = 424 Then  ' Erreur "L'objet est requis"
+            MsgBox "Opération annulée", vbInformation
+            Set GetDestination = Nothing
+            Exit Function
+        ElseIf Err.Number <> 0 Then
+            MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
+            Set GetDestination = Nothing
+            Exit Function
+        End If
+        Resume Next
+        
+ContinueLoop:
+        Err.Clear
+        Resume Next
+        
+CheckSpace:
         
         okPlage = True
         For i = 0 To nbRows - 1

@@ -10,15 +10,15 @@ Public Sub InitCategories()
     CategoriesCount = 0
     ReDim Categories(1 To 1)
     ' Technologies
-    AddCategory "Compression", "Type", "Compression", "fiches-techniques/16/3.csv", "Technologies"
+    AddCategory "Compression", "Pas de filtrage", "Compression", "fiches-techniques/16/3.csv", "Technologies"
     AddCategory "CO2 general parameters", "Pas de filtrage", "CO2 general parameters", "fiches-techniques/25.csv", "Technologies"
     AddCategory "H2 general parameters", "Pas de filtrage", "H2 general parameters", "fiches-techniques/24.csv", "Technologies"
-    AddCategory "CO2 Capture", "Pas de filtrage", "CO2 Capture", "fiches-techniques/18.csv", "Technologies"
+    AddCategory "CO2 Capture", "Brand", "CO2 Capture", "fiches-techniques/18.csv", "Technologies"
     AddCategory "H2 waters electrolysis", "Brand", "H2 waters electrolysis", "fiches-techniques/26.csv", "Technologies"
     AddCategory "MeOH - CO2-to-Methanol Synthesis", "Brand", "MeOH - CO2-to-Methanol Synthesis", "fiches-techniques/19.csv", "Technologies"
-    AddCategory "MeOH - Biomass Gasification Synthesis", "Brand", "MeOH - Biomass Gasification Synthesis", "fiches-techniques/20.csv", "Technologies"
-    AddCategory "SAF - MtJ Synthesis", "Type", "SAF - MtJ Synthesis", "fiches-techniques/21.csv", "Technologies"
-    AddCategory "SAF - BtJ/e-BtJ Synthesis", "Type/Project", "SAF - BtJ/e-BtJ Synthesis", "fiches-techniques/22.csv", "Technologies"
+    AddCategory "MeOH - Biomass Gasification Synthesis", "Pas de filtrage", "MeOH - Biomass Gasification Synthesis", "fiches-techniques/20.csv", "Technologies"
+    AddCategory "SAF - MtJ Synthesis", "Pas de filtrage", "SAF - MtJ Synthesis", "fiches-techniques/21.csv", "Technologies"
+    AddCategory "SAF - BtJ/e-BtJ Synthesis", "Pas de filtrage", "SAF - BtJ/e-BtJ Synthesis", "fiches-techniques/22.csv", "Technologies"
     ' Utilities
     AddCategory "Chiller", "Pas de filtrage", "Chiller", "utilities/5.csv", "Utilities"
     AddCategory "Cooling Water Production", "Pas de filtrage", "Cooling Water Production", "utilities/4.csv", "Utilities"
