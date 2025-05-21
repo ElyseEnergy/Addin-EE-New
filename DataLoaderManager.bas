@@ -69,7 +69,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         ProcessDataLoad = False
         Exit Function
     End If
-      ' 6. Coller les données
+    
+    ' 6. Coller les données
     If Not PasteData(loadInfo) Then
         ProcessDataLoad = False
         Exit Function
@@ -441,10 +442,33 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next v
         
         Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, lo.ListColumns.Count)
-    End If    ' Mettre en forme le tableau final
-    Dim tbl As ListObject
+    End If
+    
+    ' Vérification de la validité de la plage
+    If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
+        MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
+        PasteData = False
+        Exit Function
+    End If
+    If tblRange.MergeCells Then
+        MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
+        PasteData = False
+        Exit Function
+    End If
+    If tblRange.Worksheet.ListObjects.Count > 0 Then
+        Dim tbl As ListObject
+        For Each tbl In tblRange.Worksheet.ListObjects
+            If Not Intersect(tblRange, tbl.Range) Is Nothing Then
+                MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
+                PasteData = False
+                Exit Function
+            End If
+        Next tbl
+    End If
+    
+    ' Mettre en forme le tableau final
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
-    tbl.name = GetUniqueTableName(loadInfo.FinalDestination.Worksheet, loadInfo.category.displayName)
+    tbl.name = GetUniqueTableName(loadInfo.category.displayName)
     tbl.TableStyle = "TableStyleMedium9"
     
     ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
@@ -500,30 +524,32 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
 End Sub
 
 ' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
-Private Function GetUniqueTableName(ws As Worksheet, categoryName As String) As String
+Private Function GetUniqueTableName(categoryName As String) As String
     Dim baseName As String
     baseName = "EE_" & categoryName
-    
-    ' Trouver l'indice le plus élevé existant
     Dim maxIndex As Long
     maxIndex = 0
+    Dim ws As Worksheet
     Dim tbl As ListObject
     Dim currentIndex As Long
     Dim tableName As String
-    
-    For Each tbl In ws.ListObjects
-        If Left(tbl.name, Len(baseName)) = baseName Then
-            tableName = Right(tbl.name, Len(tbl.name) - Len(baseName))
-            If IsNumeric(tableName) Then
-                currentIndex = CLng(tableName)
-                If currentIndex > maxIndex Then
-                    maxIndex = currentIndex
+
+    For Each ws In ThisWorkbook.Worksheets
+        For Each tbl In ws.ListObjects
+            If tbl.Name = baseName Then
+                If maxIndex < 1 Then maxIndex = 1
+            ElseIf Left(tbl.Name, Len(baseName) + 1) = baseName & "_" Then
+                tableName = Mid(tbl.Name, Len(baseName) + 2)
+                If IsNumeric(tableName) Then
+                    currentIndex = CLng(tableName)
+                    If currentIndex > maxIndex Then
+                        maxIndex = currentIndex
+                    End If
                 End If
             End If
-        End If
-    Next tbl
-    
-    ' Incrémenter l'indice et retourner le nouveau nom
+        Next tbl
+    Next ws
+
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
 
