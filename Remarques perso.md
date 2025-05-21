@@ -14,3 +14,6 @@ dans PQ_data, faut il unloader à chaque fois les requêtes non utilisées ?
 2025.05.21_11.06
 
 Il faut que tous les formulaires aient un champ ID
+=> remettre sur le CO2
+
+encore des tests à effectuer sur le fait que quand je mets 1 pour CO2 parameters (une seule fiche disponible) il me jette une erreur

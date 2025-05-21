@@ -10,7 +10,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
     ' 1. Vérifier/Créer la requête PQ
-    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
+    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.category) Then
         MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
         ProcessDataLoad = False
         Exit Function
@@ -19,19 +19,19 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' 2. Charger les données
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
-    LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+    LoadQueries.LoadQuery loadInfo.category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
     
     ' 3. Gérer la sélection des valeurs
-    Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
-    If loadInfo.SelectedValues Is Nothing Then
+    Set loadInfo.selectedValues = GetSelectedValues(loadInfo.category)
+    If loadInfo.selectedValues Is Nothing Then
         ProcessDataLoad = False
         Exit Function
     End If
     
     ' Si un filtre est appliqué, proposer la sélection des fiches correspondantes
-    If loadInfo.Category.FilterLevel <> "Pas de filtrage" Then
+    If loadInfo.category.filterLevel <> "Pas de filtrage" Then
         Dim lo As ListObject
-        Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+        Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
         Dim idList As New Collection
         Dim displayList As New Collection
         Dim i As Long, v As Variant
@@ -39,8 +39,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         displayColIndex = 2 ' Afficher la colonne 2 (nom)
         ' Parcourir les lignes et ne garder que celles correspondant au(x) filtre(s) choisi(s)
         For i = 1 To lo.DataBodyRange.Rows.Count
-            For Each v In loadInfo.SelectedValues
-                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.Category.FilterLevel).Index).Value = v Then
+            For Each v In loadInfo.selectedValues
+                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.category.filterLevel).Index).Value = v Then
                     idList.Add lo.DataBodyRange.Rows(i).Columns(1).Value
                     displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
                 End If
@@ -48,12 +48,12 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         Next i
         ' Proposer la sélection des fiches parmi displayList
         Dim finalSelection As Collection
-        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
+        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.category.filterLevel & " sélectionnée :")
         If finalSelection Is Nothing Or finalSelection.Count = 0 Then
             ProcessDataLoad = False
             Exit Function
         End If
-        Set loadInfo.SelectedValues = finalSelection
+        Set loadInfo.selectedValues = finalSelection
     End If
     
     ' 4. Gérer le mode d'affichage
@@ -107,8 +107,9 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Exit Function
         End If
     End If
-      ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
-    If category.FilterLevel = "Pas de filtrage" Then
+
+    ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
+    If category.filterLevel = "Pas de filtrage" Then
         ' Créer un tableau avec toutes les fiches disponibles
         Dim displayArray() As String
         ReDim displayArray(1 To lo.DataBodyRange.Rows.Count)
@@ -120,7 +121,8 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         ' Présenter les valeurs à l'utilisateur
         Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(displayArray, _
             "Choisissez une ou plusieurs fiches à charger (ex: 1,3,5 ou *) :")
-          ' Gérer la sélection initiale
+        
+        ' Gérer la sélection initiale
         Dim selectedIndices As Collection
         Set selectedIndices = GetSelectedValues
         
@@ -130,15 +132,16 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Exit Function
         End If
         
-        ' Convertir les indices en IDs
+        ' Convertir les valeurs en IDs
         Set GetSelectedValues = New Collection
         For Each v In selectedIndices
-            ' v est une valeur de 1 à N, on peut donc l'utiliser directement comme index
-            If IsNumeric(v) Then
-                Dim rowIndex As Long
-                rowIndex = CLng(v)
-                GetSelectedValues.Add lo.DataBodyRange.Rows(rowIndex).Columns(1).Value
-            End If
+            ' v est la valeur affichée, on doit retrouver la ligne correspondante
+            For i = 1 To lo.DataBodyRange.Rows.Count
+                If lo.DataBodyRange.Rows(i).Columns(2).Value = v Then
+                    GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
+                    Exit For
+                End If
+            Next i
         Next v
         
         ' Vérifier si des IDs ont été ajoutés
@@ -147,47 +150,47 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Set GetSelectedValues = Nothing
             Exit Function
         End If
-    End If
-    
-    ' Créer un dictionnaire pour stocker les valeurs uniques
-    Set dict = CreateObject("Scripting.Dictionary")
-    
-    ' Extraire les valeurs uniques
-    For Each cell In lo.ListColumns(category.FilterLevel).DataBodyRange
-        If Not dict.Exists(cell.Value) Then
-            dict.Add cell.Value, 1
-        End If
-    Next cell
-    
-    ' Convertir le dictionnaire en tableau et trier
-    ReDim arrValues(1 To dict.Count)
-    i = 1
-    For Each v In dict.Keys
-        arrValues(i) = v
-        i = i + 1
-    Next v
-    
-    ' Trier le tableau
-    For i = 1 To UBound(arrValues) - 1
-        For j = i + 1 To UBound(arrValues)
-            If arrValues(i) > arrValues(j) Then
-                Dim temp As String
-                temp = arrValues(i)
-                arrValues(i) = arrValues(j)
-                arrValues(j) = temp
+    Else
+        ' Créer un dictionnaire pour stocker les valeurs uniques
+        Set dict = CreateObject("Scripting.Dictionary")
+        
+        ' Extraire les valeurs uniques
+        For Each cell In lo.ListColumns(category.filterLevel).DataBodyRange
+            If Not dict.Exists(cell.Value) Then
+                dict.Add cell.Value, 1
             End If
-        Next j
-    Next i
-    
-    ' Présenter les valeurs à l'utilisateur
-    Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-        "Choisissez une ou plusieurs " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
-    
-    ' Vérifier la sélection
-    If (TypeName(GetSelectedValues) <> "Collection") Or (GetSelectedValues.Count = 0) Then
-        MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
-        Set GetSelectedValues = Nothing
-        Exit Function
+        Next cell
+        
+        ' Convertir le dictionnaire en tableau et trier
+        ReDim arrValues(1 To dict.Count)
+        i = 1
+        For Each v In dict.Keys
+            arrValues(i) = v
+            i = i + 1
+        Next v
+        
+        ' Trier le tableau
+        For i = 1 To UBound(arrValues) - 1
+            For j = i + 1 To UBound(arrValues)
+                If arrValues(i) > arrValues(j) Then
+                    Dim temp As String
+                    temp = arrValues(i)
+                    arrValues(i) = arrValues(j)
+                    arrValues(j) = temp
+                End If
+            Next j
+        Next i
+        
+        ' Présenter les valeurs à l'utilisateur
+        Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
+            "Choisissez une ou plusieurs " & category.filterLevel & " (ex: 1,3,5 ou *) :")
+        
+        ' Vérifier la sélection
+        If (TypeName(GetSelectedValues) <> "Collection") Or (GetSelectedValues.Count = 0) Then
+            MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
     End If
 End Function
 
@@ -201,8 +204,8 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim colWidths() As Integer, rowWidths() As Integer
     Dim v As Variant
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
-    nbFiches = loadInfo.SelectedValues.Count
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
+    nbFiches = loadInfo.selectedValues.Count
     nbChamps = lo.ListColumns.Count
     
     ' Préparer les exemples pour l'inputbox de mode
@@ -251,7 +254,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     Next i
     
     idx = 1
-    For Each v In loadInfo.SelectedValues
+    For Each v In loadInfo.selectedValues
         If idx > loadInfo.PreviewRows Then Exit For
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -276,7 +279,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     previewNormal = previewNormal & vbCrLf
     
     idx = 1
-    For Each v In loadInfo.SelectedValues
+    For Each v In loadInfo.selectedValues
         If idx > loadInfo.PreviewRows Then Exit For
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -297,7 +300,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     For i = 1 To WorksheetFunction.Min(4, nbChamps)
         rowWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
         idx = 1
-        For Each v In loadInfo.SelectedValues
+        For Each v In loadInfo.selectedValues
             If idx > loadInfo.PreviewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -316,7 +319,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
         headT = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
         previewTransposed = previewTransposed & headT & Space(rowWidths(i) - Len(headT)) & ": "
         idx = 1
-        For Each v In loadInfo.SelectedValues
+        For Each v In loadInfo.selectedValues
             If idx > loadInfo.PreviewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -339,14 +342,14 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Dim okPlage As Boolean
     Dim i As Long, j As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
     
     ' Calculer la taille nécessaire
     If loadInfo.ModeTransposed Then
         nbRows = lo.ListColumns.Count
-        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbCols = loadInfo.selectedValues.Count + 1 ' +1 pour les en-têtes
     Else
-        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbRows = loadInfo.selectedValues.Count + 1 ' +1 pour les en-têtes
         nbCols = lo.ListColumns.Count
     End If
     
@@ -387,7 +390,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim v As Variant
     Dim currentCol As Long, currentRow As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.Category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
     
     ' Déprotéger la feuille de destination avant tout collage
     Dim ws As Worksheet
@@ -402,7 +405,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next i
         
         currentCol = 1
-        For Each v In loadInfo.SelectedValues
+        For Each v In loadInfo.selectedValues
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
                     For i = 1 To lo.ListColumns.Count
@@ -415,7 +418,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             currentCol = currentCol + 1
         Next v
         
-        Set tblRange = loadInfo.FinalDestination.Resize(lo.ListColumns.Count, loadInfo.SelectedValues.Count + 1)
+        Set tblRange = loadInfo.FinalDestination.Resize(lo.ListColumns.Count, loadInfo.selectedValues.Count + 1)
     Else
         ' Coller en normal
         For i = 1 To lo.ListColumns.Count
@@ -424,7 +427,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next i
         
         currentRow = 1
-        For Each v In loadInfo.SelectedValues
+        For Each v In loadInfo.selectedValues
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
                     For i = 1 To lo.ListColumns.Count
@@ -437,11 +440,11 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             currentRow = currentRow + 1
         Next v
         
-        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, lo.ListColumns.Count)
+        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, lo.ListColumns.Count)
     End If    ' Mettre en forme le tableau final
     Dim tbl As ListObject
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
-    tbl.Name = GetUniqueTableName(loadInfo.FinalDestination.Worksheet, loadInfo.Category.DisplayName)
+    tbl.name = GetUniqueTableName(loadInfo.FinalDestination.Worksheet, loadInfo.category.displayName)
     tbl.TableStyle = "TableStyleMedium9"
     
     ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
@@ -475,12 +478,12 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
     ' Forcer le verrouillage de nos tableaux (préfixe EE_)
     Dim tbl As ListObject
     For Each tbl In ws.ListObjects
-        If Left(tbl.Name, 3) = "EE_" Then
+        If Left(tbl.name, 3) = "EE_" Then
             tbl.Range.Locked = True
         End If
     Next tbl    ' Protéger la feuille (avec le même mot de passe si nécessaire)
     If Len(password) > 0 Then
-        ws.Protect UserInterfaceOnly:=True, Password:=password, AllowFormattingCells:=True, _
+        ws.Protect UserInterfaceOnly:=True, password:=password, AllowFormattingCells:=True, _
                    AllowFormattingColumns:=True, AllowFormattingRows:=True, _
                    AllowInsertingColumns:=True, AllowInsertingRows:=True, _
                    AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
@@ -509,8 +512,8 @@ Private Function GetUniqueTableName(ws As Worksheet, categoryName As String) As 
     Dim tableName As String
     
     For Each tbl In ws.ListObjects
-        If Left(tbl.Name, Len(baseName)) = baseName Then
-            tableName = Right(tbl.Name, Len(tbl.Name) - Len(baseName))
+        If Left(tbl.name, Len(baseName)) = baseName Then
+            tableName = Right(tbl.name, Len(tbl.name) - Len(baseName))
             If IsNumeric(tableName) Then
                 currentIndex = CLng(tableName)
                 If currentIndex > maxIndex Then
@@ -523,3 +526,5 @@ Private Function GetUniqueTableName(ws As Worksheet, categoryName As String) As 
     ' Incrémenter l'indice et retourner le nouveau nom
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
+
+

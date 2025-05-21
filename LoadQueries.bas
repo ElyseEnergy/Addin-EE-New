@@ -44,7 +44,9 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
     Next i
     
     userChoice = InputBox(listPrompt, "Sélection", "1")
-    If userChoice = "" Then Exit Function
+    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
+        Exit Function
+    End If
     If Trim(userChoice) = "*" Then
         For i = 1 To idList.Count
             selectedValues.Add idList(i)
@@ -113,4 +115,3 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         
         Set ChooseMultipleValuesFromArrayWithAll = selectedValues
     End Function
-
