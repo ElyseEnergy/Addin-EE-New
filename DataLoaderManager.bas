@@ -45,14 +45,28 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
                     displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
                 End If
             Next v
-        Next i
-        ' Proposer la sélection des fiches parmi displayList
+        Next i        ' Proposer la sélection des fiches parmi displayList
         Dim finalSelection As Collection
+        On Error Resume Next
         Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.category.filterLevel & " sélectionnée :")
-        If finalSelection Is Nothing Or finalSelection.Count = 0 Then
+        Dim errorOccurred As Boolean
+        errorOccurred = (Err.Number <> 0)
+        On Error GoTo 0
+        
+        ' Si l'utilisateur a annulé ou une erreur s'est produite
+        If errorOccurred Or finalSelection Is Nothing Then
+            MsgBox "Opération annulée", vbInformation
             ProcessDataLoad = False
             Exit Function
         End If
+        
+        ' Si aucune fiche n'a été sélectionnée
+        If finalSelection.Count = 0 Then
+            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+            ProcessDataLoad = False
+            Exit Function
+        End If
+        
         Set loadInfo.selectedValues = finalSelection
     End If
     
@@ -217,16 +231,18 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     
     ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
-    
-    ' Demander le mode à l'utilisateur
+      ' Demander le mode à l'utilisateur
     Dim modePrompt As String
     modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
                  previewNormal & vbCrLf & previewTransposed & vbCrLf & _
                  "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
-    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
     
-    ' Si l'utilisateur a cliqué sur Annuler
-    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
+    On Error Resume Next
+    userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
+    On Error GoTo 0
+    
+    ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
+    If userChoice = False Then
         MsgBox "Opération annulée", vbInformation
         GetDisplayMode = -999 ' Code d'erreur spécifique
         Exit Function
@@ -356,18 +372,26 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         nbRows = loadInfo.selectedValues.Count + 1 ' +1 pour les en-têtes
         nbCols = lo.ListColumns.Count
     End If
-    
-    ' Informer l'utilisateur
+      ' Informer l'utilisateur
     MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation
-    
-    ' Demander la cellule de destination et vérifier la place
+      ' Demander la cellule de destination et vérifier la place
     Do
-        Set GetDestination = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & _
+        Dim result As Variant
+        On Error Resume Next
+        result = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & _
             nbRows & " x " & nbCols & ")", "Destination", Type:=8)
-        If GetDestination Is Nothing Then
-            MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
+        Dim errorOccurred As Boolean
+        errorOccurred = (Err.Number <> 0)
+        On Error GoTo 0
+        
+        ' Si l'utilisateur a cliqué sur Annuler ou une erreur s'est produite
+        If errorOccurred Or TypeName(result) = "Boolean" Then
+            MsgBox "Opération annulée", vbInformation
+            Set GetDestination = Nothing
             Exit Function
         End If
+        
+        Set GetDestination = result
         
         okPlage = True
         For i = 0 To nbRows - 1

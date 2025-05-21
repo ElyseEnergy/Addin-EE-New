@@ -10,7 +10,7 @@ Public Sub InitCategories()
     CategoriesCount = 0
     ReDim Categories(1 To 1)
     ' Technologies
-    AddCategory "Compression", "Molecule Type", "Compression", "fiches-techniques/16/3.csv", "Technologies"
+    AddCategory "Compression", "Type", "Compression", "fiches-techniques/16/3.csv", "Technologies"
     AddCategory "CO2 general parameters", "Pas de filtrage", "CO2 general parameters", "fiches-techniques/25.csv", "Technologies"
     AddCategory "H2 general parameters", "Pas de filtrage", "H2 general parameters", "fiches-techniques/24.csv", "Technologies"
     AddCategory "CO2 Capture", "Pas de filtrage", "CO2 Capture", "fiches-techniques/18.csv", "Technologies"
@@ -38,10 +38,10 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
         idx = CategoriesCount + 1
     End If
     ReDim Preserve Categories(1 To idx)
-    Categories(idx).CategoryName = categoryType
-    Categories(idx).FilterLevel = filterLevel
-    Categories(idx).DisplayName = displayName
-    Categories(idx).URL = ENV.RAGIC_BASE_URL & path & ENV.RAGIC_API_PARAMS
+    Categories(idx).categoryName = categoryType
+    Categories(idx).filterLevel = filterLevel
+    Categories(idx).displayName = displayName
+    Categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
     If categoryType = "Utilities" Then
         Categories(idx).PowerQueryName = "PQ_Utility_" & Replace(name, " ", "_") & "_Data"
     Else
@@ -54,7 +54,7 @@ End Sub
 Public Function GetCategoryIndexByName(displayName As String) As Long
     Dim i As Long
     For i = 1 To CategoriesCount
-        If Categories(i).DisplayName = displayName Then
+        If Categories(i).displayName = displayName Then
             GetCategoryIndexByName = i
             Exit Function
         End If
@@ -74,4 +74,4 @@ End Function
 ' Retourne toutes les catégories sous forme de tableau
 Public Function GetAllCategories() As Variant
     GetAllCategories = Categories
-End Function 
+End Function
