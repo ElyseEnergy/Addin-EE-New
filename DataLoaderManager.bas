@@ -184,14 +184,22 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim modePrompt As String
     modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
                  previewNormal & vbCrLf & previewTransposed & vbCrLf & _
-                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
-    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
+                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
     
+    ' Si l'utilisateur a cliqué sur Annuler (chaîne vide retournée)
+    If userChoice = "" Then
+        MsgBox "Opération annulée", vbInformation
+        GetDisplayMode = -1
+        Exit Function
+    End If
+    
+    ' Vérifier la validité de la réponse
     If userChoice = "2" Then
         GetDisplayMode = True
     ElseIf userChoice = "1" Then
         GetDisplayMode = False
     Else
+        MsgBox "Veuillez entrer 1 ou 2", vbExclamation
         GetDisplayMode = -1
     End If
 End Function
@@ -422,11 +430,11 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
     If isProtected Then
         On Error Resume Next
         ws.Unprotect  ' Tenter sans mot de passe d'abord
-        If Err.Number <> 0 Then  ' Si erreur, c'est qu'un mot de passe est requis
-            password = InputBox("Cette feuille est protégée par mot de passe." & vbCrLf & _
+        If Err.Number <> 0 Then  ' Si erreur, c'est qu'un mot de passe est requis            password = InputBox("Cette feuille est protégée par mot de passe." & vbCrLf & _
                               "Veuillez entrer le mot de passe pour permettre la mise à jour des protections.", _
                               "Mot de passe requis")
-            If password = "" Then
+            ' L'utilisateur a cliqué sur Annuler ou n'a rien saisi
+            If StrPtr(password) = 0 Or Len(password) = 0 Then
                 MsgBox "Opération annulée. Les protections n'ont pas été mises à jour.", vbExclamation
                 Exit Sub
             End If

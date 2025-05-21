@@ -48,14 +48,12 @@ End Function
 Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     Dim template As String
     
-    ' Template de base pour charger les données depuis l'API Ragic
-    template = "let" & vbCrLf & _
+    ' Template de base pour charger les données depuis l'API Ragic    template = "let" & vbCrLf & _
                "    Source = Csv.Document(Web.Contents(""" & category.URL & """)," & vbCrLf & _
                "        [Delimiter="","", Encoding=65001, QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
-               "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & vbCrLf & _
-               "    DetectedTypes = Table.TransformColumnTypes(PromotedHeaders, Table.ToRows(Table.GuessColumnTypes(PromotedHeaders)))" & vbCrLf & _
+               "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true])" & vbCrLf & _
                "in" & vbCrLf & _
-               "    DetectedTypes"
+               "    PromotedHeaders"
     
     GeneratePQQueryTemplate = template
 End Function
