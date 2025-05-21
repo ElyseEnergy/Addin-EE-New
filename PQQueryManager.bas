@@ -6,19 +6,33 @@ Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
 
 ' Vérifie si une requête PowerQuery existe et la crée si nécessaire
 Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
-    ' Vérifier si la requête existe déjà
-    If QueryExists(category.PowerQueryName) Then
-        EnsurePQQueryExists = True
-        Exit Function
-    End If
-    
-    ' Créer la requête si elle n'existe pas
     Dim query As String
     query = GeneratePQQueryTemplate(category)
-      ' Ajouter la requête à PowerQuery
-    If Not AddQueryToPowerQuery(category.PowerQueryName, query) Then
-        EnsurePQQueryExists = False
-        Exit Function
+    
+    If QueryExists(category.PowerQueryName) Then
+        ' Si la requête existe, mettre à jour sa formule
+        On Error Resume Next
+        ThisWorkbook.Queries(category.PowerQueryName).Formula = query
+        Dim updateError As Long
+        updateError = Err.Number
+        On Error GoTo 0
+        
+        If updateError <> 0 Then
+            Debug.Print "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description
+            EnsurePQQueryExists = False
+            Exit Function
+        End If
+        
+        ' Rafraîchir la requête
+        ThisWorkbook.Queries(category.PowerQueryName).Refresh
+        EnsurePQQueryExists = True
+    Else
+        ' Créer la requête si elle n'existe pas
+        If Not AddQueryToPowerQuery(category.PowerQueryName, query) Then
+            EnsurePQQueryExists = False
+            Exit Function
+        End If
+        EnsurePQQueryExists = True
     End If
     
     ' Stocker les types de colonnes après la création de la requête
@@ -40,7 +54,14 @@ End Function
 Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
-    AddQueryToPowerQuery = (Err.Number = 0)
+    Dim errNum As Long
+    errNum = Err.Number
+    If errNum <> 0 Then
+        Debug.Print "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description
+        AddQueryToPowerQuery = False
+    Else
+        AddQueryToPowerQuery = True
+    End If
     On Error GoTo 0
 End Function
 
@@ -48,12 +69,13 @@ End Function
 Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     Dim template As String
     
-    ' Template de base pour charger les données depuis l'API Ragic    template = "let" & vbCrLf & _
-               "    Source = Csv.Document(Web.Contents(""" & category.URL & """)," & vbCrLf & _
-               "        [Delimiter="","", Encoding=65001, QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
-               "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true])" & vbCrLf & _
-               "in" & vbCrLf & _
-               "    PromotedHeaders"
+    ' Template de base pour charger les données depuis l'API Ragic
+    template = "let" & vbCrLf & _
+              "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
+              "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
+              "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})" & vbCrLf & _
+              "in" & vbCrLf & _
+              "    TypedTable"
     
     GeneratePQQueryTemplate = template
 End Function

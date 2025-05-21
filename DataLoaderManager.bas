@@ -107,14 +107,46 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Exit Function
         End If
     End If
-    
-    ' Si pas de filtrage, retourner toutes les fiches
+      ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
     If category.FilterLevel = "Pas de filtrage" Then
-        Set GetSelectedValues = New Collection
+        ' Créer un tableau avec toutes les fiches disponibles
+        Dim displayArray() As String
+        ReDim displayArray(1 To lo.DataBodyRange.Rows.Count)
         For i = 1 To lo.DataBodyRange.Rows.Count
-            GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
+            ' Utiliser la colonne 2 (nom) comme affichage
+            displayArray(i) = lo.DataBodyRange.Rows(i).Columns(2).Value
         Next i
-        Exit Function
+        
+        ' Présenter les valeurs à l'utilisateur
+        Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(displayArray, _
+            "Choisissez une ou plusieurs fiches à charger (ex: 1,3,5 ou *) :")
+          ' Gérer la sélection initiale
+        Dim selectedIndices As Collection
+        Set selectedIndices = GetSelectedValues
+        
+        ' Si l'utilisateur a annulé ou n'a rien sélectionné
+        If selectedIndices Is Nothing Then
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
+        
+        ' Convertir les indices en IDs
+        Set GetSelectedValues = New Collection
+        For Each v In selectedIndices
+            ' v est une valeur de 1 à N, on peut donc l'utiliser directement comme index
+            If IsNumeric(v) Then
+                Dim rowIndex As Long
+                rowIndex = CLng(v)
+                GetSelectedValues.Add lo.DataBodyRange.Rows(rowIndex).Columns(1).Value
+            End If
+        Next v
+        
+        ' Vérifier si des IDs ont été ajoutés
+        If GetSelectedValues.Count = 0 Then
+            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
     End If
     
     ' Créer un dictionnaire pour stocker les valeurs uniques
@@ -179,15 +211,15 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     
     ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
-    
-    ' Demander le mode à l'utilisateur
+      ' Demander le mode à l'utilisateur
     Dim modePrompt As String
     modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
                  previewNormal & vbCrLf & previewTransposed & vbCrLf & _
-                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
+                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
+    userChoice = InputBox(modePrompt, "Choix du mode de collage", "1")
     
-    ' Si l'utilisateur a cliqué sur Annuler (chaîne vide retournée)
-    If userChoice = "" Then
+    ' Si l'utilisateur a cliqué sur Annuler
+    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         MsgBox "Opération annulée", vbInformation
         GetDisplayMode = -1
         Exit Function
@@ -325,10 +357,8 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Do
         Set GetDestination = Application.InputBox("Sélectionnez la cellule où charger les fiches (" & _
             nbRows & " x " & nbCols & ")", "Destination", Type:=8)
-            
         If GetDestination Is Nothing Then
             MsgBox "Aucune destination sélectionnée. Opération annulée.", vbExclamation
-            Set GetDestination = Nothing
             Exit Function
         End If
         
@@ -433,8 +463,7 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
         If Err.Number <> 0 Then  ' Si erreur, c'est qu'un mot de passe est requis            password = InputBox("Cette feuille est protégée par mot de passe." & vbCrLf & _
                               "Veuillez entrer le mot de passe pour permettre la mise à jour des protections.", _
                               "Mot de passe requis")
-            ' L'utilisateur a cliqué sur Annuler ou n'a rien saisi
-            If StrPtr(password) = 0 Or Len(password) = 0 Then
+            If StrPtr(password) = 0 Or Len(Trim(password)) = 0 Then
                 MsgBox "Opération annulée. Les protections n'ont pas été mises à jour.", vbExclamation
                 Exit Sub
             End If

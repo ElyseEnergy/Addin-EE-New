@@ -10,3 +10,7 @@ quand il y a des min max comme dans CO2 capture, Specific Electricity Consumptio
 
 
 dans PQ_data, faut il unloader à chaque fois les requêtes non utilisées ?
+
+2025.05.21_11.06
+
+Il faut que tous les formulaires aient un champ ID
