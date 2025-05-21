@@ -197,13 +197,23 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
                 End If
             Next j
         Next i
-        
-        ' Présenter les valeurs à l'utilisateur
+          ' Présenter les valeurs à l'utilisateur
+        On Error Resume Next
         Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
             "Choisissez une ou plusieurs " & category.filterLevel & " (ex: 1,3,5 ou *) :")
+        Dim errorOccurred As Boolean
+        errorOccurred = (Err.Number <> 0)
+        On Error GoTo 0
         
-        ' Vérifier la sélection
-        If (TypeName(GetSelectedValues) <> "Collection") Or (GetSelectedValues.Count = 0) Then
+        ' Si l'utilisateur a annulé ou une erreur s'est produite
+        If errorOccurred Or GetSelectedValues Is Nothing Then
+            MsgBox "Opération annulée", vbInformation
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
+        
+        ' Si aucune valeur n'a été sélectionnée
+        If GetSelectedValues.Count = 0 Then
             MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
             Set GetSelectedValues = Nothing
             Exit Function
