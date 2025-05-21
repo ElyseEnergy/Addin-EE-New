@@ -89,6 +89,16 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     Dim v As Variant
     
     Set lo = wsPQData.ListObjects("Table_" & category.PowerQueryName)
+    ' S'assurer que la table existe, sinon la charger
+    If lo Is Nothing Then
+        LoadQueries.LoadQuery category.PowerQueryName, wsPQData, wsPQData.Cells(1, wsPQData.Cells(1, wsPQData.Columns.Count).End(xlToLeft).Column + 1)
+        Set lo = wsPQData.ListObjects("Table_" & category.PowerQueryName)
+        If lo Is Nothing Then
+            MsgBox "Impossible de charger la table PowerQuery '" & category.PowerQueryName & "'", vbExclamation
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
+    End If
     
     ' Si pas de filtrage, retourner toutes les fiches
     If category.FilterLevel = "Pas de filtrage" Then
