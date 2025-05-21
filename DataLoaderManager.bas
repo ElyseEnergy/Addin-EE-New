@@ -69,12 +69,20 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         ProcessDataLoad = False
         Exit Function
     End If
-    
-    ' 6. Coller les données
+      ' 6. Coller les données
     If Not PasteData(loadInfo) Then
         ProcessDataLoad = False
         Exit Function
     End If
+    
+    ' 7. S'assurer que la destination est visible
+    With loadInfo.FinalDestination
+        .Parent.Activate  ' Activer la feuille de destination
+        .Select          ' Sélectionner la cellule de départ
+        .Parent.Range(.Address).Select  ' Sélectionner le range complet
+        ActiveWindow.ScrollRow = .Row   ' S'assurer que le haut du tableau est visible
+        ActiveWindow.ScrollColumn = .Column  ' S'assurer que la gauche du tableau est visible
+    End With
     
     ProcessDataLoad = True
 End Function
@@ -392,58 +400,89 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next v
         
         Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, lo.ListColumns.Count)
-    End If
-    
-    ' Mettre en forme le tableau final
+    End If    ' Mettre en forme le tableau final
     Dim tbl As ListObject
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    tbl.Name = GetUniqueTableName(loadInfo.FinalDestination.Worksheet, loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
     
-    ' Protéger finement la feuille : seules les valeurs du tableau et les anciennes cellules verrouillées sont protégées
-    ProtectSheetWithTable tblRange
-    
+    ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
+    ProtectSheetWithTable tblRange.Worksheet
+
     PasteData = True
 End Function
 
-' Protège la feuille en ne verrouillant que les cellules du tableau et celles déjà verrouillées
-Private Sub ProtectSheetWithTable(tblRange As Range)
-    Dim ws As Worksheet
-    Set ws = tblRange.Worksheet
-
-    ' Mémoriser les cellules déjà verrouillées
-    Dim lockedCells As Collection
-    Set lockedCells = New Collection
-    Dim cell As Range
-    For Each cell In ws.UsedRange
-        If cell.Locked Then
-            lockedCells.Add cell.Address
+' Protège la feuille en préservant les verrouillages manuels et en forçant le verrouillage de nos tableaux
+Private Sub ProtectSheetWithTable(ws As Worksheet)
+    ' Stocker l'état de protection actuel de la feuille
+    Dim isProtected As Boolean
+    isProtected = ws.ProtectContents
+      ' Si la feuille est protégée, essayer de la déprotéger
+    Dim password As String
+    If isProtected Then
+        On Error Resume Next
+        ws.Unprotect  ' Tenter sans mot de passe d'abord
+        If Err.Number <> 0 Then  ' Si erreur, c'est qu'un mot de passe est requis
+            password = InputBox("Cette feuille est protégée par mot de passe." & vbCrLf & _
+                              "Veuillez entrer le mot de passe pour permettre la mise à jour des protections.", _
+                              "Mot de passe requis")
+            If password = "" Then
+                MsgBox "Opération annulée. Les protections n'ont pas été mises à jour.", vbExclamation
+                Exit Sub
+            End If
+            ws.Unprotect password
         End If
-    Next cell
-
-    ' Déprotéger la feuille
-    ws.Unprotect
-
-    ' Verrouiller les cellules du tableau
-    tblRange.Locked = True
-
-    ' Reprotéger les anciennes cellules verrouillées
-    If lockedCells.Count > 0 Then
-        Dim addr As Variant
-        For Each addr In lockedCells
-            ws.Range(addr).Locked = True
-        Next addr
+        On Error GoTo 0
     End If
+    
+    ' Forcer le verrouillage de nos tableaux (préfixe EE_)
+    Dim tbl As ListObject
+    For Each tbl In ws.ListObjects
+        If Left(tbl.Name, 3) = "EE_" Then
+            tbl.Range.Locked = True
+        End If
+    Next tbl    ' Protéger la feuille (avec le même mot de passe si nécessaire)
+    If Len(password) > 0 Then
+        ws.Protect UserInterfaceOnly:=True, Password:=password, AllowFormattingCells:=True, _
+                   AllowFormattingColumns:=True, AllowFormattingRows:=True, _
+                   AllowInsertingColumns:=True, AllowInsertingRows:=True, _
+                   AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
+                   AllowDeletingRows:=True, AllowSorting:=True, _
+                   AllowFiltering:=True, AllowUsingPivotTables:=True
+    Else
+        ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
+                   AllowFormattingColumns:=True, AllowFormattingRows:=True, _
+                   AllowInsertingColumns:=True, AllowInsertingRows:=True, _
+                   AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
+                   AllowDeletingRows:=True, AllowSorting:=True, _
+                   AllowFiltering:=True, AllowUsingPivotTables:=True
+    End If
+End Sub
 
-    ' Protéger la feuille (autoriser tout sauf la modification des valeurs, sans mot de passe)
-    ws.Protect Password:="", _
-               AllowFormattingCells:=True, _
-               AllowFormattingColumns:=True, _
-               AllowFormattingRows:=True, _
-               AllowInsertingColumns:=True, _
-               AllowInsertingRows:=True, _
-               AllowDeletingColumns:=True, _
-               AllowDeletingRows:=True, _
-               AllowSorting:=True, _
-               AllowFiltering:=True, _
-               AllowUsingPivotTables:=True
-End Sub 
+' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
+Private Function GetUniqueTableName(ws As Worksheet, categoryName As String) As String
+    Dim baseName As String
+    baseName = "EE_" & categoryName
+    
+    ' Trouver l'indice le plus élevé existant
+    Dim maxIndex As Long
+    maxIndex = 0
+    Dim tbl As ListObject
+    Dim currentIndex As Long
+    Dim tableName As String
+    
+    For Each tbl In ws.ListObjects
+        If Left(tbl.Name, Len(baseName)) = baseName Then
+            tableName = Right(tbl.Name, Len(tbl.Name) - Len(baseName))
+            If IsNumeric(tableName) Then
+                currentIndex = CLng(tableName)
+                If currentIndex > maxIndex Then
+                    maxIndex = currentIndex
+                End If
+            End If
+        End If
+    Next tbl
+    
+    ' Incrémenter l'indice et retourner le nouveau nom
+    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
+End Function
