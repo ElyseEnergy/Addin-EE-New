@@ -33,7 +33,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' Si un filtre est appliqué, proposer la sélection des fiches correspondantes
     If loadInfo.category.filterLevel <> "Pas de filtrage" Then
         Dim lo As ListObject
-        Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
+        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
         Dim idList As New Collection
         Dim displayList As New Collection
         Dim i As Long, v As Variant
@@ -121,11 +121,11 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     Dim cell As Range
     Dim v As Variant
     
-    Set lo = wsPQData.ListObjects("Table_" & category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(category.PowerQueryName))
     ' S'assurer que la table existe, sinon la charger
     If lo Is Nothing Then
         LoadQueries.LoadQuery category.PowerQueryName, wsPQData, wsPQData.Cells(1, wsPQData.Cells(1, wsPQData.Columns.Count).End(xlToLeft).Column + 1)
-        Set lo = wsPQData.ListObjects("Table_" & category.PowerQueryName)
+        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(category.PowerQueryName))
         If lo Is Nothing Then
             MsgBox "Impossible de charger la table PowerQuery '" & category.PowerQueryName & "'", vbExclamation
             Set GetSelectedValues = Nothing
@@ -257,7 +257,7 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim colWidths() As Integer, rowWidths() As Integer
     Dim v As Variant
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
     nbFiches = loadInfo.selectedValues.Count
     nbChamps = lo.ListColumns.Count
     
@@ -398,7 +398,7 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Dim okPlage As Boolean
     Dim i As Long, j As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
     
     ' Calculer la taille nécessaire
     If loadInfo.ModeTransposed Then
@@ -483,7 +483,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim v As Variant
     Dim currentCol As Long, currentRow As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & loadInfo.category.PowerQueryName)
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
     
     ' Déprotéger la feuille de destination avant tout collage
     Dim ws As Worksheet
@@ -632,7 +632,7 @@ End Sub
 ' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
 Private Function GetUniqueTableName(categoryName As String) As String
     Dim baseName As String
-    baseName = "EE_" & categoryName
+    baseName = "EE_" & Utilities.SanitizeTableName(categoryName)
     Dim maxIndex As Long
     maxIndex = 0
     Dim ws As Worksheet
@@ -664,7 +664,7 @@ Private Sub CleanupPowerQuery(queryName As String)
     
     ' 1. Supprimer la table si elle existe
     Dim lo As ListObject
-    Set lo = wsPQData.ListObjects("Table_" & queryName)
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(queryName))
     If Not lo Is Nothing Then
         lo.Delete
     End If

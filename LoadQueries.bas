@@ -1,8 +1,13 @@
 ﻿Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Dim lo As ListObject
+    Dim sanitizedName As String
+    
+    ' Nettoyer le nom de la requête pour le nom de tableau
+    sanitizedName = "Table_" & Utilities.SanitizeTableName(QueryName)
+    
     ' Vérifier si la table existe déjà
     For Each lo In ws.ListObjects
-        If lo.Name = "Table_" & QueryName Then
+        If lo.Name = sanitizedName Then
             Exit Sub
         End If
     Next lo
@@ -22,13 +27,19 @@
         .SaveData = False
         .AdjustColumnWidth = True
         .RefreshPeriod = 0
-        .ListObject.DisplayName = "Table_" & QueryName
+        .ListObject.DisplayName = sanitizedName
         .Refresh BackgroundQuery:=False
     End With
     If Err.Number <> 0 Then
         MsgBox "Erreur lors du chargement de la requête " & QueryName & ": " & Err.Description, vbExclamation
     End If
     On Error GoTo 0
+    
+    ' Après le chargement de la requête, s'assurer que le nom est correct
+    Set lo = ws.ListObjects(ws.ListObjects.Count) ' Le dernier tableau créé
+    If Not lo Is Nothing Then
+        lo.Name = sanitizedName
+    End If
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
