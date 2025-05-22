@@ -68,19 +68,20 @@ End Function
 ' Génère le template de requête PowerQuery
 Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     Dim template As String
-      ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
+    ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
           "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
           "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
-          "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})," & vbCrLf & _
-          "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
-          "    Colonnes = Table.ColumnNames(TypedTable)," & vbCrLf & _
           "    // Trouver la colonne ID quelle que soit sa casse" & vbCrLf & _
+          "    Colonnes = Table.ColumnNames(PromotedHeaders)," & vbCrLf & _
           "    IdColumn = List.First(List.Select(Colonnes, each Text.Lower(_) = ""id""))," & vbCrLf & _
           "    AutresColonnes = List.Select(Colonnes, each Text.Lower(_) <> ""id"")," & vbCrLf & _
-          "    ReorderedColumns = Table.ReorderColumns(TypedTable, {IdColumn} & AutresColonnes)" & vbCrLf & _
+          "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
+          "    ReorderedColumns = Table.ReorderColumns(PromotedHeaders, {IdColumn} & AutresColonnes)," & vbCrLf & _
+          "    // Typer la colonne ID" & vbCrLf & _
+          "    TypedTable = Table.TransformColumnTypes(ReorderedColumns,{{IdColumn, Int64.Type}})" & vbCrLf & _
           "in" & vbCrLf & _
-          "    ReorderedColumns"
+          "    TypedTable"
     
     GeneratePQQueryTemplate = template
 End Function
