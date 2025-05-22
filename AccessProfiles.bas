@@ -10,6 +10,7 @@ Public Enum DemoProfile
     Finance_Controller = 3
     Technical_Director = 4
     Multi_Project_Lead = 5
+    Full_Admin = 6 ' Ajout profil admin
 End Enum
 
 Private mCurrentProfile As DemoProfile
@@ -40,6 +41,10 @@ Public Sub InitializeDemoProfiles()
     ' Multi-projets (Echo + EmRhone + Tools)
     AddProfile Multi_Project_Lead, "Multi-Project Leader", _
                False, False, True, False, Array("Echo", "EmRhone")
+               
+    ' Profil administrateur (voit tout)
+    AddProfile Full_Admin, "Admin (Full Access)", _
+               True, True, True, True, Array()
                
     ' Par défaut, on commence avec le profil Technical Director
     mCurrentProfile = Technical_Director
@@ -88,6 +93,12 @@ End Function
 Public Function HasAccess(feature As String) As Boolean
     Dim prof As AccessProfile
     prof = GetProfileById(mCurrentProfile)
+    
+    ' Accès total pour l'admin
+    If mCurrentProfile = Full_Admin Then
+        HasAccess = True
+        Exit Function
+    End If
     
     Select Case feature
         Case "Engineering"

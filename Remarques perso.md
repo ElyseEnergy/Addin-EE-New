@@ -22,3 +22,10 @@ encore des tests à effectuer sur le fait que quand je mets 1 pour CO2 parameter
 
 Bon je crois que je m'arrête là, c'est déjà pas mal.
 Normalement c'est fonctionnel
+
+
+2025.05.2_12.46
+
+Les groupes de visibilité semblent fonctionner
+il y a encore quelques problèmes d'icones et les groupes ne sont pas fonctionnelement corrects
+maintenant nous pouvons loader plus de data

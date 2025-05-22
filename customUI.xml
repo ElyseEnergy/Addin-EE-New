@@ -4,7 +4,7 @@
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
                 <ns0:group id="grpAccess" label="Demo Access">
-                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="GroupPermissions" size="large">
+                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="UserPermission" size="large">
                         <ns0:button id="btnEngineerBasic" label="Basic Engineer" onAction="OnSelectDemoProfile" imageMso="ContactCard"/>
                         <ns0:button id="btnProjectManager" label="Project Manager (Echo)" onAction="OnSelectDemoProfile" imageMso="TeamSiteSettings"/>
                         <ns0:button id="btnFinanceController" label="Finance Controller" onAction="OnSelectDemoProfile" imageMso="AccountingTools"/>
