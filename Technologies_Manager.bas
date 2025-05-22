@@ -68,6 +68,79 @@ Public Sub ProcessWaterTreatMain()
     ProcessWaterTreat Nothing, Nothing
 End Sub
 
+' Nouvelles catégories
+Public Sub ProcessMetriquesBaseMain()
+    ProcessMetriquesBase Nothing, Nothing
+End Sub
+
+Public Sub ProcessMetriquesExpertMain()
+    ProcessMetriquesExpert Nothing, Nothing
+End Sub
+
+Public Sub ProcessTimingsReferenceMain()
+    ProcessTimingsReference Nothing, Nothing
+End Sub
+
+Public Sub ProcessMetriquesREDMain()
+    ProcessMetriquesRED Nothing, Nothing
+End Sub
+
+Public Sub ProcessEmissionsMain()
+    ProcessEmissions Nothing, Nothing
+End Sub
+
+Public Sub ProcessInfraLogMain()
+    ProcessInfraLog Nothing, Nothing
+End Sub
+
+Public Sub ProcessBudgetCorpoMain()
+    ProcessBudgetCorpo Nothing, Nothing
+End Sub
+
+Public Sub ProcessDetailsBudgetsMain()
+    ProcessDetailsBudgets Nothing, Nothing
+End Sub
+
+Public Sub ProcessDIBMain()
+    ProcessDIB Nothing, Nothing
+End Sub
+
+Public Sub ProcessDemandesAchatMain()
+    ProcessDemandesAchat Nothing, Nothing
+End Sub
+
+Public Sub ProcessReceptionsMain()
+    ProcessReceptions Nothing, Nothing
+End Sub
+
+Public Sub ProcessScenariosMain()
+    ProcessScenarios Nothing, Nothing
+End Sub
+
+Public Sub ProcessPlanningPhasesMain()
+    ProcessPlanningPhases Nothing, Nothing
+End Sub
+
+Public Sub ProcessPlanningSousMain()
+    ProcessPlanningSous Nothing, Nothing
+End Sub
+
+Public Sub ProcessBudgetProjetMain()
+    ProcessBudgetProjet Nothing, Nothing
+End Sub
+
+Public Sub ProcessDevexMain()
+    ProcessDevex Nothing, Nothing
+End Sub
+
+Public Sub ProcessCapexMain()
+    ProcessCapex Nothing, Nothing
+End Sub
+
+Public Sub ProcessCapexEPCMain()
+    ProcessCapexEPC Nothing, Nothing
+End Sub
+
 Public Sub ProcessH2Electrolysis(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     DataLoaderManager.ProcessCategory "H2 waters electrolysis", "Erreur lors du traitement des données d'électrolyse"
 End Sub
@@ -130,4 +203,76 @@ End Sub
 
 Public Sub ProcessWaterTreat(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     DataLoaderManager.ProcessCategory "Water Treatment", "Erreur lors du traitement des données Water Treatment"
+End Sub
+
+Public Sub ProcessMetriquesBase(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Métriques de base", "Erreur lors du traitement des métriques de base"
+End Sub
+
+Public Sub ProcessMetriquesExpert(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Métriques expert", "Erreur lors du traitement des métriques expert"
+End Sub
+
+Public Sub ProcessTimingsReference(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Timings de référence", "Erreur lors du traitement des timings de référence"
+End Sub
+
+Public Sub ProcessMetriquesRED(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Métriques RED III", "Erreur lors du traitement des métriques RED III"
+End Sub
+
+Public Sub ProcessEmissions(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Emissions", "Erreur lors du traitement des émissions"
+End Sub
+
+Public Sub ProcessInfraLog(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Infra et logistique", "Erreur lors du traitement des données d'infrastructure et logistique"
+End Sub
+
+Public Sub ProcessBudgetCorpo(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Budget Corpo", "Erreur lors du traitement du budget corpo"
+End Sub
+
+Public Sub ProcessDetailsBudgets(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Détails Budgets", "Erreur lors du traitement des détails budgets"
+End Sub
+
+Public Sub ProcessDIB(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "DIB", "Erreur lors du traitement des DIB"
+End Sub
+
+Public Sub ProcessDemandesAchat(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Demandes d'achat", "Erreur lors du traitement des demandes d'achat"
+End Sub
+
+Public Sub ProcessReceptions(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Réceptions", "Erreur lors du traitement des réceptions"
+End Sub
+
+Public Sub ProcessScenarios(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Scénarios techniques", "Erreur lors du traitement des scénarios techniques"
+End Sub
+
+Public Sub ProcessPlanningPhases(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Plannings de phases", "Erreur lors du traitement des plannings de phases"
+End Sub
+
+Public Sub ProcessPlanningSous(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Plannings de sous phases", "Erreur lors du traitement des plannings de sous phases"
+End Sub
+
+Public Sub ProcessBudgetProjet(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Budget Projet", "Erreur lors du traitement du budget projet"
+End Sub
+
+Public Sub ProcessDevex(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Devex", "Erreur lors du traitement du Devex"
+End Sub
+
+Public Sub ProcessCapex(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Capex", "Erreur lors du traitement du Capex"
+End Sub
+
+Public Sub ProcessCapexEPC(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    DataLoaderManager.ProcessCategory "Capex EPC", "Erreur lors du traitement du Capex EPC"
 End Sub
