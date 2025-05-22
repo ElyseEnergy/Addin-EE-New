@@ -2,6 +2,12 @@
 ' Gère le chargement et l'affichage des données pour toutes les catégories
 Option Explicit
 
+Public Enum DataLoadResult
+    Success = 1
+    Cancelled = 2
+    Error = 3
+End Enum
+
 
 
 ' Fonction principale de traitement
@@ -274,8 +280,9 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
            
     ' Puis demander le choix avec une InputBox simple
     Dim modePrompt As String
-    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & _
-                 "Tapez 1 pour NORMAL, 2 pour TRANSPOSE"
+    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
+                 "1 pour NORMAL" & vbCrLf & _
+                 "2 pour TRANSPOSE"
     userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
       ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
     If userChoice = 0 Then
@@ -678,5 +685,35 @@ Public Sub CleanupPowerQuery(queryName As String)
     
     On Error GoTo 0
 End Sub
+
+' Fonction générique pour traiter une catégorie
+Public Function ProcessCategory(categoryName As String, Optional errorMessage As String = "") As DataLoadResult
+    If CategoriesCount = 0 Then InitCategories
+    
+    Dim loadInfo As DataLoadInfo
+    loadInfo.Category = GetCategoryByName(categoryName)
+    If loadInfo.Category.DisplayName = "" Then
+        MsgBox "Catégorie '" & categoryName & "' non trouvée", vbExclamation
+        ProcessCategory = DataLoadResult.Error
+        Exit Function
+    End If
+    
+    loadInfo.PreviewRows = 3
+    
+    If Not ProcessDataLoad(loadInfo) Then
+        ' Vérifie si c'est une annulation ou une erreur
+        If WasCancelled Then
+            ProcessCategory = DataLoadResult.Cancelled
+        Else
+            If errorMessage <> "" Then
+                MsgBox errorMessage, vbExclamation
+            End If
+            ProcessCategory = DataLoadResult.Error
+        End If
+        Exit Function
+    End If
+    
+    ProcessCategory = DataLoadResult.Success
+End Function
 
 

@@ -68,89 +68,66 @@ Public Sub ProcessWaterTreatMain()
     ProcessWaterTreat Nothing, Nothing
 End Sub
 
-' Fonction générique pour traiter une catégorie
-Private Function ProcessCategory(categoryName As String, errorMessage As String) As Boolean
-    If CategoriesCount = 0 Then InitCategories
-    
-    Dim loadInfo As DataLoadInfo
-    loadInfo.Category = GetCategoryByName(categoryName)
-    If loadInfo.Category.DisplayName = "" Then
-        MsgBox "Catégorie '" & categoryName & "' non trouvée", vbExclamation
-        ProcessCategory = False
-        Exit Function
-    End If
-    
-    loadInfo.PreviewRows = 3
-    
-    If Not DataLoaderManager.ProcessDataLoad(loadInfo) Then
-        MsgBox errorMessage, vbExclamation
-        ProcessCategory = False
-        Exit Function
-    End If
-    
-    ProcessCategory = True
-End Function
-
 Public Sub ProcessH2Electrolysis(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "H2 waters electrolysis", "Erreur lors du traitement des données d'électrolyse"
+    DataLoaderManager.ProcessCategory "H2 waters electrolysis", "Erreur lors du traitement des données d'électrolyse"
 End Sub
 
 Public Sub ProcessCO2Capture(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "CO2 Capture", "Erreur lors du traitement des données CO2 Capture"
+    DataLoaderManager.ProcessCategory "CO2 Capture", "Erreur lors du traitement des données CO2 Capture"
 End Sub
 
 Public Sub ProcessCO2General(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "CO2 general parameters", "Erreur lors du traitement des données CO2 General Parameters"
+    DataLoaderManager.ProcessCategory "CO2 general parameters", "Erreur lors du traitement des données CO2 General Parameters"
 End Sub
 
 Public Sub ProcessCompression(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Compression", "Erreur lors du traitement des données de compression"
+    DataLoaderManager.ProcessCategory "Compression", "Erreur lors du traitement des données de compression"
 End Sub
 
 Public Sub ProcessH2General(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "H2 general parameters", "Erreur lors du traitement des données H2 General Parameters"
+    DataLoaderManager.ProcessCategory "H2 general parameters", "Erreur lors du traitement des données H2 General Parameters"
 End Sub
 
 Public Sub ProcessMeOHCO2(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "MeOH - CO2-to-Methanol Synthesis", "Erreur lors du traitement des données MeOH CO2"
+    DataLoaderManager.ProcessCategory "MeOH - CO2-to-Methanol Synthesis", "Erreur lors du traitement des données MeOH CO2"
 End Sub
 
 Public Sub ProcessMeOHBiomass(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "MeOH - Biomass Gasification Synthesis", "Erreur lors du traitement des données MeOH Biomass"
+    DataLoaderManager.ProcessCategory "MeOH - Biomass Gasification Synthesis", "Erreur lors du traitement des données MeOH Biomass"
 End Sub
 
 Public Sub ProcessSAFBtJ(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "SAF - BtJ/e-BtJ Synthesis", "Erreur lors du traitement des données SAF BtJ"
+    DataLoaderManager.ProcessCategory "SAF - BtJ/e-BtJ Synthesis", "Erreur lors du traitement des données SAF BtJ"
 End Sub
 
 Public Sub ProcessSAFMtJ(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "SAF - MtJ Synthesis", "Erreur lors du traitement des données SAF MtJ"
+    DataLoaderManager.ProcessCategory "SAF - MtJ Synthesis", "Erreur lors du traitement des données SAF MtJ"
 End Sub
 
 Public Sub ProcessChiller(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Chiller", "Erreur lors du traitement des données Chiller"
+    DataLoaderManager.ProcessCategory "Chiller", "Erreur lors du traitement des données Chiller"
 End Sub
 
 Public Sub ProcessCoolingWater(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Cooling Water Production", "Erreur lors du traitement des données Cooling Water Production"
+    DataLoaderManager.ProcessCategory "Cooling Water Production", "Erreur lors du traitement des données Cooling Water Production"
 End Sub
 
 Public Sub ProcessHeatProd(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Heat Production", "Erreur lors du traitement des données Heat Production"
+    DataLoaderManager.ProcessCategory "Heat Production", "Erreur lors du traitement des données Heat Production"
 End Sub
 
 Public Sub ProcessOtherUtil(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Other utilities", "Erreur lors du traitement des données Other utilities"
+    DataLoaderManager.ProcessCategory "Other utilities", "Erreur lors du traitement des données Other utilities"
 End Sub
 
 Public Sub ProcessPowerLoss(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Power losses", "Erreur lors du traitement des données Power losses"
+    DataLoaderManager.ProcessCategory "Power losses", "Erreur lors du traitement des données Power losses"
 End Sub
 
 Public Sub ProcessWastewater(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "WasteWater Treatment", "Erreur lors du traitement des données WasteWater Treatment"
+    DataLoaderManager.ProcessCategory "WasteWater Treatment", "Erreur lors du traitement des données WasteWater Treatment"
 End Sub
 
 Public Sub ProcessWaterTreat(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ProcessCategory "Water Treatment", "Erreur lors du traitement des données Water Treatment"
+    DataLoaderManager.ProcessCategory "Water Treatment", "Erreur lors du traitement des données Water Treatment"
 End Sub

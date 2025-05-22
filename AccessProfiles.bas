@@ -5,12 +5,12 @@ Option Explicit
 ' Note: Utilise le type AccessProfile défini dans Types.bas
 
 Public Enum DemoProfile
-    Engineer_Basic = 1
-    Project_Manager = 2
-    Finance_Controller = 3
-    Technical_Director = 4
-    Business_Analyst = 5    ' Renommé de Multi_Project_Lead pour mieux refléter le rôle
-    Full_Admin = 6 
+    Engineer_Basic = 0
+    Project_Manager = 1
+    Finance_Controller = 2
+    Technical_Director = 3
+    Business_Analyst = 4    ' Renommé de Multi_Project_Lead pour mieux refléter le rôle
+    Full_Admin = 5
 End Enum
 
 Private mCurrentProfile As DemoProfile
@@ -60,13 +60,13 @@ Private Sub AddProfile(id As DemoProfile, Name As String, _
     Profiles(id).Description = Name
     Profiles(id).Engineering = eng
     Profiles(id).Finance = fin
-    Profiles(id).Tools = tools
+    Profiles(id).tools = tools
     Profiles(id).AllProjects = allProj
     
-    Set Profiles(id).Projects = New Collection
+    Set Profiles(id).projects = New Collection
     Dim proj As Variant
     For Each proj In projects
-        Profiles(id).Projects.Add CStr(proj)
+        Profiles(id).projects.Add CStr(proj)
     Next
     
     ProfilesCount = id
@@ -101,7 +101,7 @@ Public Function HasAccess(feature As String) As Boolean
         Case "Finance"
             HasAccess = prof.Finance
         Case "Tools"
-            HasAccess = prof.Tools
+            HasAccess = prof.tools
         Case "Admin"
             HasAccess = (mCurrentProfile = Full_Admin)
         Case Else
@@ -114,3 +114,5 @@ End Function
 Public Function GetCurrentProfileName() As String
     GetCurrentProfileName = Profiles(mCurrentProfile).Name
 End Function
+
+
