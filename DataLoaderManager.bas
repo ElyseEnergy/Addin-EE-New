@@ -114,8 +114,6 @@ End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(category As CategoryInfo) As Collection
-    On Error GoTo ErrorHandler
-    
     Dim lo As ListObject
     Dim dict As Object
     Dim arrValues() As String
@@ -137,6 +135,8 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
 
     ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
     If category.filterLevel = "Pas de filtrage" Then
+        On Error Resume Next ' Pour gérer l'annulation de l'InputBox
+        
         ' Créer un tableau avec toutes les fiches disponibles
         Dim displayArray() As String
         ReDim displayArray(1 To lo.DataBodyRange.Rows.Count)
@@ -148,6 +148,12 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         ' Présenter les valeurs à l'utilisateur
         Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(displayArray, _
             "Choisissez une ou plusieurs fiches à charger (ex: 1,3,5 ou *) :")
+            
+        If Err.Number <> 0 Then
+            Set GetSelectedValues = Nothing
+            Exit Function
+        End If
+        On Error GoTo 0
         
         ' Gérer la sélection initiale
         Dim selectedIndices As Collection
@@ -229,6 +235,16 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Exit Function
         End If
     End If
+    Exit Function
+    
+ErrorHandler:
+    If Err.Number = 424 Then  ' "L'objet est requis" - typiquement quand l'utilisateur annule une InputBox
+        Set GetSelectedValues = Nothing
+    Else
+        MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
+        Set GetSelectedValues = Nothing
+    End If
+    Exit Function
 End Function
 
 ' Gère le mode d'affichage (normal/transposé)
@@ -660,27 +676,28 @@ Private Function GetUniqueTableName(categoryName As String) As String
                 End If
             End If
         Next tbl
-    Next ws    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
+    Next ws    
+    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
 
-' Gère les erreurs pour GetSelectedValues
-ErrorHandler:
-    If Err.Number = 424 Then  ' "L'objet est requis" - typiquement quand l'utilisateur annule une InputBox
-        Set GetSelectedValues = Nothing
-    Else
-        MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
-        Set GetSelectedValues = Nothing
-    End If
-    Exit Function
-
-' Nettoie la requête PowerQuery en supprimant son tableau associé
+' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même
 Private Sub CleanupPowerQuery(queryName As String)
     On Error Resume Next
+    
+    ' 1. Supprimer la table si elle existe
     Dim lo As ListObject
     Set lo = wsPQData.ListObjects("Table_" & queryName)
     If Not lo Is Nothing Then
         lo.Delete
     End If
+    
+    ' 2. Forcer le nettoyage du cache PowerQuery en supprimant la requête
+    Dim wb As Workbook
+    Set wb = ThisWorkbook
+    With wb.Queries(queryName)
+        .Delete
+    End With
+    
     On Error GoTo 0
 End Sub
 

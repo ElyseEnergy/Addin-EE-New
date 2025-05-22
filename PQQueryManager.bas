@@ -68,14 +68,17 @@ End Function
 ' Génère le template de requête PowerQuery
 Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     Dim template As String
-    
-    ' Template de base pour charger les données depuis l'API Ragic
+      ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
               "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
               "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
-              "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})" & vbCrLf & _
+              "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})," & vbCrLf & _
+              "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
+              "    Colonnes = Table.ColumnNames(TypedTable)," & vbCrLf & _
+              "    AutresColonnes = List.Select(Colonnes, each _ <> ""ID"")," & vbCrLf & _
+              "    ReorderedColumns = Table.ReorderColumns(TypedTable, {""ID""} & AutresColonnes)" & vbCrLf & _
               "in" & vbCrLf & _
-              "    TypedTable"
+              "    ReorderedColumns"
     
     GeneratePQQueryTemplate = template
 End Function
