@@ -659,7 +659,7 @@ Private Function GetUniqueTableName(categoryName As String) As String
 End Function
 
 ' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même
-Private Sub CleanupPowerQuery(queryName As String)
+Public Sub CleanupPowerQuery(queryName As String)
     On Error Resume Next
     
     ' 1. Supprimer la table si elle existe

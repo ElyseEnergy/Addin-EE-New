@@ -5,7 +5,7 @@ Option Explicit
 ' Module de debug pour tester les requêtes PowerQuery dans l'éditeur
 
 ' Force l'injection et le chargement de toutes les requêtes PowerQuery
-Public Sub InjectAllPowerQueries()
+Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     ' Initialiser les catégories
     CategoryManager.InitCategories
     
@@ -52,7 +52,7 @@ NextCategory:
 End Sub
 
 ' Efface toutes les requêtes PowerQuery et leurs tableaux associés
-Public Sub CleanupAllPowerQueries()
+Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     ' Initialiser les catégories
     CategoryManager.InitCategories
     

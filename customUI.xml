@@ -65,7 +65,14 @@
                     <ns0:button id="btnOpex" label="OPEX" onAction="OnOpex" image="opex" size="large" getVisible="GetOpexVisibility" enabled="false"/>
                     <ns0:button id="btnScenariosTech" label="Scénarios techniques" onAction="OnTechScenarios" image="scenarios_techniques" size="large" getVisible="GetTechScenariosVisibility" enabled="false"/>
                 </ns0:group>
+
+                <ns0:group id="grpDebug" label="Debug Tools" getVisible="GetAdminVisibility">                    
+                    <ns0:menu id="menuPowerQuery" label="PowerQuery Debug" imageMso="QueryBuilder" size="large">
+                        <ns0:button id="btnInjectPQ" label="Inject All PowerQueries" onAction="ProcessInjectAllPowerQueries" imageMso="RefreshAll"/>
+                        <ns0:button id="btnCleanupPQ" label="Cleanup All PowerQueries" onAction="ProcessCleanupAllPowerQueries" imageMso="DeleteTable"/>
+                    </ns0:menu>
+                </ns0:group>
             </ns0:tab>
         </ns0:tabs>
     </ns0:ribbon>
-</ns0:customUI> 
+</ns0:customUI>

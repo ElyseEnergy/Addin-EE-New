@@ -113,3 +113,8 @@ End Sub
 Public Sub OnTestButton(control As IRibbonControl)
     MsgBox "Test button clicked!"
 End Sub
+
+' Callback pour la visibilité du menu Debug (admin only)
+Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = HasAccess("Admin")
+End Sub
