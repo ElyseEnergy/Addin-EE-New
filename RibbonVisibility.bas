@@ -9,57 +9,92 @@ Public gRibbon As IRibbonUI
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
     Debug.Print "Ribbon_Load appelé"
     Set gRibbon = ribbon
+    InitializeDemoProfiles
     Debug.Print "gRibbon initialisé"
+End Sub
+
+' Callback pour le sélecteur de profil
+Public Sub OnSelectDemoProfile(control As IRibbonControl)
+    Select Case control.ID
+        Case "btnEngineerBasic": SetCurrentProfile Engineer_Basic
+        Case "btnProjectManager": SetCurrentProfile Project_Manager
+        Case "btnFinanceController": SetCurrentProfile Finance_Controller
+        Case "btnTechnicalDirector": SetCurrentProfile Technical_Director
+        Case "btnMultiProjectLead": SetCurrentProfile Multi_Project_Lead
+    End Select
+    
+    InvalidateRibbon
+End Sub
+
+' Callback pour l'affichage du profil actuel
+Public Sub GetCurrentProfileLabel(control As IRibbonControl, ByRef label)
+    label = "Current Profile: " & GetCurrentProfileName()
 End Sub
 
 ' Callback pour la visibilité du menu Technologies
 Public Sub GetTechnologiesVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Engineering")
 End Sub
 
 ' Callback pour la visibilité du menu Utilities
 Public Sub GetUtilitiesVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Engineering")
 End Sub
 
 ' Callback pour la visibilité du menu Files
 Public Sub GetServerFilesVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Tools")
 End Sub
 
 ' Callback pour la visibilité du menu Outils
 Public Sub GetAnalysisToolsVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Tools")
 End Sub
 
 ' Callback pour la visibilité du menu Finances
 Public Sub GetFinancesVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Finance")
 End Sub
 
 ' Callback pour la visibilité des menus de projets
+Public Function GetProjectMenuVisibility(projectMenu As String) As Boolean
+    ' Extrait le nom du projet du menu (par exemple "Echo" de "summaryEcho")
+    Dim projectName As String
+    If InStr(1, projectMenu, "GENERIC") > 0 Then
+        GetProjectMenuVisibility = HasAccess("Engineering") ' Seuls les ingénieurs voient les génériques
+    Else
+        projectName = Replace(projectMenu, "summary", "")
+        projectName = Replace(projectName, "planning", "")
+        projectName = Replace(projectName, "devex", "")
+        projectName = Replace(projectName, "capex", "")
+        projectName = Replace(projectName, "opex", "")
+        projectName = Replace(projectName, "tech", "")
+        GetProjectMenuVisibility = HasAccess(projectName)
+    End If
+End Function
+
 Public Sub GetSummarySheetsVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = GetProjectMenuVisibility(control.ID)
 End Sub
 
 Public Sub GetPlanningsVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = GetProjectMenuVisibility(control.ID)
 End Sub
 
 Public Sub GetDevexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
 End Sub
 
 Public Sub GetCapexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
 End Sub
 
 Public Sub GetOpexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
 End Sub
 
 Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = True
+    visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.ID)
 End Sub
 
 ' Fonction pour forcer le rafraîchissement du ruban
