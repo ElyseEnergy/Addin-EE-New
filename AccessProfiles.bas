@@ -9,8 +9,8 @@ Public Enum DemoProfile
     Project_Manager = 2
     Finance_Controller = 3
     Technical_Director = 4
-    Multi_Project_Lead = 5
-    Full_Admin = 6 ' Ajout profil admin
+    Business_Analyst = 5    ' Renommé de Multi_Project_Lead pour mieux refléter le rôle
+    Full_Admin = 6 
 End Enum
 
 Private mCurrentProfile As DemoProfile
@@ -22,27 +22,27 @@ Public Sub InitializeDemoProfiles()
     ProfilesCount = 0
     Erase Profiles
     
-    ' Ingénieur de base (accès Engineering + Tools)
+    ' Ingénieur de base (accès Engineering + Tools basiques)
     AddProfile Engineer_Basic, "Basic Engineer", _
                True, False, True, False, Array()
                
-    ' Chef de projet Echo (accès Tools + Echo specific)
-    AddProfile Project_Manager, "Echo Project Manager", _
-               False, False, True, False, Array("Echo")
+    ' Chef de projet (accès Tools + Projets)
+    AddProfile Project_Manager, "Project Manager", _
+               False, False, True, True, Array()
                
-    ' Contrôleur financier (Finance + tous les CAPEX/OPEX)
+    ' Contrôleur financier (Finance + tous les budgets)
     AddProfile Finance_Controller, "Finance Controller", _
-               False, True, True, True, Array()
+               False, True, True, False, Array()
                
     ' Directeur technique (Tout Engineering + Tools + All Projects)
     AddProfile Technical_Director, "Technical Director", _
                True, False, True, True, Array()
                
-    ' Multi-projets (Echo + EmRhone + Tools)
-    AddProfile Multi_Project_Lead, "Multi-Project Leader", _
-               False, False, True, False, Array("Echo", "EmRhone")
+    ' Business Analyst (Tools + Finance partiel)
+    AddProfile Business_Analyst, "Business Analyst", _
+               False, True, True, False, Array()
                
-    ' Profil administrateur (voit tout)
+    ' Admin (accès total)
     AddProfile Full_Admin, "Admin (Full Access)", _
                True, True, True, True, Array()
                
@@ -53,28 +53,23 @@ End Sub
 Private Sub AddProfile(id As DemoProfile, Name As String, _
                       eng As Boolean, fin As Boolean, tools As Boolean, _
                       allProj As Boolean, projects As Variant)
-    Dim idx As Long
-    If ProfilesCount = 0 Then
-        idx = 1
-    Else
-        idx = ProfilesCount + 1
-    End If
-    ReDim Preserve Profiles(1 To idx)
+    ReDim Preserve Profiles(1 To CInt(id))
+    ProfilesCount = CInt(id)
     
-    Profiles(idx).Name = Name
-    Profiles(idx).Description = Name
-    Profiles(idx).Engineering = eng
-    Profiles(idx).Finance = fin
-    Profiles(idx).Tools = tools
-    Profiles(idx).AllProjects = allProj
+    Profiles(id).Name = Name
+    Profiles(id).Description = Name
+    Profiles(id).Engineering = eng
+    Profiles(id).Finance = fin
+    Profiles(id).Tools = tools
+    Profiles(id).AllProjects = allProj
     
-    Set Profiles(idx).Projects = New Collection
+    Set Profiles(id).Projects = New Collection
     Dim proj As Variant
     For Each proj In projects
-        Profiles(idx).Projects.Add CStr(proj)
+        Profiles(id).Projects.Add CStr(proj)
     Next
     
-    ProfilesCount = idx
+    ProfilesCount = id
 End Sub
 
 ' Définit le profil actif
@@ -107,20 +102,11 @@ Public Function HasAccess(feature As String) As Boolean
             HasAccess = prof.Finance
         Case "Tools"
             HasAccess = prof.Tools
+        Case "Admin"
+            HasAccess = (mCurrentProfile = Full_Admin)
         Case Else
-            ' Pour les projets spécifiques
-            If prof.AllProjects Then
-                HasAccess = True
-            Else
-                Dim proj As Variant
-                For Each proj In prof.Projects
-                    If InStr(1, feature, proj, vbTextCompare) > 0 Then
-                        HasAccess = True
-                        Exit Function
-                    End If
-                Next
-                HasAccess = False
-            End If
+            ' Pour les projets (plus de référence aux projets spécifiques)
+            HasAccess = prof.AllProjects
     End Select
 End Function
 

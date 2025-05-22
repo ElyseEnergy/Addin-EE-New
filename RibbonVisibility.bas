@@ -15,12 +15,12 @@ End Sub
 
 ' Callback pour le sélecteur de profil
 Public Sub OnSelectDemoProfile(control As IRibbonControl)
-    Select Case control.ID
+    Select Case control.id
         Case "btnEngineerBasic": SetCurrentProfile AccessProfiles.Engineer_Basic
         Case "btnProjectManager": SetCurrentProfile AccessProfiles.Project_Manager
         Case "btnFinanceController": SetCurrentProfile AccessProfiles.Finance_Controller
         Case "btnTechnicalDirector": SetCurrentProfile AccessProfiles.Technical_Director
-        Case "btnMultiProjectLead": SetCurrentProfile AccessProfiles.Multi_Project_Lead
+        Case "btnMultiProjectLead": SetCurrentProfile AccessProfiles.Business_Analyst  ' Changed from Multi_Project_Lead
         Case "btnFullAdmin": SetCurrentProfile AccessProfiles.Full_Admin
     End Select
     
@@ -75,27 +75,27 @@ Public Function GetProjectMenuVisibility(projectMenu As String) As Boolean
 End Function
 
 Public Sub GetSummarySheetsVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = GetProjectMenuVisibility(control.ID)
+    visible = GetProjectMenuVisibility(control.id)
 End Sub
 
 Public Sub GetPlanningsVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = GetProjectMenuVisibility(control.ID)
+    visible = GetProjectMenuVisibility(control.id)
 End Sub
 
 Public Sub GetDevexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
 End Sub
 
 Public Sub GetCapexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
 End Sub
 
 Public Sub GetOpexVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.ID)
+    visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
 End Sub
 
 Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible As Variant)
-    visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.ID)
+    visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.id)
 End Sub
 
 ' Fonction pour forcer le rafraîchissement du ruban

@@ -40,6 +40,34 @@ Public Sub ProcessSAFMtJMain()
     ProcessSAFMtJ Nothing, Nothing
 End Sub
 
+Public Sub ProcessChillerMain()
+    ProcessChiller Nothing, Nothing
+End Sub
+
+Public Sub ProcessCoolingWaterMain()
+    ProcessCoolingWater Nothing, Nothing
+End Sub
+
+Public Sub ProcessHeatProdMain()
+    ProcessHeatProd Nothing, Nothing
+End Sub
+
+Public Sub ProcessOtherUtilMain()
+    ProcessOtherUtil Nothing, Nothing
+End Sub
+
+Public Sub ProcessPowerLossMain()
+    ProcessPowerLoss Nothing, Nothing
+End Sub
+
+Public Sub ProcessWastewaterMain()
+    ProcessWastewater Nothing, Nothing
+End Sub
+
+Public Sub ProcessWaterTreatMain()
+    ProcessWaterTreat Nothing, Nothing
+End Sub
+
 ' Fonction générique pour traiter une catégorie
 Private Function ProcessCategory(categoryName As String, errorMessage As String) As Boolean
     If CategoriesCount = 0 Then InitCategories
@@ -97,4 +125,32 @@ End Sub
 
 Public Sub ProcessSAFMtJ(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     ProcessCategory "SAF - MtJ Synthesis", "Erreur lors du traitement des données SAF MtJ"
+End Sub
+
+Public Sub ProcessChiller(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Chiller", "Erreur lors du traitement des données Chiller"
+End Sub
+
+Public Sub ProcessCoolingWater(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Cooling Water Production", "Erreur lors du traitement des données Cooling Water Production"
+End Sub
+
+Public Sub ProcessHeatProd(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Heat Production", "Erreur lors du traitement des données Heat Production"
+End Sub
+
+Public Sub ProcessOtherUtil(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Other utilities", "Erreur lors du traitement des données Other utilities"
+End Sub
+
+Public Sub ProcessPowerLoss(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Power losses", "Erreur lors du traitement des données Power losses"
+End Sub
+
+Public Sub ProcessWastewater(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "WasteWater Treatment", "Erreur lors du traitement des données WasteWater Treatment"
+End Sub
+
+Public Sub ProcessWaterTreat(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    ProcessCategory "Water Treatment", "Erreur lors du traitement des données Water Treatment"
 End Sub

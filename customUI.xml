@@ -3,13 +3,12 @@
     <ns0:ribbon startFromScratch="false">
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
-                <ns0:group id="grpAccess" label="Demo Access">
-                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">
+                <ns0:group id="grpAccess" label="Demo Access">                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">
                         <ns0:button id="btnEngineerBasic" label="Basic Engineer" onAction="OnSelectDemoProfile" imageMso="ContactCard"/>
-                        <ns0:button id="btnProjectManager" label="Project Manager (Echo)" onAction="OnSelectDemoProfile" imageMso="TeamSiteSettings"/>
+                        <ns0:button id="btnProjectManager" label="Project Manager" onAction="OnSelectDemoProfile" imageMso="TeamSiteSettings"/>
                         <ns0:button id="btnFinanceController" label="Finance Controller" onAction="OnSelectDemoProfile" imageMso="AccountingTools"/>
                         <ns0:button id="btnTechnicalDirector" label="Technical Director" onAction="OnSelectDemoProfile" imageMso="AdministrativeTools"/>
-                        <ns0:button id="btnMultiProjectLead" label="Multi-Project Leader" onAction="OnSelectDemoProfile" imageMso="ViewCategory"/>
+                        <ns0:button id="btnBusinessAnalyst" label="Business Analyst" onAction="OnSelectDemoProfile" imageMso="ViewCategory"/>
                         <ns0:button id="btnFullAdmin" label="Admin (Full Access)" onAction="OnSelectDemoProfile" imageMso="UserPermission"/>
                         <ns0:menuSeparator id="sepCurrentAccess"/>
                         <ns0:button id="lblCurrentProfile" getLabel="GetCurrentProfileLabel"/>
@@ -26,15 +25,15 @@
                         <ns0:button id="btnMeOHBiomass" label="MeOH - Biomass Gasification Synthesis" onAction="ProcessMeOHBiomass" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="ProcessSAFBtJ" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="ProcessSAFMtJ" imageMso="AcceptInvitation"/>
-                    </ns0:menu>
+                    </ns0:menu>                    
                     <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
-                        <ns0:button id="btnChiller" label="Chiller" onAction="OnChiller" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnOtherUtil" label="Other Utilities" onAction="OnOtherUtil" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnPowerLoss" label="Power Losses" onAction="OnPowerLoss" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnWastewater" label="Wastewater Treatment" onAction="OnWastewater" imageMso="DeclineInvitation" enabled="false"/>
-                        <ns0:button id="btnWaterTreat" label="Water Treatment" onAction="OnWaterTreat" imageMso="DeclineInvitation" enabled="false"/>
+                        <ns0:button id="btnChiller" label="Chiller" onAction="ProcessChiller" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="ProcessCoolingWater" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnHeatProd" label="Heat Production" onAction="ProcessHeatProd" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnOtherUtil" label="Other Utilities" onAction="ProcessOtherUtil" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnPowerLoss" label="Power Losses" onAction="ProcessPowerLoss" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnWastewater" label="Wastewater Treatment" onAction="ProcessWastewater" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnWaterTreat" label="Water Treatment" onAction="ProcessWaterTreat" imageMso="AcceptInvitation"/>
                     </ns0:menu>
                 </ns0:group>
                 <ns0:group id="grpFiles" label="Files">
