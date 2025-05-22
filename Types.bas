@@ -20,4 +20,15 @@ Public Type DataLoadInfo
     PreviewRows As Long
 End Type
 
-' --- Ajoutez ici d'autres types personnalisés au besoin --- 
+' --- Ajoutez ici d'autres types personnalisés au besoin ---
+
+' Type pour gérer les profils d'accès
+Public Type AccessProfile
+    Name As String
+    Description As String
+    Engineering As Boolean
+    Finance As Boolean
+    Tools As Boolean
+    AllProjects As Boolean
+    Projects As Collection  ' Projets spécifiques
+End Type

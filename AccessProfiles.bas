@@ -2,6 +2,8 @@
 ' Gère les profils de démonstration pour les droits d'accès
 Option Explicit
 
+' Note: Utilise le type AccessProfile défini dans Types.bas
+
 Public Enum DemoProfile
     Engineer_Basic = 1
     Project_Manager = 2
@@ -10,22 +12,14 @@ Public Enum DemoProfile
     Multi_Project_Lead = 5
 End Enum
 
-Private Type AccessProfile
-    Name As String
-    Description As String
-    Engineering As Boolean
-    Finance As Boolean
-    Tools As Boolean
-    AllProjects As Boolean
-    Projects As Collection  ' Projets spécifiques
-End Type
-
 Private mCurrentProfile As DemoProfile
-Private mProfiles As Collection
+Dim Profiles() As AccessProfile
+Dim ProfilesCount As Long
 
 ' Initialisation des profils de démonstration
 Public Sub InitializeDemoProfiles()
-    Set mProfiles = New Collection
+    ProfilesCount = 0
+    Erase Profiles
     
     ' Ingénieur de base (accès Engineering + Tools)
     AddProfile Engineer_Basic, "Basic Engineer", _
@@ -54,20 +48,28 @@ End Sub
 Private Sub AddProfile(id As DemoProfile, Name As String, _
                       eng As Boolean, fin As Boolean, tools As Boolean, _
                       allProj As Boolean, projects As Variant)
-    Dim prof As AccessProfile
-    prof.Name = Name
-    prof.Engineering = eng
-    prof.Finance = fin
-    prof.Tools = tools
-    prof.AllProjects = allProj
+    Dim idx As Long
+    If ProfilesCount = 0 Then
+        idx = 1
+    Else
+        idx = ProfilesCount + 1
+    End If
+    ReDim Preserve Profiles(1 To idx)
     
-    Set prof.Projects = New Collection
+    Profiles(idx).Name = Name
+    Profiles(idx).Description = Name
+    Profiles(idx).Engineering = eng
+    Profiles(idx).Finance = fin
+    Profiles(idx).Tools = tools
+    Profiles(idx).AllProjects = allProj
+    
+    Set Profiles(idx).Projects = New Collection
     Dim proj As Variant
     For Each proj In projects
-        prof.Projects.Add CStr(proj)
+        Profiles(idx).Projects.Add CStr(proj)
     Next
     
-    mProfiles.Add prof, CStr(id)
+    ProfilesCount = idx
 End Sub
 
 ' Définit le profil actif
@@ -75,10 +77,17 @@ Public Sub SetCurrentProfile(profile As DemoProfile)
     mCurrentProfile = profile
 End Sub
 
+' Récupère le profil par ID (suppose que l'ID correspond à l'index)
+Private Function GetProfileById(id As DemoProfile) As AccessProfile
+    If id >= 1 And id <= ProfilesCount Then
+        GetProfileById = Profiles(id)
+    End If
+End Function
+
 ' Vérifie si le profil actuel a accès à une fonctionnalité
 Public Function HasAccess(feature As String) As Boolean
     Dim prof As AccessProfile
-    prof = mProfiles(CStr(mCurrentProfile))
+    prof = GetProfileById(mCurrentProfile)
     
     Select Case feature
         Case "Engineering"
@@ -106,5 +115,5 @@ End Function
 
 ' Récupère le nom du profil actuel
 Public Function GetCurrentProfileName() As String
-    GetCurrentProfileName = mProfiles(CStr(mCurrentProfile)).Name
+    GetCurrentProfileName = Profiles(mCurrentProfile).Name
 End Function

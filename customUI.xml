@@ -10,14 +10,14 @@
                         <ns0:button id="btnFinanceController" label="Finance Controller" onAction="OnSelectDemoProfile" imageMso="AccountingTools"/>
                         <ns0:button id="btnTechnicalDirector" label="Technical Director" onAction="OnSelectDemoProfile" imageMso="AdministrativeTools"/>
                         <ns0:button id="btnMultiProjectLead" label="Multi-Project Leader" onAction="OnSelectDemoProfile" imageMso="ViewCategory"/>
-                        <ns0:separator id="sepCurrentAccess"/>
-                        <ns0:labelControl id="lblCurrentProfile" getLabel="GetCurrentProfileLabel"/>
+                        <ns0:menuSeparator id="sepCurrentAccess"/>
+                        <ns0:button id="lblCurrentProfile" getLabel="GetCurrentProfileLabel"/>
                     </ns0:menu>
                 </ns0:group>
                 <ns0:group id="grpTechnologies" label="Engineering">
                     <ns0:menu id="menuTechnologies" label="Technologies" image="technologies" size="large" getVisible="GetTechnologiesVisibility">
-                        <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" image="technologies"/>
-                        <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" image="technologies"/>
+                        <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" image="AcceptInvitation"/>
+                        <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" image="AcceptInvitation"/>
                         <ns0:button id="btnCO2Capture" label="CO2 - Capture" onAction="ProcessCO2Capture" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnH2General" label="H2 - General Parameters" onAction="ProcessH2General" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnH2ELY" label="H2 - Water Electrolysis (ELY)" onAction="ProcessH2Electrolysis" imageMso="AcceptInvitation"/>
@@ -27,13 +27,13 @@
                         <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="ProcessSAFMtJ" imageMso="AcceptInvitation"/>
                     </ns0:menu>
                     <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
-                        <ns0:button id="btnChiller" label="Chiller" onAction="OnChiller" image="utilities"/>
-                        <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater" image="utilities"/>
-                        <ns0:button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd" image="utilities"/>
-                        <ns0:button id="btnOtherUtil" label="Other Utilities" onAction="OnOtherUtil" image="utilities"/>
-                        <ns0:button id="btnPowerLoss" label="Power Losses" onAction="OnPowerLoss" image="utilities"/>
-                        <ns0:button id="btnWastewater" label="Wastewater Treatment" onAction="OnWastewater" image="utilities"/>
-                        <ns0:button id="btnWaterTreat" label="Water Treatment" onAction="OnWaterTreat" image="utilities"/>
+                        <ns0:button id="btnChiller" label="Chiller" onAction="OnChiller" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnOtherUtil" label="Other Utilities" onAction="OnOtherUtil" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnPowerLoss" label="Power Losses" onAction="OnPowerLoss" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnWastewater" label="Wastewater Treatment" onAction="OnWastewater" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnWaterTreat" label="Water Treatment" onAction="OnWaterTreat" imageMso="DeclineInvitation"/>
                     </ns0:menu>
                 </ns0:group>
                 <ns0:group id="grpFiles" label="Files">
@@ -63,7 +63,7 @@
                 <ns0:group id="grpProjects" label="Projets">
                     <ns0:menu id="menuSummarySheets" label="Fiches récapitulatives" image="projects_summaries" size="large" getVisible="GetSummarySheetsVisibility">
                         <ns0:menu id="summaryGreenCoast" label="GreenCoast">
-                            <ns0:button id="summaryGreenCoastMay25" label="version COMEX mai 2025" onAction="OnSummarySheet" image="projects_summaries"/>
+                            <ns0:button id="summaryGreenCoastMay25" label="version COMEX mai 2025" onAction="OnSummarySheet" imageMso="DeclineInvitation"/>
                             <ns0:button id="summaryGreenCoastApr25" label="version COMEX avril 2025" onAction="OnSummarySheet" imageMso="DeclineInvitation"/>
                         </ns0:menu>
                         <ns0:menu id="summaryEcho" label="Echo">
