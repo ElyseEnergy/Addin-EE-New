@@ -9,6 +9,7 @@ Public Type CategoryInfo
     DisplayName As String         ' Nom d'affichage pour l'utilisateur
     URL As String                 ' URL complète
     PowerQueryName As String      ' Nom de la requête PowerQuery
+    CategoryGroup As String       ' Groupe de la catégorie
 End Type
 
 ' Type pour stocker les informations de chargement de données
