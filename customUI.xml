@@ -3,7 +3,8 @@
     <ns0:ribbon startFromScratch="false">
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
-                <ns0:group id="grpAccess" label="Demo Access">                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">
+                <ns0:group id="grpAccess" label="Demo Access">                    
+                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">
                         <ns0:button id="btnEngineerBasic" label="Basic Engineer" onAction="OnSelectDemoProfile" imageMso="ContactCard"/>
                         <ns0:button id="btnProjectManager" label="Project Manager" onAction="OnSelectDemoProfile" imageMso="TeamSiteSettings"/>
                         <ns0:button id="btnFinanceController" label="Finance Controller" onAction="OnSelectDemoProfile" imageMso="AccountingTools"/>
@@ -13,9 +14,8 @@
                         <ns0:menuSeparator id="sepCurrentAccess"/>
                         <ns0:button id="lblCurrentProfile" getLabel="GetCurrentProfileLabel"/>
                     </ns0:menu>
-                </ns0:group>
-                <ns0:group id="grpTechnologies" label="Engineering">
-                    <ns0:menu id="menuTechnologies" label="Technologies" image="technologies" size="large" getVisible="GetTechnologiesVisibility">
+                </ns0:group>                
+                <ns0:group id="grpTechnologies" label="Engineering">                    <ns0:menu id="menuTechnologies" label="Technologies" image="technologies" size="large" getVisible="GetTechnologiesVisibility">
                         <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCO2Capture" label="CO2 - Capture" onAction="ProcessCO2Capture" imageMso="AcceptInvitation"/>
@@ -25,8 +25,16 @@
                         <ns0:button id="btnMeOHBiomass" label="MeOH - Biomass Gasification Synthesis" onAction="ProcessMeOHBiomass" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="ProcessSAFBtJ" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="ProcessSAFMtJ" imageMso="AcceptInvitation"/>
-                    </ns0:menu>                    
-                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
+                    </ns0:menu>                    <ns0:menu id="menuMetriques" label="Métriques" imageMso="ViewCategory" size="large" getVisible="GetTechnologiesVisibility">
+                        <ns0:button id="btnMetriquesBase" label="Métriques de base" onAction="ProcessMetriquesBase" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnMetriquesExpert" label="Métriques expert" onAction="ProcessMetriquesExpert" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnTimingsReference" label="Timings de référence" onAction="ProcessTimingsReference" imageMso="AcceptInvitation"/>
+                    </ns0:menu>
+                    <ns0:menu id="menuLCA" label="LCA" imageMso="ReviewingPane" size="large" getVisible="GetTechnologiesVisibility">
+                        <ns0:button id="btnMetriquesRED" label="Métriques RED III" onAction="ProcessMetriquesRED" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnEmissions" label="Emissions" onAction="ProcessEmissions" imageMso="AcceptInvitation"/>
+                    </ns0:menu>
+                    <ns0:button id="btnInfraLog" label="Logistique" onAction="ProcessInfraLog" imageMso="AcceptInvitation" size="large" getVisible="GetTechnologiesVisibility"/>                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
                         <ns0:button id="btnChiller" label="Chiller" onAction="ProcessChiller" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="ProcessCoolingWater" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnHeatProd" label="Heat Production" onAction="ProcessHeatProd" imageMso="AcceptInvitation"/>
@@ -47,22 +55,18 @@
                     <ns0:button id="btnBusinessPlan" label="Business Plan" onAction="OnBusinessPlan" image="business_plan" size="large" enabled="false"/>
                     <ns0:button id="btnElecOptim" label="Optimisation d'achat d'électricité" onAction="OnElecOptim" image="tool_electricity" size="large" enabled="false"/>
                     <ns0:button id="btnLCA" label="Analyse en cycle de vie" onAction="OnLCA" image="tool_lca" size="large" enabled="false"/>
-                </ns0:group>
-
-                <ns0:group id="grpFinances" label="Finances">
-                    <ns0:button id="btnCorpoBudgets" label="Budgets corpo" onAction="OnCorpoBudgets" image="budget_corp" getVisible="GetFinancesVisibility" size="large" enabled="false"/>
-                    <ns0:button id="btnBudgetRequests" label="Demandes évolutions budgétaires" onAction="OnBudgetRequests" image="budget_dib" getVisible="GetFinancesVisibility" size="large" enabled="false"/>
-                    <ns0:button id="btnPurchaseRequests" label="Demandes d'achats" onAction="OnPurchaseRequests" image="budget_po" getVisible="GetFinancesVisibility" size="large" enabled="false"/>
-                    <ns0:button id="btnReceptions" label="Réceptions" onAction="OnReceptions" image="budget_reception" getVisible="GetFinancesVisibility" size="large" enabled="false"/>
-                </ns0:group>
-
-                <ns0:group id="grpProjects" label="Projets">
+                </ns0:group>                <ns0:group id="grpFinances" label="Finances">
+                    <ns0:button id="btnCorpoBudgets" label="Budgets corpo" onAction="ProcessBudgetCorpo" image="budget_corp" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnBudgetRequests" label="Demandes évolutions budgétaires" onAction="ProcessDIB" image="budget_dib" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnPurchaseRequests" label="Demandes d'achats" onAction="ProcessDemandesAchat" image="budget_po" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnReceptions" label="Réceptions" onAction="ProcessReceptions" image="budget_reception" getVisible="GetFinancesVisibility" size="large"/>
+                </ns0:group>                <ns0:group id="grpProjects" label="Projets">
                     <ns0:button id="btnSummarySheets" label="Fiches récapitulatives" onAction="OnSummarySheets" image="projects_summaries" size="large" getVisible="GetSummarySheetsVisibility" enabled="false"/>
-                    <ns0:button id="btnPlannings" label="Plannings" onAction="OnPlannings" image="plannings" size="large" getVisible="GetPlanningsVisibility" enabled="false"/>
-                    <ns0:button id="btnDevex" label="DEVEX" onAction="OnDevex" image="devex" size="large" getVisible="GetDevexVisibility" enabled="false"/>
-                    <ns0:button id="btnCapex" label="CAPEX" onAction="OnCapex" image="capex" size="large" getVisible="GetCapexVisibility" enabled="false"/>
+                    <ns0:button id="btnPlannings" label="Plannings" onAction="ProcessPlanningPhases" image="plannings" size="large" getVisible="GetPlanningsVisibility"/>
+                    <ns0:button id="btnDevex" label="DEVEX" onAction="ProcessDevex" image="devex" size="large" getVisible="GetDevexVisibility"/>
+                    <ns0:button id="btnCapex" label="CAPEX" onAction="ProcessCapex" image="capex" size="large" getVisible="GetCapexVisibility"/>
                     <ns0:button id="btnOpex" label="OPEX" onAction="OnOpex" image="opex" size="large" getVisible="GetOpexVisibility" enabled="false"/>
-                    <ns0:button id="btnScenariosTech" label="Scénarios techniques" onAction="OnTechScenarios" image="scenarios_techniques" size="large" getVisible="GetTechScenariosVisibility" enabled="false"/>
+                    <ns0:button id="btnScenariosTech" label="Scénarios techniques" onAction="ProcessScenarios" image="scenarios_techniques" size="large" getVisible="GetTechScenariosVisibility"/>
                 </ns0:group>
 
                 <ns0:group id="grpDebug" label="Debug Tools" getVisible="GetAdminVisibility">                    

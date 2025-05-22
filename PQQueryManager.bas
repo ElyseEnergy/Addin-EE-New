@@ -70,15 +70,17 @@ Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     Dim template As String
       ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
-              "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
-              "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
-              "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})," & vbCrLf & _
-              "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
-              "    Colonnes = Table.ColumnNames(TypedTable)," & vbCrLf & _
-              "    AutresColonnes = List.Select(Colonnes, each _ <> ""ID"")," & vbCrLf & _
-              "    ReorderedColumns = Table.ReorderColumns(TypedTable, {""ID""} & AutresColonnes)" & vbCrLf & _
-              "in" & vbCrLf & _
-              "    ReorderedColumns"
+          "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
+          "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
+          "    TypedTable = Table.TransformColumnTypes(PromotedHeaders,{{""ID"", Int64.Type}})," & vbCrLf & _
+          "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
+          "    Colonnes = Table.ColumnNames(TypedTable)," & vbCrLf & _
+          "    // Trouver la colonne ID quelle que soit sa casse" & vbCrLf & _
+          "    IdColumn = List.First(List.Select(Colonnes, each Text.Lower(_) = ""id""))," & vbCrLf & _
+          "    AutresColonnes = List.Select(Colonnes, each Text.Lower(_) <> ""id"")," & vbCrLf & _
+          "    ReorderedColumns = Table.ReorderColumns(TypedTable, {IdColumn} & AutresColonnes)" & vbCrLf & _
+          "in" & vbCrLf & _
+          "    ReorderedColumns"
     
     GeneratePQQueryTemplate = template
 End Function
