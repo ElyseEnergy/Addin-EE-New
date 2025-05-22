@@ -605,50 +605,28 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     PasteData = True
 End Function
 
-' Protège la feuille en préservant les verrouillages manuels et en forçant le verrouillage de nos tableaux
+' Protège uniquement les tableaux EE_ dans la feuille
 Private Sub ProtectSheetWithTable(ws As Worksheet)
-    ' Stocker l'état de protection actuel de la feuille
-    Dim isProtected As Boolean
-    isProtected = ws.ProtectContents
-      ' Si la feuille est protégée, essayer de la déprotéger
-    Dim password As String
-    If isProtected Then
-        On Error Resume Next
-        ws.Unprotect  ' Tenter sans mot de passe d'abord
-        If Err.Number <> 0 Then  ' Si erreur, c'est qu'un mot de passe est requis            password = InputBox("Cette feuille est protégée par mot de passe." & vbCrLf & _
-                              "Veuillez entrer le mot de passe pour permettre la mise à jour des protections.", _
-                              "Mot de passe requis")
-            If StrPtr(password) = 0 Or Len(Trim(password)) = 0 Then
-                MsgBox "Opération annulée. Les protections n'ont pas été mises à jour.", vbExclamation
-                Exit Sub
-            End If
-            ws.Unprotect password
-        End If
-        On Error GoTo 0
-    End If
+    ws.Unprotect
     
-    ' Forcer le verrouillage de nos tableaux (préfixe EE_)
+    ' 1. Déverrouiller toutes les cellules
+    ws.Cells.Locked = False
+    
+    ' 2. Verrouiller uniquement les cellules des tableaux EE_
     Dim tbl As ListObject
     For Each tbl In ws.ListObjects
-        If Left(tbl.name, 3) = "EE_" Then
+        If Left(tbl.Name, 3) = "EE_" Then
             tbl.Range.Locked = True
         End If
-    Next tbl    ' Protéger la feuille (avec le même mot de passe si nécessaire)
-    If Len(password) > 0 Then
-        ws.Protect UserInterfaceOnly:=True, password:=password, AllowFormattingCells:=True, _
-                   AllowFormattingColumns:=True, AllowFormattingRows:=True, _
-                   AllowInsertingColumns:=True, AllowInsertingRows:=True, _
-                   AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
-                   AllowDeletingRows:=True, AllowSorting:=True, _
-                   AllowFiltering:=True, AllowUsingPivotTables:=True
-    Else
-        ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
-                   AllowFormattingColumns:=True, AllowFormattingRows:=True, _
-                   AllowInsertingColumns:=True, AllowInsertingRows:=True, _
-                   AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
-                   AllowDeletingRows:=True, AllowSorting:=True, _
-                   AllowFiltering:=True, AllowUsingPivotTables:=True
-    End If
+    Next tbl
+    
+    ' 3. Protéger la feuille avec les permissions standard
+    ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
+               AllowFormattingColumns:=True, AllowFormattingRows:=True, _
+               AllowInsertingColumns:=True, AllowInsertingRows:=True, _
+               AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
+               AllowDeletingRows:=True, AllowSorting:=True, _
+               AllowFiltering:=True, AllowUsingPivotTables:=True
 End Sub
 
 ' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
