@@ -55,14 +55,13 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
         
-        ' Si l'utilisateur a annulé ou une erreur s'est produite
-        If errorOccurred Or finalSelection Is Nothing Then
-            MsgBox "Opération annulée", vbInformation
-            ' Nettoyer la requête avant de sortir
-            CleanupPowerQuery loadInfo.category.PowerQueryName
-            ProcessDataLoad = False
-            Exit Function
-        End If
+    ' Si l'utilisateur a annulé ou une erreur s'est produite
+    If errorOccurred Or finalSelection Is Nothing Then
+        ' Nettoyer la requête avant de sortir
+        CleanupPowerQuery loadInfo.category.PowerQueryName
+        ProcessDataLoad = False
+        Exit Function
+    End If
         
         ' Si aucune fiche n'a été sélectionnée
         If finalSelection.Count = 0 Then
@@ -115,6 +114,8 @@ End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(category As CategoryInfo) As Collection
+    On Error GoTo ErrorHandler
+    
     Dim lo As ListObject
     Dim dict As Object
     Dim arrValues() As String
@@ -659,10 +660,18 @@ Private Function GetUniqueTableName(categoryName As String) As String
                 End If
             End If
         Next tbl
-    Next ws
-
-    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
+    Next ws    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
+
+' Gère les erreurs pour GetSelectedValues
+ErrorHandler:
+    If Err.Number = 424 Then  ' "L'objet est requis" - typiquement quand l'utilisateur annule une InputBox
+        Set GetSelectedValues = Nothing
+    Else
+        MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
+        Set GetSelectedValues = Nothing
+    End If
+    Exit Function
 
 ' Nettoie la requête PowerQuery en supprimant son tableau associé
 Private Sub CleanupPowerQuery(queryName As String)
