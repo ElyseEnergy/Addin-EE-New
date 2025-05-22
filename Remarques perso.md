@@ -17,3 +17,8 @@ Il faut que tous les formulaires aient un champ ID
 => remettre sur le CO2
 
 encore des tests à effectuer sur le fait que quand je mets 1 pour CO2 parameters (une seule fiche disponible) il me jette une erreur
+
+2025.05.21_17.11
+
+Bon je crois que je m'arrête là, c'est déjà pas mal.
+Normalement c'est fonctionnel

@@ -22,6 +22,46 @@ Public Sub GetUtilitiesVisibility(control As IRibbonControl, ByRef visible As Va
     visible = True
 End Sub
 
+' Callback pour la visibilité du menu Files
+Public Sub GetServerFilesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+' Callback pour la visibilité du menu Outils
+Public Sub GetAnalysisToolsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+' Callback pour la visibilité du menu Finances
+Public Sub GetFinancesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+' Callback pour la visibilité des menus de projets
+Public Sub GetSummarySheetsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+Public Sub GetPlanningsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+Public Sub GetDevexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+Public Sub GetCapexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+Public Sub GetOpexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
+Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible As Variant)
+    visible = True
+End Sub
+
 ' Fonction pour forcer le rafraîchissement du ruban
 Public Sub InvalidateRibbon()
     Debug.Print "InvalidateRibbon appelé"

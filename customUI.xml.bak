@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<ns0:customUI xmlns:ns0="http://schemas.microsoft.com/office/2006/01/customui" onLoad="Ribbon_Load">
+    <ns0:ribbon startFromScratch="false">
+        <ns0:tabs>
+            <ns0:tab id="tabElyse" label="Elyse Energy">
+                <ns0:group id="grpTechnologies" label="Engineering">
+                    <ns0:menu id="menuTechnologies" label="Technologies" imageMso="CreateForm" size="large" getVisible="GetTechnologiesVisibility">
+                        <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnCO2Capture" label="CO2 - Capture" onAction="ProcessCO2Capture" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnH2General" label="H2 - General Parameters" onAction="ProcessH2General" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnH2ELY" label="H2 - Water Electrolysis (ELY)" onAction="ProcessH2Electrolysis" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnMeOHCO2" label="MeOH - CO2-to-Methanol Synthesis" onAction="ProcessMeOHCO2" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnMeOHBiomass" label="MeOH - Biomass Gasification Synthesis" onAction="ProcessMeOHBiomass" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="ProcessSAFBtJ" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="ProcessSAFMtJ" imageMso="AcceptInvitation"/>
+                    </ns0:menu>
+                    <ns0:menu id="menuUtilities" label="Utilities" imageMso="CreateQueryFromWizard" size="large" getVisible="GetUtilitiesVisibility">
+                        <ns0:button id="btnChiller" label="Chiller" onAction="OnChiller" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="OnCoolingWater" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnHeatProd" label="Heat Production" onAction="OnHeatProd" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnOtherUtil" label="Other Utilities" onAction="OnOtherUtil" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnPowerLoss" label="Power Losses" onAction="OnPowerLoss" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnWastewater" label="Wastewater Treatment" onAction="OnWastewater" imageMso="DeclineInvitation"/>
+                        <ns0:button id="btnWaterTreat" label="Water Treatment" onAction="OnWaterTreat" imageMso="DeclineInvitation"/>
+                    </ns0:menu>
+			</ns0:tab>
+        </ns0:tabs>
+    </ns0:ribbon>
+</ns0:customUI>
