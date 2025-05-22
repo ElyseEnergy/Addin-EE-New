@@ -16,11 +16,12 @@ End Sub
 ' Callback pour le sélecteur de profil
 Public Sub OnSelectDemoProfile(control As IRibbonControl)
     Select Case control.ID
-        Case "btnEngineerBasic": SetCurrentProfile Engineer_Basic
-        Case "btnProjectManager": SetCurrentProfile Project_Manager
-        Case "btnFinanceController": SetCurrentProfile Finance_Controller
-        Case "btnTechnicalDirector": SetCurrentProfile Technical_Director
-        Case "btnMultiProjectLead": SetCurrentProfile Multi_Project_Lead
+        Case "btnEngineerBasic": SetCurrentProfile AccessProfiles.Engineer_Basic
+        Case "btnProjectManager": SetCurrentProfile AccessProfiles.Project_Manager
+        Case "btnFinanceController": SetCurrentProfile AccessProfiles.Finance_Controller
+        Case "btnTechnicalDirector": SetCurrentProfile AccessProfiles.Technical_Director
+        Case "btnMultiProjectLead": SetCurrentProfile AccessProfiles.Multi_Project_Lead
+        Case "btnFullAdmin": SetCurrentProfile AccessProfiles.Full_Admin
     End Select
     
     InvalidateRibbon
@@ -106,4 +107,9 @@ Public Sub InvalidateRibbon()
     Else
         Debug.Print "gRibbon est Nothing"
     End If
-End Sub 
+End Sub
+
+' Simple test button callback
+Public Sub OnTestButton(control As IRibbonControl)
+    MsgBox "Test button clicked!"
+End Sub

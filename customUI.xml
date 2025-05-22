@@ -4,20 +4,21 @@
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
                 <ns0:group id="grpAccess" label="Demo Access">
-                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="UserPermission" size="large">
+                    <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">
                         <ns0:button id="btnEngineerBasic" label="Basic Engineer" onAction="OnSelectDemoProfile" imageMso="ContactCard"/>
                         <ns0:button id="btnProjectManager" label="Project Manager (Echo)" onAction="OnSelectDemoProfile" imageMso="TeamSiteSettings"/>
                         <ns0:button id="btnFinanceController" label="Finance Controller" onAction="OnSelectDemoProfile" imageMso="AccountingTools"/>
                         <ns0:button id="btnTechnicalDirector" label="Technical Director" onAction="OnSelectDemoProfile" imageMso="AdministrativeTools"/>
                         <ns0:button id="btnMultiProjectLead" label="Multi-Project Leader" onAction="OnSelectDemoProfile" imageMso="ViewCategory"/>
+                        <ns0:button id="btnFullAdmin" label="Admin (Full Access)" onAction="OnSelectDemoProfile" imageMso="UserPermission"/>
                         <ns0:menuSeparator id="sepCurrentAccess"/>
                         <ns0:button id="lblCurrentProfile" getLabel="GetCurrentProfileLabel"/>
                     </ns0:menu>
                 </ns0:group>
                 <ns0:group id="grpTechnologies" label="Engineering">
                     <ns0:menu id="menuTechnologies" label="Technologies" image="technologies" size="large" getVisible="GetTechnologiesVisibility">
-                        <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" image="AcceptInvitation"/>
-                        <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" image="AcceptInvitation"/>
+                        <ns0:button id="btnCompression" label="Compression" onAction="ProcessCompression" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnCO2General" label="CO2 - General Parameters" onAction="ProcessCO2General" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCO2Capture" label="CO2 - Capture" onAction="ProcessCO2Capture" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnH2General" label="H2 - General Parameters" onAction="ProcessH2General" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnH2ELY" label="H2 - Water Electrolysis (ELY)" onAction="ProcessH2Electrolysis" imageMso="AcceptInvitation"/>
@@ -43,21 +44,17 @@
                 </ns0:group>
 
                 <ns0:group id="grpOutils" label="Outils">
-                    <ns0:menu id="menuAnalysisTools" label="Outils d'analyse" imageMso="AnalysisToolsMenu" size="large" getVisible="GetAnalysisToolsVisibility">
-                        <ns0:button id="btnTechEcoAnalysis" label="Analyse technico économique" onAction="OnTechEcoAnalysis" image="tool_tea"/>
-                        <ns0:button id="btnBusinessPlan" label="Business Plan" onAction="OnBusinessPlan" image="business plan"/>
-                        <ns0:button id="btnElecOptim" label="Optimisation d'achat d'électricité" onAction="OnElecOptim" image="tool_electricity"/>
-                        <ns0:button id="btnLCA" label="Analyse en cycle de vie" onAction="OnLCA" image="tool_lca"/>
-                    </ns0:menu>
+                    <ns0:button id="btnTechEcoAnalysis" label="Analyse technico économique" onAction="OnTechEcoAnalysis" image="tool_tea" size="large"/>
+                    <ns0:button id="btnBusinessPlan" label="Business Plan" onAction="OnBusinessPlan" image="business_plan" size="large"/>
+                    <ns0:button id="btnElecOptim" label="Optimisation d'achat d'électricité" onAction="OnElecOptim" image="tool_electricity" size="large"/>
+                    <ns0:button id="btnLCA" label="Analyse en cycle de vie" onAction="OnLCA" image="tool_lca" size="large"/>
                 </ns0:group>
 
                 <ns0:group id="grpFinances" label="Finances">
-                    <ns0:menu id="menuFinances" label="Gestion financière" imageMso="AccountingFormulas" size="large" getVisible="GetFinancesVisibility">
-                        <ns0:button id="btnCorpoBudgets" label="Budgets corpo" onAction="OnCorpoBudgets" image="budget_corp"/>
-                        <ns0:button id="btnBudgetRequests" label="Demandes évolutions budgétaires" onAction="OnBudgetRequests" image="budget_dib"/>
-                        <ns0:button id="btnPurchaseRequests" label="Demandes d'achats" onAction="OnPurchaseRequests" image="budget_po"/>
-                        <ns0:button id="btnReceptions" label="Réceptions" onAction="OnReceptions" image="budget_reception"/>
-                    </ns0:menu>
+                    <ns0:button id="btnCorpoBudgets" label="Budgets corpo" onAction="OnCorpoBudgets" image="budget_corp" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnBudgetRequests" label="Demandes évolutions budgétaires" onAction="OnBudgetRequests" image="budget_dib" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnPurchaseRequests" label="Demandes d'achats" onAction="OnPurchaseRequests" image="budget_po" getVisible="GetFinancesVisibility" size="large"/>
+                    <ns0:button id="btnReceptions" label="Réceptions" onAction="OnReceptions" image="budget_reception" getVisible="GetFinancesVisibility" size="large"/>
                 </ns0:group>
 
                 <ns0:group id="grpProjects" label="Projets">

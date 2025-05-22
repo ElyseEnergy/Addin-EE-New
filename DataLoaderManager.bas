@@ -24,6 +24,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' 3. Gérer la sélection des valeurs
     Set loadInfo.selectedValues = GetSelectedValues(loadInfo.category)
     If loadInfo.selectedValues Is Nothing Then
+        ' Nettoyer la requête avant de sortir
+        CleanupPowerQuery loadInfo.category.PowerQueryName
         ProcessDataLoad = False
         Exit Function
     End If
@@ -56,6 +58,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         ' Si l'utilisateur a annulé ou une erreur s'est produite
         If errorOccurred Or finalSelection Is Nothing Then
             MsgBox "Opération annulée", vbInformation
+            ' Nettoyer la requête avant de sortir
+            CleanupPowerQuery loadInfo.category.PowerQueryName
             ProcessDataLoad = False
             Exit Function
         End If
@@ -63,6 +67,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         ' Si aucune fiche n'a été sélectionnée
         If finalSelection.Count = 0 Then
             MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+            ' Nettoyer la requête avant de sortir
+            CleanupPowerQuery loadInfo.category.PowerQueryName
             ProcessDataLoad = False
             Exit Function
         End If
@@ -100,6 +106,9 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         ActiveWindow.ScrollRow = .Row   ' S'assurer que le haut du tableau est visible
         ActiveWindow.ScrollColumn = .Column  ' S'assurer que la gauche du tableau est visible
     End With
+    
+    ' 8. Nettoyer la requête PowerQuery après le collage réussi
+    CleanupPowerQuery loadInfo.category.PowerQueryName
     
     ProcessDataLoad = True
 End Function
@@ -654,5 +663,16 @@ Private Function GetUniqueTableName(categoryName As String) As String
 
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
+
+' Nettoie la requête PowerQuery en supprimant son tableau associé
+Private Sub CleanupPowerQuery(queryName As String)
+    On Error Resume Next
+    Dim lo As ListObject
+    Set lo = wsPQData.ListObjects("Table_" & queryName)
+    If Not lo Is Nothing Then
+        lo.Delete
+    End If
+    On Error GoTo 0
+End Sub
 
 
