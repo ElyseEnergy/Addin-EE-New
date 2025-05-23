@@ -1,0 +1,124 @@
+﻿"SheetName";"URL";"API URL";"Type of field";"Field Location";"Field Name";"Field Type";"Field ID";"Memo"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"S13";"Décembre";"Number";"1003918";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"R13";"Novembre";"Number";"1003917";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"Q13";"Octobre";"Number";"1003916";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"P13";"Septembre";"Number";"1003915";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"O13";"Août";"Number";"1003914";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"N13";"Juillet";"Number";"1003913";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"M13";"Juin";"Number";"1003912";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"L13";"Mai";"Number";"1003911";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"K13";"Avril";"Number";"1003910";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"J13";"Mars";"Number";"1003909";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"I13";"Février";"Number";"1003908";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"H13";"Janvier";"Number";"1003907";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"G13";"Montant HT Annuel";"Number";"1003906";"Formula: H13+I13+J13+K13+L13+ M13+N13+O13+P13+Q13+R13+S13
+Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"E13";"Description";"Free text";"1003920";"Read Only"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"D13";"Catégorie";"Selection";"1003905";"Read Only
+Linked to field nom on sheet Catégories"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"C13";"Fournisseur";"Selection";"1003904";"Read Only
+Linked to field Nom on sheet Sociétés partenaires - Fournisseurs"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"subfield";"A13";"id";"Free text";"1003901";"Read Only
+Auto Generate: GROUP_DETAILS_{1`date`yyyy}_{0`number`00000}"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"A10";"Montant Total";"Number";"1003921";"Formula: G13"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"F7";"Année";"Free text";"1003969";"Read Only
+Hidden
+Loaded from field Année on sheet Budget"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"M6";"Département";"Free text";"1004866";"Read Only
+Hidden
+Loaded from field Département on sheet Département par Pôle"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"K6";"Pole associé";"Selection";"1004865";"Read Only
+Hidden
+Linked to field Nom on sheet Pôle
+Loaded from field Pole associé on sheet Département par Pôle"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"F6";"Département par pole";"Selection";"1004864";"Read Only
+Hidden
+Linked to field nom on sheet Département par Pôle
+Loaded from field Département par pole on sheet Budget"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"A6";"Groupe";"Selection";"1004858";"Linked to field Nom on sheet Groupe Budget"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"F5";"Service";"Selection";"1003967";"Read Only
+Hidden
+Linked to field Nom on sheet Service par département
+Loaded from field Service on sheet Budget"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"A5";"budget Associé";"Selection";"1002828";"Linked to field Name on sheet Budget"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"A2";"nom";"Free text";"1002920";"Formula: A5 + "" - "" + A6
+Read Only
+Unique;Unique"
+"↳ Budget Groupes";"https://ragic.elyse.energy/default/newbudget/2";"https://ragic.elyse.energy/default/newbudget/2?api=true";"main";"F1";"id";"Free text";"1002937";"Read Only
+Auto Generate: BUDGET_DETAILS_{1`date`yyyy}_{0`number`000000}
+Hidden
+Unique;Unique"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"subfield";"E17";"Montant Total";"Number";"1003921";"Read Only"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"subfield";"C17";"Groupe";"Selection";"1004858";"Read Only
+Linked to field Nom on sheet Groupe Budget"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"subfield";"A17";"id";"Free text";"1002937";"Read Only
+Auto Generate: {0`number`00000}"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A14";"Budget Total";"Number";"1002911";"Formula: E17
+Read Only"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A11";"Changelog";"Free text";"1003331";""
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A10";"version";"Free text";"1002916";""
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A8";"Phase Projet";"Selection";"1005054";"Linked to field Name on sheet   ↳ P + SP : Project Phases (generic) - Level 1"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A7";"Année";"Free text";"1002910";""
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"I6";"Département nom";"Free text";"1004861";"Read Only
+Hidden
+Loaded from field Département on sheet Département par Pôle"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"G6";"Pole associé";"Selection";"1004860";"Read Only
+Hidden
+Linked to field Nom on sheet Pôle
+Loaded from field Pole associé on sheet Département par Pôle"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A6";"Département par pole";"Selection";"1004862";"Read Only
+Linked to field nom on sheet Département par Pôle
+Loaded from field Département par pole on sheet Service par département"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"G5";"Service Name";"Selection";"1003951";"Read Only
+Hidden
+Loaded from field Service on sheet Service par département
+Options: DIRECTION COMMERCIALE,BUSINESS DEV,APPRO BIOMASSE & LOGISTIQUE,APPRO CARBONE,APPRO ENERGIE,OFFTAKE,DIRECTION INDUSTRIELLE,INGENIERIE,SERVICES TO PROJECT,IT & PROCESS,SUPPORT - RESSOURCES HUMAINES,SUPPORT - ADMIN & FINANCE,SUPPORT - FINANCEMENT & INVEST,SUPPORT - JURIDIQUE,SUPPORT - AFFAIRES PUBLIQUES,SUPPORT - COMMUNICATION,SUPPORT - ESG,SUPPORT - FGX - Lyon,SUPPORT - FGX - Marseille,SUPPORT - FGX - Paris,SUPPORT - FGX - Pau,SUPPORT - FGX - Madrid,SUPPORT - FGX - Lisbonne,SUPPORT - DIRECTION,PROJET EBIOFUEL SERVICES,PROJET FERME,PROJET NEOCARB,PROJET EM CTY,PROJET AVEBIO,PROJET GREEN COAST,PROJET EM - RHONE,PROJET HYLACQ 1,PROJET HYLACQ 2,PROJET EM LACQ,PROJET BIOTJET,PROJET EM-NUMANCIA"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A5";"Service";"Selection";"1003945";"Linked to field Nom on sheet Service par département"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A2";"Name";"Free text";"1002827";"Formula: ""Budget "" + A7 + "" - ""  + A5 + "" - "" + A10
+Read Only
+Unique;Unique"
+"Budget";"https://ragic.elyse.energy/default/newbudget/1";"https://ragic.elyse.energy/default/newbudget/1?api=true";"main";"A1";"ID";"Free text";"1002826";"Auto Generate: BUDGET_{1`date`yyyy}_{0`number`00000}
+Unique;Unique"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A11";"Département(old)";"Selection";"1003971";"Read Only
+Linked to field Name on sheet Département (OLD)
+Loaded from field Département (old) on sheet Service par département"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A8";"Année";"Free text";"1003974";""
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A7";"Service Name";"Selection";"1003973";"Read Only
+Loaded from field Service on sheet Service par département
+Options: DIRECTION COMMERCIALE,BUSINESS DEV,APPRO BIOMASSE & LOGISTIQUE,APPRO CARBONE,APPRO ENERGIE,OFFTAKE,DIRECTION INDUSTRIELLE,INGENIERIE,SERVICES TO PROJECT,IT & PROCESS,SUPPORT - RESSOURCES HUMAINES,SUPPORT - ADMIN & FINANCE,SUPPORT - FINANCEMENT & INVEST,SUPPORT - JURIDIQUE,SUPPORT - AFFAIRES PUBLIQUES,SUPPORT - COMMUNICATION,SUPPORT - ESG,SUPPORT - FGX - Lyon,SUPPORT - FGX - Marseille,SUPPORT - FGX - Paris,SUPPORT - FGX - Pau,SUPPORT - FGX - Madrid,SUPPORT - FGX - Lisbonne,SUPPORT - DIRECTION,PROJET EBIOFUEL SERVICES,PROJET FERME,PROJET NEOCARB,PROJET EM CTY,PROJET AVEBIO,PROJET GREEN COAST,PROJET EM - RHONE,PROJET HYLACQ 1,PROJET HYLACQ 2,PROJET EM LACQ,PROJET BIOTJET,PROJET EM-NUMANCIA"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A6";"Service";"Selection";"1003972";"Linked to field Nom on sheet Service par département"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"H5";"Département Name";"Free text";"1004856";"Loaded from field Département on sheet Département par Pôle"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"F5";"Pole associé";"Selection";"1004855";"Linked to field Nom on sheet Pôle
+Loaded from field Pole associé on sheet Département par Pôle"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A5";"Département par pole";"Selection";"1004854";"Read Only
+Linked to field nom on sheet Département par Pôle
+Loaded from field Département par pole on sheet Service par département"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A3";"Nom";"Free text";"1003965";"Unique;Unique"
+"Groupe Budget";"https://ragic.elyse.energy/default/budget-compta/3";"https://ragic.elyse.energy/default/budget-compta/3?api=true";"main";"A1";"id";"Free text";"1003964";"Read Only
+Auto Generate: GROUPE_BUDGET_{0`number`00000}
+Hidden
+Unique;Unique"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"A8";"Sous-type 2";"Selection";"1001729";"Not Empty
+Options: OSBL|H2,OSBL|Carbon Capture,OSBL|HTA,OSBL|Général,OSBL|Autre,ISBL|Methanol,ISBL|General,ISBL|Autre;Not Empty"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"A7";"Sous-type 1";"Selection";"1001727";"Not Empty
+Options: OSBL,ISBL;Not Empty"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"A5";"Parent Name - L0";"Selection";"1001726";"Linked to field name on sheet E : Typology Budget (generic) - level 0"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"F3";"Sous-Type value";"Free text";"1001734";"Formula: A7 + ""-"" + A8
+Read Only
+Hidden"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"A3";"nom";"Free text";"1001725";"Formula: A5 + "" → "" + F3
+Read Only
+Unique;Unique"
+"↳ E+SE : Typology Budget (generic) - level 1";"https://ragic.elyse.energy/default/budget/6";"https://ragic.elyse.energy/default/budget/6?api=true";"main";"A1";"id";"Free text";"1001724";"Read Only
+Auto Generate: {0`number`00000}
+Unique;Unique"
+"E : Typology Budget (generic) - level 0";"https://ragic.elyse.energy/default/budget/5";"https://ragic.elyse.energy/default/budget/5?api=true";"main";"A6";"Type 2";"Selection";"1001722";"Not Empty
+Options: Etudes|Ingénierie,Etudes|DDAE,AMO|Ingénierie,AMO|DDAE,Accomptes|PTF,Accomptes|Foncier,Accomptes|LLI Poste source,Accomptes|LLI Electrolyseur,Accomptes|Grid Connection,Frais financiers|Success Fees Innovation Fund,Frais financiers|Success Fees Ariane 2,Frais financiers|Grid Connection,Frais financiers|CO2 & Steam contract,Frais financiers|Water contract,Aléas|Aléas,Public|CNDP,Milestone|Gate,Milestone|Legal Deadlines,Permitting|Permis de construire;Not Empty"
+"E : Typology Budget (generic) - level 0";"https://ragic.elyse.energy/default/budget/5";"https://ragic.elyse.energy/default/budget/5?api=true";"main";"A5";"Type 1";"Selection";"1001721";"Not Empty
+Options: Etudes,AMO,Accomptes,Frais financiers,Aléas,Public,Milestone,Permitting;Not Empty"
+"E : Typology Budget (generic) - level 0";"https://ragic.elyse.energy/default/budget/5";"https://ragic.elyse.energy/default/budget/5?api=true";"main";"A3";"name";"Free text";"1001720";"Formula: A5 + ""-"" + A6
+Read Only
+Unique;Unique"
+"E : Typology Budget (generic) - level 0";"https://ragic.elyse.energy/default/budget/5";"https://ragic.elyse.energy/default/budget/5?api=true";"main";"A1";"id";"Free text";"1001719";"Read Only
+Auto Generate: {0`number`00000}
+Unique;Unique"
