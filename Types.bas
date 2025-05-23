@@ -11,6 +11,7 @@ Public Type CategoryInfo
     URL As String                 ' URL complète
     PowerQueryName As String      ' Nom de la requête PowerQuery
     CategoryGroup As String       ' Groupe de la catégorie
+    SheetName As String           ' Nom de la feuille Ragic associée
 End Type
 
 ' Type pour stocker les informations de chargement de données

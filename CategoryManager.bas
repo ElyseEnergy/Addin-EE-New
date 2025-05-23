@@ -9,6 +9,7 @@ Public CategoriesCount As Long
 Public Sub InitCategories()
     CategoriesCount = 0
     ReDim Categories(1 To 1)
+    LoadRagicDictionary
     ' # Engineering
     ' ## Technologies
     AddCategory "Compression", "Pas de filtrage", "Compression", "fiches-techniques/16/3.csv", "Technologies"
@@ -60,7 +61,7 @@ Public Sub InitCategories()
 End Sub
 
 ' Ajoute une catégorie au tableau
-Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "")
+Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "", Optional sheetName As String = "")
     Dim idx As Long
     If CategoriesCount = 0 Then
         idx = 1
@@ -75,6 +76,8 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
     Categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
     Categories(idx).PowerQueryName = "PQ_" & Utilities.SanitizeTableName(name)
     Categories(idx).categoryGroup = categoryGroup
+    If sheetName = "" Then sheetName = displayName
+    Categories(idx).SheetName = sheetName
     CategoriesCount = idx
 End Sub
 

@@ -581,14 +581,25 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                 "Catégorie: " & loadInfo.category.DisplayName & vbCrLf & _
                 "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
                 "Nombre de valeurs sélectionnées: " & loadInfo.selectedValues.Count
+
+    ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
+    Dim visibleCols As Collection
+    Set visibleCols = New Collection
+    Dim header As String
+    For i = 1 To lo.ListColumns.Count
+        header = lo.HeaderRowRange.Cells(1, i).Value
+        If Not IsFieldHidden(loadInfo.category.SheetName, header) Then
+            visibleCols.Add i
+        End If
+    Next i
     
     If loadInfo.ModeTransposed Then
         Debug.Print "--- Début collage transposé ---"
         ' Coller en transposé
-        For i = 1 To lo.ListColumns.Count
-            Debug.Print "Colonne " & i & ": " & lo.HeaderRowRange.Cells(1, i).Value
-            loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, i).Value
-            loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        For i = 1 To visibleCols.Count
+            Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
+            loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
+            loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
         Next i
         
         currentCol = 1
@@ -597,25 +608,25 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
                     Debug.Print "  Trouvé à la ligne " & j
-                    For i = 1 To lo.ListColumns.Count
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    For i = 1 To visibleCols.Count
+                        loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
+                        loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
                     Next i
                     Exit For
                 End If
             Next j
             currentCol = currentCol + 1
         Next v
-        
-        Set tblRange = loadInfo.FinalDestination.Resize(lo.ListColumns.Count, loadInfo.selectedValues.Count + 1)
+
+        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.selectedValues.Count + 1)
         Debug.Print "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     Else
         Debug.Print "--- Début collage normal ---"
         ' Coller en normal
-        For i = 1 To lo.ListColumns.Count
-            Debug.Print "Colonne " & i & ": " & lo.HeaderRowRange.Cells(1, i).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, i).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(i).Cells(1, 1).NumberFormat
+        For i = 1 To visibleCols.Count
+            Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
+            loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
+            loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
         Next i
         
         currentRow = 1
@@ -624,17 +635,17 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
                     Debug.Print "  Trouvé à la ligne " & j
-                    For i = 1 To lo.ListColumns.Count
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, i).Value
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, i).NumberFormat
+                    For i = 1 To visibleCols.Count
+                        loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
+                        loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
                     Next i
                     Exit For
                 End If
             Next j
             currentRow = currentRow + 1
         Next v
-        
-        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, lo.ListColumns.Count)
+
+        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, visibleCols.Count)
         Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     End If
     
