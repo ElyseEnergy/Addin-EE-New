@@ -702,6 +702,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     
     If Not ProcessDataLoad(loadInfo) Then
         ' Vérifie si c'est une annulation ou une erreur
+        Dim WasCancelled As Boolean
         If WasCancelled Then
             ProcessCategory = DataLoadResult.Cancelled
         Else

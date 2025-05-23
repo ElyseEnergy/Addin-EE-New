@@ -47,7 +47,7 @@ Public Sub InitCategories()
     
     ' Projets
         AddCategory "Scénarios techniques", "Projet", "Scénarios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
-        AddCategory "Plannings de phases", "Projet", "Plannings de phases", "tests/6.csv", "Projets"
+        AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets"
         AddCategory "Plannings de sous phases", "Level 0 Complete Name", "Plannings de sous phases", "tests/7.csv", "Projets"
         AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
         AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"

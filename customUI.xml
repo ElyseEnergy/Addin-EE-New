@@ -62,7 +62,10 @@
                     <ns0:button id="btnReceptions" label="Réceptions" onAction="ProcessReceptions" image="budget_reception" getVisible="GetFinancesVisibility" size="large"/>
                 </ns0:group>                <ns0:group id="grpProjects" label="Projets">
                     <ns0:button id="btnSummarySheets" label="Fiches récapitulatives" onAction="OnSummarySheets" image="projects_summaries" size="large" getVisible="GetSummarySheetsVisibility" enabled="false"/>
-                    <ns0:button id="btnPlannings" label="Plannings" onAction="ProcessPlanningPhases" image="plannings" size="large" getVisible="GetPlanningsVisibility"/>
+                    <ns0:menu id="menuPlannings" label="Plannings" image="plannings" size="large" getVisible="GetPlanningsVisibility">
+                        <ns0:button id="btnPlanningPhases" label="Plannings de phase" onAction="ProcessPlanningPhases" imageMso="AcceptInvitation"/>
+                        <ns0:button id="btnPlanningSousPhases" label="Plannings de sous phases" onAction="ProcessPlanningSous" imageMso="AcceptInvitation"/>
+                    </ns0:menu>
                     <ns0:button id="btnDevex" label="DEVEX" onAction="ProcessDevex" image="devex" size="large" getVisible="GetDevexVisibility"/>
                     <ns0:button id="btnCapex" label="CAPEX" onAction="ProcessCapex" image="capex" size="large" getVisible="GetCapexVisibility"/>
                     <ns0:button id="btnOpex" label="OPEX" onAction="OnOpex" image="opex" size="large" getVisible="GetOpexVisibility" enabled="false"/>
