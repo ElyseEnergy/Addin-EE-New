@@ -29,3 +29,10 @@ Normalement c'est fonctionnel
 Les groupes de visibilité semblent fonctionner
 il y a encore quelques problèmes d'icones et les groupes ne sont pas fonctionnelement corrects
 maintenant nous pouvons loader plus de data
+
+2025.05.22_09.00
+
+Pour les plannings, la sélection se fait désormais en deux étapes :
+1. Choix du projet (filtre principal)
+2. Choix de la version de planning
+Toutes les lignes correspondant à ces choix sont chargées automatiquement sans nouvelle sélection.

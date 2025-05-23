@@ -47,8 +47,8 @@ Public Sub InitCategories()
     
     ' Projets
         AddCategory "Scénarios techniques", "Projet", "Scénarios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
-        AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets"
-        AddCategory "Plannings de sous phases", "Level 0 Complete Name", "Plannings de sous phases", "tests/7.csv", "Projets"
+        AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets", "Planning link"
+        AddCategory "Plannings de sous phases", "Level 0 Complete Name", "Plannings de sous phases", "tests/7.csv", "Projets", "Planning link"
         AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
         AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
         AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
@@ -60,7 +60,7 @@ Public Sub InitCategories()
 End Sub
 
 ' Ajoute une catégorie au tableau
-Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String)
+Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "")
     Dim idx As Long
     If CategoriesCount = 0 Then
         idx = 1
@@ -70,6 +70,7 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
     ReDim Preserve Categories(1 To idx)
     Categories(idx).categoryName = name
     Categories(idx).filterLevel = filterLevel
+    Categories(idx).SecondaryFilterLevel = secondaryFilterLevel
     Categories(idx).displayName = displayName
     Categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
     Categories(idx).PowerQueryName = "PQ_" & Utilities.SanitizeTableName(name)

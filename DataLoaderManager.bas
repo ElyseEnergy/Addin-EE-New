@@ -36,8 +36,9 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         Exit Function
     End If
     
-    ' Si un filtre est appliqué, proposer la sélection des fiches correspondantes
-    If loadInfo.category.filterLevel <> "Pas de filtrage" Then
+    ' Si un filtre est appliqué et qu'il n'y a pas de filtre secondaire,
+    ' proposer la sélection des fiches correspondantes
+    If loadInfo.category.filterLevel <> "Pas de filtrage" And loadInfo.category.SecondaryFilterLevel = "" Then
         Dim lo As ListObject
         Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
         Dim idList As New Collection
@@ -192,14 +193,14 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     Else
         ' Créer un dictionnaire pour stocker les valeurs uniques
         Set dict = CreateObject("Scripting.Dictionary")
-        
+
         ' Extraire les valeurs uniques
         For Each cell In lo.ListColumns(category.filterLevel).DataBodyRange
             If Not dict.Exists(cell.Value) Then
                 dict.Add cell.Value, 1
             End If
         Next cell
-        
+
         ' Convertir le dictionnaire en tableau et trier
         ReDim arrValues(1 To dict.Count)
         i = 1
@@ -207,7 +208,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             arrValues(i) = v
             i = i + 1
         Next v
-        
+
         ' Trier le tableau
         For i = 1 To UBound(arrValues) - 1
             For j = i + 1 To UBound(arrValues)
@@ -219,26 +220,104 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
                 End If
             Next j
         Next i
-          ' Présenter les valeurs à l'utilisateur
+
+        Dim selectedPrimary As Collection
         On Error Resume Next
-        Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
+        Set selectedPrimary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
             "Choisissez une ou plusieurs " & category.filterLevel & " (ex: 1,3,5 ou *) :")
         Dim errorOccurred As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
-        
-        ' Si l'utilisateur a annulé ou une erreur s'est produite
-        If errorOccurred Or GetSelectedValues Is Nothing Then
+
+        If errorOccurred Or selectedPrimary Is Nothing Then
             MsgBox "Opération annulée", vbInformation
             Set GetSelectedValues = Nothing
             Exit Function
         End If
-        
-        ' Si aucune valeur n'a été sélectionnée
-        If GetSelectedValues.Count = 0 Then
+
+        If selectedPrimary.Count = 0 Then
             MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
             Set GetSelectedValues = Nothing
             Exit Function
+        End If
+
+        If category.SecondaryFilterLevel <> "" Then
+            ' Deuxième étape de filtrage
+            Set dict = CreateObject("Scripting.Dictionary")
+            For i = 1 To lo.DataBodyRange.Rows.Count
+                For Each v In selectedPrimary
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.filterLevel).Index).Value = v Then
+                        Dim secVal As String
+                        secVal = lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value
+                        If Not dict.Exists(secVal) Then dict.Add secVal, 1
+                        Exit For
+                    End If
+                Next v
+            Next i
+
+            ReDim arrValues(1 To dict.Count)
+            i = 1
+            For Each v In dict.Keys
+                arrValues(i) = v
+                i = i + 1
+            Next v
+
+            For i = 1 To UBound(arrValues) - 1
+                For j = i + 1 To UBound(arrValues)
+                    If arrValues(i) > arrValues(j) Then
+                        temp = arrValues(i)
+                        arrValues(i) = arrValues(j)
+                        arrValues(j) = temp
+                    End If
+                Next j
+            Next i
+
+            Dim selectedSecondary As Collection
+            On Error Resume Next
+            Set selectedSecondary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
+                "Choisissez une ou plusieurs " & category.SecondaryFilterLevel & " (ex: 1,3,5 ou *) :")
+            errorOccurred = (Err.Number <> 0)
+            On Error GoTo 0
+
+            If errorOccurred Or selectedSecondary Is Nothing Then
+                MsgBox "Opération annulée", vbInformation
+                Set GetSelectedValues = Nothing
+                Exit Function
+            End If
+
+            If selectedSecondary.Count = 0 Then
+                MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
+                Set GetSelectedValues = Nothing
+                Exit Function
+            End If
+
+            Set GetSelectedValues = New Collection
+            For i = 1 To lo.DataBodyRange.Rows.Count
+                Dim matchPrimary As Boolean
+                matchPrimary = False
+                For Each v In selectedPrimary
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.filterLevel).Index).Value = v Then
+                        matchPrimary = True
+                        Exit For
+                    End If
+                Next v
+                If matchPrimary Then
+                    For Each v In selectedSecondary
+                        If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value = v Then
+                            GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
+                            Exit For
+                        End If
+                    Next v
+                End If
+            Next i
+
+            If GetSelectedValues.Count = 0 Then
+                MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+                Set GetSelectedValues = Nothing
+                Exit Function
+            End If
+        Else
+            Set GetSelectedValues = selectedPrimary
         End If
     End If
     Exit Function

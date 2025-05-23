@@ -6,6 +6,7 @@ Option Explicit
 Public Type CategoryInfo
     CategoryName As String        ' Technologies ou Utilities
     FilterLevel As String         ' Niveau de filtrage (Molecule Type, Brand, Type, etc.)
+    SecondaryFilterLevel As String ' Niveau de filtrage secondaire (ex: version de planning)
     DisplayName As String         ' Nom d'affichage pour l'utilisateur
     URL As String                 ' URL complète
     PowerQueryName As String      ' Nom de la requête PowerQuery
