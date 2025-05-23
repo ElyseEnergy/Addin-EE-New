@@ -72,3 +72,40 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     
     MsgBox "Nettoyage terminé", vbInformation
 End Sub
+
+' Test et debug du RagicDictionary
+Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+    Debug.Print "=== Test du RagicDictionary ==="
+    
+    ' 1. Charger le dictionnaire
+    Debug.Print "1. Chargement du dictionnaire..."
+    LoadRagicDictionary
+    
+    ' 2. Vérifier si le dictionnaire a été chargé
+    If RagicFieldDict Is Nothing Then
+        Debug.Print "ERREUR: Le dictionnaire n'a pas été chargé"
+        Exit Sub
+    End If
+    
+    ' 3. Afficher le contenu du dictionnaire
+    Debug.Print "2. Contenu du dictionnaire :"
+    Dim key As Variant
+    For Each key In RagicFieldDict.Keys
+        Debug.Print "  " & key & " => " & RagicFieldDict(key)
+    Next key
+    
+    ' 4. Tester quelques champs
+    Debug.Print "3. Test de quelques champs :"
+    TestField "CO2 Capture", "Brand"
+    TestField "H2 waters electrolysis", "Specific Electricity Consumption (SEC) [MWhe/kgH2]"
+    TestField "MeOH - CO2-to-Methanol Synthesis", "CO2 Conversion [%]"
+    
+    Debug.Print String(50, "-")
+    MsgBox "Test du RagicDictionary terminé. Voir la fenêtre de debug pour les détails.", vbInformation
+End Sub
+
+' Fonction utilitaire pour tester un champ
+Private Sub TestField(sheetName As String, fieldName As String)
+    Debug.Print "  Test de " & sheetName & "|" & fieldName & " :"
+    Debug.Print "    Hidden = " & IsFieldHidden(sheetName, fieldName)
+End Sub

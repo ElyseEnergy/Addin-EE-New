@@ -8,39 +8,37 @@ Public Enum DataLoadResult
     Error = 3
 End Enum
 
-
-
 ' Fonction principale de traitement
-Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
+Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
     ' 1. Vérifier/Créer la requête PQ
-    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.category) Then
+    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
         MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
     ' 2. Charger les données
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
-    LoadQueries.LoadQuery loadInfo.category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+    LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
     
     ' 3. Gérer la sélection des valeurs
-    Set loadInfo.selectedValues = GetSelectedValues(loadInfo.category)
-    If loadInfo.selectedValues Is Nothing Then
+    Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
+    If loadInfo.SelectedValues Is Nothing Then
         ' Nettoyer la requête avant de sortir
-        CleanupPowerQuery loadInfo.category.PowerQueryName
-        ProcessDataLoad = False
+        CleanupPowerQuery loadInfo.Category.PowerQueryName
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
     ' Si un filtre est appliqué et qu'il n'y a pas de filtre secondaire,
     ' proposer la sélection des fiches correspondantes
-    If loadInfo.category.filterLevel <> "Pas de filtrage" And loadInfo.category.SecondaryFilterLevel = "" Then
+    If loadInfo.Category.FilterLevel <> "Pas de filtrage" And loadInfo.Category.SecondaryFilterLevel = "" Then
         Dim lo As ListObject
-        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
+        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
         Dim idList As New Collection
         Dim displayList As New Collection
         Dim i As Long, v As Variant
@@ -48,8 +46,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         displayColIndex = 2 ' Afficher la colonne 2 (nom)
         ' Parcourir les lignes et ne garder que celles correspondant au(x) filtre(s) choisi(s)
         For i = 1 To lo.DataBodyRange.Rows.Count
-            For Each v In loadInfo.selectedValues
-                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.category.filterLevel).Index).Value = v Then
+            For Each v In loadInfo.SelectedValues
+                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.Category.FilterLevel).Index).Value = v Then
                     idList.Add lo.DataBodyRange.Rows(i).Columns(1).Value
                     displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
                 End If
@@ -57,7 +55,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         Next i        ' Proposer la sélection des fiches parmi displayList
         Dim finalSelection As Collection
         On Error Resume Next
-        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.category.filterLevel & " sélectionnée :")
+        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
         Dim errorOccurred As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
@@ -65,8 +63,8 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' Si l'utilisateur a annulé ou une erreur s'est produite
     If errorOccurred Or finalSelection Is Nothing Then
         ' Nettoyer la requête avant de sortir
-        CleanupPowerQuery loadInfo.category.PowerQueryName
-        ProcessDataLoad = False
+        CleanupPowerQuery loadInfo.Category.PowerQueryName
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
         
@@ -74,19 +72,19 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
         If finalSelection.Count = 0 Then
             MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
             ' Nettoyer la requête avant de sortir
-            CleanupPowerQuery loadInfo.category.PowerQueryName
-            ProcessDataLoad = False
+            CleanupPowerQuery loadInfo.Category.PowerQueryName
+            ProcessDataLoad = DataLoadResult.Cancelled
             Exit Function
         End If
         
-        Set loadInfo.selectedValues = finalSelection
+        Set loadInfo.SelectedValues = finalSelection
     End If
     
     ' 4. Gérer le mode d'affichage
     Dim displayModeResult As Variant
     displayModeResult = GetDisplayMode(loadInfo)
     If displayModeResult = -999 Then ' Code d'erreur spécifique
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     loadInfo.ModeTransposed = displayModeResult
@@ -94,13 +92,13 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' 5. Gérer la destination
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
     If loadInfo.FinalDestination Is Nothing Then
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
     ' 6. Coller les données
     If Not PasteData(loadInfo) Then
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
@@ -114,9 +112,9 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     End With
     
     ' 8. Nettoyer la requête PowerQuery après le collage réussi
-    CleanupPowerQuery loadInfo.category.PowerQueryName
+    CleanupPowerQuery loadInfo.Category.PowerQueryName
     
-    ProcessDataLoad = True
+    ProcessDataLoad = DataLoadResult.Success
 End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
@@ -141,7 +139,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     End If
 
     ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
-    If category.filterLevel = "Pas de filtrage" Then
+    If category.FilterLevel = "Pas de filtrage" Then
         On Error Resume Next ' Pour gérer l'annulation de l'InputBox
         
         ' Créer un tableau avec toutes les fiches disponibles
@@ -195,7 +193,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         Set dict = CreateObject("Scripting.Dictionary")
 
         ' Extraire les valeurs uniques
-        For Each cell In lo.ListColumns(category.filterLevel).DataBodyRange
+        For Each cell In lo.ListColumns(category.FilterLevel).DataBodyRange
             If Not dict.Exists(cell.Value) Then
                 dict.Add cell.Value, 1
             End If
@@ -224,7 +222,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         Dim selectedPrimary As Collection
         On Error Resume Next
         Set selectedPrimary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-            "Choisissez une ou plusieurs " & category.filterLevel & " (ex: 1,3,5 ou *) :")
+            "Choisissez une ou plusieurs " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
         Dim errorOccurred As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
@@ -246,7 +244,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Set dict = CreateObject("Scripting.Dictionary")
             For i = 1 To lo.DataBodyRange.Rows.Count
                 For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.filterLevel).Index).Value = v Then
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
                         Dim secVal As String
                         secVal = lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value
                         If Not dict.Exists(secVal) Then dict.Add secVal, 1
@@ -296,7 +294,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
                 Dim matchPrimary As Boolean
                 matchPrimary = False
                 For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.filterLevel).Index).Value = v Then
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
                         matchPrimary = True
                         Exit For
                     End If
@@ -342,8 +340,8 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim colWidths() As Integer, rowWidths() As Integer
     Dim v As Variant
     
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
-    nbFiches = loadInfo.selectedValues.Count
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
+    nbFiches = loadInfo.SelectedValues.Count
     nbChamps = lo.ListColumns.Count
     
     ' Préparer les exemples pour l'inputbox de mode
@@ -396,7 +394,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     Next i
     
     idx = 1
-    For Each v In loadInfo.selectedValues
+    For Each v In loadInfo.SelectedValues
         If idx > loadInfo.PreviewRows Then Exit For
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -421,7 +419,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     previewNormal = previewNormal & vbCrLf
     
     idx = 1
-    For Each v In loadInfo.selectedValues
+    For Each v In loadInfo.SelectedValues
         If idx > loadInfo.PreviewRows Then Exit For
         For j = 1 To lo.DataBodyRange.Rows.Count
             If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -442,7 +440,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     For i = 1 To WorksheetFunction.Min(4, nbChamps)
         rowWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
         idx = 1
-        For Each v In loadInfo.selectedValues
+        For Each v In loadInfo.SelectedValues
             If idx > loadInfo.PreviewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -461,7 +459,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
         headT = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
         previewTransposed = previewTransposed & headT & Space(rowWidths(i) - Len(headT)) & ": "
         idx = 1
-        For Each v In loadInfo.selectedValues
+        For Each v In loadInfo.SelectedValues
             If idx > loadInfo.PreviewRows Then Exit For
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -484,14 +482,14 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Dim okPlage As Boolean
     Dim i As Long, j As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
     ' Calculer la taille nécessaire
     If loadInfo.ModeTransposed Then
         nbRows = lo.ListColumns.Count
-        nbCols = loadInfo.selectedValues.Count + 1 ' +1 pour les en-têtes
+        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
     Else
-        nbRows = loadInfo.selectedValues.Count + 1 ' +1 pour les en-têtes
+        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
         nbCols = lo.ListColumns.Count
     End If
       ' Informer l'utilisateur
@@ -569,7 +567,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim v As Variant
     Dim currentCol As Long, currentRow As Long
     
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.category.PowerQueryName))
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
     ' Déprotéger la feuille de destination avant tout collage
     Dim ws As Worksheet
@@ -578,9 +576,9 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     Debug.Print "=== DÉBUT PASTEDATA ===" & vbCrLf & _
                 "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
-                "Catégorie: " & loadInfo.category.DisplayName & vbCrLf & _
+                "Catégorie: " & loadInfo.Category.DisplayName & vbCrLf & _
                 "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
-                "Nombre de valeurs sélectionnées: " & loadInfo.selectedValues.Count
+                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count
 
     ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
     Dim visibleCols As Collection
@@ -588,7 +586,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim header As String
     For i = 1 To lo.ListColumns.Count
         header = lo.HeaderRowRange.Cells(1, i).Value
-        If Not IsFieldHidden(loadInfo.category.SheetName, header) Then
+        If Not IsFieldHidden(loadInfo.Category.SheetName, header) Then
             visibleCols.Add i
         End If
     Next i
@@ -603,7 +601,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next i
         
         currentCol = 1
-        For Each v In loadInfo.selectedValues
+        For Each v In loadInfo.SelectedValues
             Debug.Print "Traitement colonne " & currentCol & ", valeur=" & v
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -618,7 +616,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             currentCol = currentCol + 1
         Next v
 
-        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.selectedValues.Count + 1)
+        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
         Debug.Print "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     Else
         Debug.Print "--- Début collage normal ---"
@@ -630,7 +628,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next i
         
         currentRow = 1
-        For Each v In loadInfo.selectedValues
+        For Each v In loadInfo.SelectedValues
             Debug.Print "Traitement ligne " & currentRow & ", valeur=" & v
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -645,7 +643,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             currentRow = currentRow + 1
         Next v
 
-        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.selectedValues.Count + 1, visibleCols.Count)
+        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, visibleCols.Count)
         Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     End If
     
@@ -691,7 +689,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     End If
     On Error GoTo 0
     
-    tbl.name = GetUniqueTableName(loadInfo.category.displayName)
+    tbl.name = GetUniqueTableName(loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
     Debug.Print "Tableau créé avec succès: " & tbl.Name
     
