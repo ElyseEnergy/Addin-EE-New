@@ -11,14 +11,14 @@ End Enum
 
 
 ' Fonction principale de traitement
-Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
+Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
     ' 1. Vérifier/Créer la requête PQ
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.category) Then
         MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
@@ -32,7 +32,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     If loadInfo.selectedValues Is Nothing Then
         ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.category.PowerQueryName
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
@@ -66,7 +66,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     If errorOccurred Or finalSelection Is Nothing Then
         ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.category.PowerQueryName
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
         
@@ -75,7 +75,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
             MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
             ' Nettoyer la requête avant de sortir
             CleanupPowerQuery loadInfo.category.PowerQueryName
-            ProcessDataLoad = False
+            ProcessDataLoad = DataLoadResult.Cancelled
             Exit Function
         End If
         
@@ -86,7 +86,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     Dim displayModeResult As Variant
     displayModeResult = GetDisplayMode(loadInfo)
     If displayModeResult = -999 Then ' Code d'erreur spécifique
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     loadInfo.ModeTransposed = displayModeResult
@@ -94,13 +94,13 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' 5. Gérer la destination
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
     If loadInfo.FinalDestination Is Nothing Then
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
     ' 6. Coller les données
     If Not PasteData(loadInfo) Then
-        ProcessDataLoad = False
+        ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
@@ -116,7 +116,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As Boolean
     ' 8. Nettoyer la requête PowerQuery après le collage réussi
     CleanupPowerQuery loadInfo.category.PowerQueryName
     
-    ProcessDataLoad = True
+    ProcessDataLoad = DataLoadResult.Success
 End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
@@ -779,10 +779,10 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     
     loadInfo.PreviewRows = 3
     
-    If Not ProcessDataLoad(loadInfo) Then
-        ' Vérifie si c'est une annulation ou une erreur
-        Dim WasCancelled As Boolean
-        If WasCancelled Then
+    Dim result As DataLoadResult
+    result = ProcessDataLoad(loadInfo)
+    If result <> DataLoadResult.Success Then
+        If result = DataLoadResult.Cancelled Then
             ProcessCategory = DataLoadResult.Cancelled
         Else
             If errorMessage <> "" Then
@@ -792,7 +792,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
         End If
         Exit Function
     End If
-    
+
     ProcessCategory = DataLoadResult.Success
 End Function
 
