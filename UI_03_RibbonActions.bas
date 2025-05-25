@@ -1,7 +1,5 @@
-' Module: H2_Waters_Electrolysis_Manager
-' Gère le traitement des données d'électrolyse de l'eau
 Option Explicit
-Private Const MODULE_NAME As String = "H2_Waters_Electrolysis_Manager"
+Private Const MODULE_NAME As String = "UI_03_RibbonActions"
 
 Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessage As String) As DataLoadResult
     On Error GoTo ErrorHandler
