@@ -12,6 +12,7 @@ Option Explicit
 ' This module requires:
 ' - ElyseCore_System (enums, constants, utilities)
 ' - ElyseLogger_Module (logging functions)
+' - Microsoft SharePoint Type Library (MSOWC.DLL)
 
 ' ============================================================================
 ' SHAREPOINT CONFIGURATION AND TYPES
@@ -53,6 +54,7 @@ Private mCurrentSiteInfo As SharePointSiteInfo
 Private mSharePointAvailable As Boolean
 Private mLastMetadataCheck As Date
 Private mCachedMetadata As Object
+Private mSharePointObject As Object ' Pour l'objet SharePoint
 
 ' ============================================================================
 ' SHAREPOINT DETECTION AND INITIALIZATION
@@ -65,6 +67,16 @@ Public Function InitializeSharePointIntegration() As Boolean
     
     ' Initialize cache
     Set mCachedMetadata = CreateObject("Scripting.Dictionary")
+    
+    ' Initialize SharePoint object
+    On Error Resume Next
+    Set mSharePointObject = CreateObject("MSOWC.SharePoint")
+    If Err.Number <> 0 Then
+        LogError "sharepoint_init_error", Err.Number, "Failed to initialize SharePoint object: " & Err.Description
+        InitializeSharePointIntegration = False
+        Exit Function
+    End If
+    On Error GoTo 0
     
     ' Detect SharePoint availability
     mSharePointAvailable = DetectSharePointEnvironment()
@@ -168,18 +180,19 @@ Private Sub GetDocumentIDProperties()
     ' Get SharePoint document ID properties
     On Error Resume Next
     
-    ' Try to get SharePoint Document ID
-    mCurrentDocumentInfo.DocumentID = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocId").Value
-    
-    If mCurrentDocumentInfo.DocumentID = "" Then
-        mCurrentDocumentInfo.DocumentID = ActiveWorkbook.CustomDocumentProperties("_dlc_DocId").Value
+    ' Try to get SharePoint Document ID using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        mCurrentDocumentInfo.DocumentID = mSharePointObject.DocumentID
+        mCurrentDocumentInfo.ItemGUID = mSharePointObject.ItemGUID
     End If
     
-    ' Try to get Item GUID
-    mCurrentDocumentInfo.ItemGUID = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocIdItemGuid").Value
-    
-    If mCurrentDocumentInfo.ItemGUID = "" Then
-        mCurrentDocumentInfo.ItemGUID = ActiveWorkbook.CustomDocumentProperties("_dlc_DocIdItemGuid").Value
+    ' Fallback to Excel properties if SharePoint object fails
+    If mCurrentDocumentInfo.DocumentID = "" Then
+        mCurrentDocumentInfo.DocumentID = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocId").Value
+        
+        If mCurrentDocumentInfo.DocumentID = "" Then
+            mCurrentDocumentInfo.DocumentID = ActiveWorkbook.CustomDocumentProperties("_dlc_DocId").Value
+        End If
     End If
     
     ' Generate fallback ID if no SharePoint ID found
@@ -251,14 +264,21 @@ Private Sub GetDocumentFileProperties()
     ' Get file-related properties
     On Error Resume Next
     
-    mCurrentDocumentInfo.LastModified = ActiveWorkbook.BuiltinDocumentProperties("Last Save Time").Value
-    
-    ' Try to get file size
-    Dim filePath As String
-    filePath = ActiveWorkbook.FullName
-    
-    If InStr(filePath, "http") = 0 Then ' Local file
-        mCurrentDocumentInfo.FileSize = FileLen(filePath)
+    ' Try to get file properties using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        mCurrentDocumentInfo.LastModified = mSharePointObject.LastModified
+        mCurrentDocumentInfo.FileSize = mSharePointObject.FileSize
+    Else
+        ' Fallback to Excel properties
+        mCurrentDocumentInfo.LastModified = ActiveWorkbook.BuiltinDocumentProperties("Last Save Time").Value
+        
+        ' Try to get file size
+        Dim filePath As String
+        filePath = ActiveWorkbook.FullName
+        
+        If InStr(filePath, "http") = 0 Then ' Local file
+            mCurrentDocumentInfo.FileSize = FileLen(filePath)
+        End If
     End If
     
     On Error GoTo 0
@@ -268,19 +288,23 @@ Private Sub GetDocumentVersionProperties()
     ' Get version-related properties
     On Error Resume Next
     
-    ' Try to get version information
-    mCurrentDocumentInfo.VersionNumber = ActiveWorkbook.BuiltinDocumentProperties("Revision Number").Value
-    
-    ' Try to get content type
-    mCurrentDocumentInfo.ContentType = ActiveWorkbook.CustomDocumentProperties("Content Type").Value
+    ' Try to get version information using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        mCurrentDocumentInfo.VersionNumber = mSharePointObject.Version
+        mCurrentDocumentInfo.ContentType = mSharePointObject.ContentType
+        mCurrentDocumentInfo.IsCheckedOut = mSharePointObject.IsCheckedOut
+        mCurrentDocumentInfo.CheckoutUser = mSharePointObject.CheckedOutBy
+    Else
+        ' Fallback to Excel properties
+        mCurrentDocumentInfo.VersionNumber = ActiveWorkbook.BuiltinDocumentProperties("Revision Number").Value
+        mCurrentDocumentInfo.ContentType = ActiveWorkbook.CustomDocumentProperties("Content Type").Value
+        mCurrentDocumentInfo.IsCheckedOut = False ' Default
+        mCurrentDocumentInfo.CheckoutUser = ""
+    End If
     
     If mCurrentDocumentInfo.ContentType = "" Then
         mCurrentDocumentInfo.ContentType = "Document"
     End If
-    
-    ' Check if document is checked out
-    mCurrentDocumentInfo.IsCheckedOut = False ' Default
-    mCurrentDocumentInfo.CheckoutUser = ""
     
     On Error GoTo 0
 End Sub
@@ -460,9 +484,13 @@ Public Function CheckOutDocument() As Boolean
     
     LogInfo "sharepoint_checkout_attempt", "Attempting to check out document"
     
-    ' Try to check out the document
-    ' Note: This requires SharePoint integration APIs which may not be available in all Excel versions
-    ActiveWorkbook.CheckOut
+    ' Try to check out using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        mSharePointObject.CheckOut
+    Else
+        ' Fallback to Excel's built-in method
+        ActiveWorkbook.CheckOut
+    End If
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = True
@@ -489,12 +517,16 @@ Public Function CheckInDocument(Optional comment As String = "") As Boolean
     
     LogInfo "sharepoint_checkin_attempt", "Attempting to check in document"
     
-    ' Try to check in the document
-    If comment = "" Then
-        comment = "Checked in via Elyse Energy Excel Add-in"
+    ' Try to check in using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        If comment = "" Then
+            comment = "Checked in via Elyse Energy Excel Add-in"
+        End If
+        mSharePointObject.CheckIn comment
+    Else
+        ' Fallback to Excel's built-in method
+        ActiveWorkbook.CheckIn True, comment, True
     End If
-    
-    ActiveWorkbook.CheckIn True, comment, True ' Save changes, add comment, make major version
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = False
@@ -521,8 +553,13 @@ Public Function DiscardCheckOut() As Boolean
     
     LogInfo "sharepoint_discard_attempt", "Attempting to discard check out"
     
-    ' Discard checkout
-    ActiveWorkbook.UndoCheckOut
+    ' Try to discard checkout using SharePoint Type Library
+    If Not mSharePointObject Is Nothing Then
+        mSharePointObject.UndoCheckOut
+    Else
+        ' Fallback to Excel's built-in method
+        ActiveWorkbook.UndoCheckOut
+    End If
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = False
