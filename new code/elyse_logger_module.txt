@@ -1,0 +1,531 @@
+' ============================================================================
+' ElyseLogger_Module - Centralized Logging System
+' Elyse Energy VBA Ecosystem - Logging Component
+' Requires: ElyseCore_System
+' ============================================================================
+
+Option Explicit
+
+' ============================================================================
+' MODULE DEPENDENCIES
+' ============================================================================
+' This module requires ElyseCore_System to be loaded first
+' Dependencies: ElyseCore_System (enums, constants, utilities)
+
+' ============================================================================
+' LOGGING STATE VARIABLES
+' ============================================================================
+
+Private mLogBuffer As Collection
+Private mHeartbeatTimer As Date
+Private mHeartbeatFile As String
+Private mLastFlushTime As Date
+Private mLoggerInitialized As Boolean
+Private mCurrentLogLevel As LogLevel
+
+' ============================================================================
+' LOGGER INITIALIZATION
+' ============================================================================
+
+Public Function InitializeLogger(Optional logLevel As LogLevel = INFO_LEVEL) As Boolean
+    ' Initialize the logging system
+    On Error GoTo ErrorHandler
+    
+    ' Check core system dependency
+    If Not IsSystemInitialized() Then
+        InitializeLogger = False
+        Exit Function
+    End If
+    
+    ' Set logging configuration
+    mCurrentLogLevel = logLevel
+    mLastFlushTime = Now
+    
+    ' Initialize log buffer
+    Set mLogBuffer = New Collection
+    
+    ' Setup heartbeat system
+    InitializeHeartbeatSystem
+    
+    ' Check for previous crash
+    CheckForPreviousCrash
+    
+    ' Mark as initialized
+    mLoggerInitialized = True
+    
+    ' Log the initialization
+    LogEvent "logger_init", "Logger system initialized successfully", INFO_LEVEL
+    
+    InitializeLogger = True
+    Exit Function
+    
+ErrorHandler:
+    InitializeLogger = False
+End Function
+
+Public Sub ShutdownLogger()
+    ' Clean shutdown of logging system
+    
+    If Not mLoggerInitialized Then Exit Sub
+    
+    ' Log shutdown
+    LogEvent "logger_shutdown", "Logger system shutting down", INFO_LEVEL
+    
+    ' Flush remaining logs
+    FlushLogBuffer True
+    
+    ' Stop heartbeat
+    StopHeartbeat
+    
+    ' Cleanup
+    Set mLogBuffer = Nothing
+    mLoggerInitialized = False
+End Sub
+
+' ============================================================================
+' CORE LOGGING FUNCTIONS
+' ============================================================================
+
+Public Sub LogEvent(action As String, details As String, Optional level As LogLevel = INFO_LEVEL, Optional includeContext As Boolean = True)
+    ' Main logging function
+    
+    ' Check if we should log this level
+    If level < mCurrentLogLevel Then Exit Sub
+    
+    ' Ensure logger is initialized
+    If Not mLoggerInitialized Then
+        If Not InitializeLogger() Then Exit Sub
+    End If
+    
+    ' Create log entry
+    Dim logEntry As Object
+    Set logEntry = CreateLogEntry(action, details, level, includeContext)
+    
+    ' Add to buffer
+    AddToLogBuffer logEntry
+    
+    ' Auto-flush if critical or buffer full
+    If level >= ERROR_LEVEL Or mLogBuffer.Count >= LOG_BUFFER_SIZE Then
+        FlushLogBuffer
+    End If
+End Sub
+
+Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
+    ' Specialized logging for ribbon button clicks
+    Dim details As String
+    details = "Button ID: " & buttonId
+    
+    If additionalInfo <> "" Then
+        details = details & " | Info: " & additionalInfo
+    End If
+    
+    LogEvent "ribbon_click", details, INFO_LEVEL
+End Sub
+
+Public Sub LogFunctionCall(functionName As String, Optional parameters As String = "", Optional executionTime As Double = 0)
+    ' Specialized logging for function calls
+    Dim details As String
+    details = "Function: " & functionName
+    
+    If parameters <> "" Then
+        details = details & " | Parameters: " & parameters
+    End If
+    
+    If executionTime > 0 Then
+        details = details & " | Execution time: " & Format(executionTime, "0.000") & "s"
+    End If
+    
+    LogEvent "function_call", details, DEBUG_LEVEL
+End Sub
+
+Public Sub LogUserAction(actionType As String, description As String, Optional targetObject As String = "")
+    ' Specialized logging for user actions
+    Dim details As String
+    details = "Action: " & actionType & " | Description: " & description
+    
+    If targetObject <> "" Then
+        details = details & " | Target: " & targetObject
+    End If
+    
+    LogEvent "user_action", details, INFO_LEVEL
+End Sub
+
+Public Sub LogError(errorSource As String, errorNumber As Long, errorDescription As String, Optional stackTrace As String = "")
+    ' Specialized logging for errors
+    Dim details As String
+    details = "Source: " & errorSource & " | Error: " & errorNumber & " | Description: " & errorDescription
+    
+    If stackTrace <> "" Then
+        details = details & " | Stack: " & stackTrace
+    End If
+    
+    LogEvent "error", details, ERROR_LEVEL
+End Sub
+
+Public Sub LogPerformance(operationName As String, duration As Double, Optional additionalMetrics As String = "")
+    ' Specialized logging for performance metrics
+    Dim details As String
+    details = "Operation: " & operationName & " | Duration: " & Format(duration, "0.000") & "s"
+    
+    If additionalMetrics <> "" Then
+        details = details & " | Metrics: " & additionalMetrics
+    End If
+    
+    LogEvent "performance", details, DEBUG_LEVEL
+End Sub
+
+' ============================================================================
+' LOG ENTRY CREATION AND FORMATTING
+' ============================================================================
+
+Private Function CreateLogEntry(action As String, details As String, level As LogLevel, includeContext As Boolean) As Object
+    ' Create a complete log entry with all metadata
+    
+    Dim logEntry As Object
+    Set logEntry = CreateObject("Scripting.Dictionary")
+    
+    ' Basic log information
+    logEntry("timestamp") = FormatTimestamp(True)
+    logEntry("session_id") = GetSessionID()
+    logEntry("user") = GetUserIdentity()
+    logEntry("action") = action
+    logEntry("details") = TruncateString(details, 500) ' Limit detail length
+    logEntry("level") = GetLogLevelString(level)
+    
+    ' Include contextual information if requested
+    If includeContext Then
+        AddContextualInformation logEntry
+    End If
+    
+    Set CreateLogEntry = logEntry
+End Function
+
+Private Sub AddContextualInformation(logEntry As Object)
+    ' Add rich contextual information to log entry
+    
+    ' System context
+    logEntry("excel_version") = Application.Version
+    logEntry("computer_name") = Environ("COMPUTERNAME")
+    logEntry("user_domain") = Environ("USERDOMAIN")
+    
+    ' Excel context
+    logEntry("workbook_name") = GetCurrentWorkbookName()
+    logEntry("active_sheet") = GetActiveSheetName()
+    logEntry("selected_range") = GetSelectedRangeAddress()
+    
+    ' File context (will be populated by SharePoint module if available)
+    logEntry("file_location") = "pending_sharepoint_check"
+    logEntry("sharepoint_doc_id") = "pending_sharepoint_check"
+    logEntry("sharepoint_url") = "pending_sharepoint_check"
+End Sub
+
+' ============================================================================
+' LOG BUFFER MANAGEMENT
+' ============================================================================
+
+Private Sub AddToLogBuffer(logEntry As Object)
+    ' Add log entry to buffer with overflow protection
+    
+    ' Initialize buffer if needed
+    If mLogBuffer Is Nothing Then
+        Set mLogBuffer = New Collection
+    End If
+    
+    ' Add entry
+    mLogBuffer.Add logEntry
+    
+    ' Prevent buffer overflow
+    If mLogBuffer.Count > LOG_BUFFER_SIZE * 2 Then
+        FlushLogBuffer True ' Force flush with older entries
+    End If
+End Sub
+
+Public Sub FlushLogBuffer(Optional forceFlush As Boolean = False)
+    ' Send buffered log entries to API
+    
+    If mLogBuffer Is Nothing Then Exit Sub
+    If mLogBuffer.Count = 0 Then Exit Sub
+    
+    ' Check if enough time has passed since last flush (unless forced)
+    If Not forceFlush Then
+        If DateDiff("s", mLastFlushTime, Now) < 10 Then Exit Sub ' Wait at least 10 seconds
+    End If
+    
+    ' Send the batch
+    SendLogBatch mLogBuffer
+    
+    ' Clear buffer and update flush time
+    Set mLogBuffer = New Collection
+    mLastFlushTime = Now
+End Sub
+
+' ============================================================================
+' API COMMUNICATION
+' ============================================================================
+
+Private Sub SendLogBatch(logCollection As Collection)
+    ' Send batch of log entries to the API
+    On Error GoTo ErrorHandler
+    
+    ' Skip if no logs to send
+    If logCollection.Count = 0 Then Exit Sub
+    
+    ' Create HTTP request
+    Dim http As Object
+    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+    
+    ' Configure request
+    http.Open "POST", API_BASE_URL & API_LOGS_ENDPOINT, True ' Async
+    http.SetRequestHeader "Content-Type", "application/json"
+    http.SetRequestHeader "Authorization", API_TOKEN
+    http.SetRequestHeader "User-Agent", "ElyseLogger/1.0"
+    
+    ' Convert logs to JSON
+    Dim jsonPayload As String
+    jsonPayload = ConvertLogBatchToJSON(logCollection)
+    
+    ' Send request (non-blocking)
+    http.Send jsonPayload
+    
+    ' Don't wait for response to avoid blocking Excel
+    Exit Sub
+    
+ErrorHandler:
+    ' Silently handle API errors to avoid disrupting user workflow
+    ' Could optionally store failed logs for retry later
+End Sub
+
+Private Function ConvertLogBatchToJSON(logCollection As Collection) As String
+    ' Convert log collection to JSON format
+    
+    Dim json As String
+    json = "{""logs"":["
+    
+    Dim i As Integer
+    For i = 1 To logCollection.Count
+        If i > 1 Then json = json & ","
+        json = json & ConvertSingleLogToJSON(logCollection(i))
+    Next i
+    
+    json = json & "],""batch_info"":{""count"":" & logCollection.Count & ",""timestamp"":""" & FormatTimestamp() & """}}"
+    
+    ConvertLogBatchToJSON = json
+End Function
+
+Private Function ConvertSingleLogToJSON(logEntry As Object) As String
+    ' Convert single log entry to JSON
+    
+    Dim json As String
+    json = "{"
+    
+    ' Add all log entry fields
+    Dim keys As Variant
+    keys = logEntry.Keys
+    
+    Dim i As Integer
+    For i = 0 To UBound(keys)
+        If i > 0 Then json = json & ","
+        json = json & """" & keys(i) & """:""" & EscapeJSON(CStr(logEntry(keys(i)))) & """"
+    Next i
+    
+    json = json & "}"
+    
+    ConvertSingleLogToJSON = json
+End Function
+
+' ============================================================================
+' HEARTBEAT SYSTEM FOR CRASH DETECTION
+' ============================================================================
+
+Private Sub InitializeHeartbeatSystem()
+    ' Initialize heartbeat system for crash detection
+    
+    ' Create heartbeat file path
+    mHeartbeatFile = GetTempFilePath("heartbeat_" & GetSessionID() & ".txt")
+    
+    ' Start heartbeat
+    StartHeartbeat
+End Sub
+
+Private Sub StartHeartbeat()
+    ' Start heartbeat timer
+    WriteHeartbeat
+    
+    ' Schedule next heartbeat
+    Application.OnTime Now + TimeValue("00:00:" & HEARTBEAT_INTERVAL_SECONDS), "HeartbeatCallback"
+End Sub
+
+Public Sub HeartbeatCallback()
+    ' Heartbeat callback function (must be public for OnTime)
+    
+    If mLoggerInitialized Then
+        WriteHeartbeat
+        
+        ' Schedule next heartbeat
+        Application.OnTime Now + TimeValue("00:00:" & HEARTBEAT_INTERVAL_SECONDS), "HeartbeatCallback"
+    End If
+End Sub
+
+Private Sub WriteHeartbeat()
+    ' Write current timestamp to heartbeat file
+    On Error Resume Next
+    
+    Dim fileNum As Integer
+    fileNum = FreeFile
+    
+    Open mHeartbeatFile For Output As fileNum
+    Print #fileNum, FormatTimestamp()
+    Print #fileNum, GetSessionID()
+    Print #fileNum, GetCurrentWorkbookName()
+    Close fileNum
+    
+    On Error GoTo 0
+End Sub
+
+Private Sub StopHeartbeat()
+    ' Stop heartbeat and cleanup file
+    On Error Resume Next
+    
+    ' Cancel scheduled heartbeat
+    Application.OnTime Now + TimeValue("00:00:" & HEARTBEAT_INTERVAL_SECONDS), "HeartbeatCallback", , False
+    
+    ' Remove heartbeat file
+    Kill mHeartbeatFile
+    
+    On Error GoTo 0
+End Sub
+
+Private Sub CheckForPreviousCrash()
+    ' Check if previous session ended unexpectedly
+    On Error Resume Next
+    
+    Dim tempDir As String
+    tempDir = Environ("TEMP")
+    
+    ' Look for orphaned heartbeat files
+    Dim fileName As String
+    fileName = Dir(tempDir & "\" & TEMP_FILE_PREFIX & "heartbeat_*.txt")
+    
+    Do While fileName <> ""
+        Dim fullPath As String
+        fullPath = tempDir & "\" & fileName
+        
+        ' Check file age
+        Dim fileDate As Date
+        fileDate = FileDateTime(fullPath)
+        
+        ' If file is older than 5 minutes, it's likely from a crash
+        If DateDiff("n", fileDate, Now) > 5 Then
+            LogEvent "crash_detected", "Orphaned heartbeat file found: " & fileName & " | Last modified: " & fileDate, WARNING_LEVEL
+            Kill fullPath ' Clean up old file
+        End If
+        
+        fileName = Dir
+    Loop
+    
+    On Error GoTo 0
+End Sub
+
+' ============================================================================
+' LOG LEVEL MANAGEMENT
+' ============================================================================
+
+Public Sub SetLogLevel(level As LogLevel)
+    ' Set current logging level
+    mCurrentLogLevel = level
+    LogEvent "log_level_changed", "Log level set to: " & GetLogLevelString(level), INFO_LEVEL
+End Sub
+
+Public Function GetCurrentLogLevel() As LogLevel
+    ' Get current logging level
+    GetCurrentLogLevel = mCurrentLogLevel
+End Function
+
+Public Function ShouldLog(level As LogLevel) As Boolean
+    ' Check if a log level should be recorded
+    ShouldLog = (level >= mCurrentLogLevel And mLoggerInitialized)
+End Function
+
+' ============================================================================
+' DEBUGGING AND DIAGNOSTICS
+' ============================================================================
+
+Public Function GetLoggerStatus() As Object
+    ' Get comprehensive logger status
+    Dim status As Object
+    Set status = CreateObject("Scripting.Dictionary")
+    
+    status("initialized") = mLoggerInitialized
+    status("current_log_level") = GetLogLevelString(mCurrentLogLevel)
+    status("buffer_count") = IIf(mLogBuffer Is Nothing, 0, mLogBuffer.Count)
+    status("last_flush_time") = Format(mLastFlushTime, "yyyy-mm-dd hh:nn:ss")
+    status("heartbeat_file") = mHeartbeatFile
+    status("heartbeat_exists") = (Dir(mHeartbeatFile) <> "")
+    
+    Set GetLoggerStatus = status
+End Function
+
+Public Sub DumpBufferToDebug()
+    ' Dump current buffer contents to debug window (development only)
+    
+    If Not IsDebugMode() Then Exit Sub
+    If mLogBuffer Is Nothing Then Exit Sub
+    
+    Debug.Print "=== LOG BUFFER DUMP ==="
+    Debug.Print "Buffer Count: " & mLogBuffer.Count
+    Debug.Print "========================"
+    
+    Dim i As Integer
+    For i = 1 To mLogBuffer.Count
+        Dim logEntry As Object
+        Set logEntry = mLogBuffer(i)
+        
+        Debug.Print i & ": " & logEntry("timestamp") & " | " & logEntry("level") & " | " & logEntry("action") & " | " & logEntry("details")
+    Next i
+    
+    Debug.Print "=== END DUMP ==="
+End Sub
+
+' ============================================================================
+' PUBLIC CONVENIENCE FUNCTIONS
+' ============================================================================
+
+Public Sub LogInfo(action As String, details As String)
+    ' Convenience function for info logging
+    LogEvent action, details, INFO_LEVEL
+End Sub
+
+Public Sub LogDebug(action As String, details As String)
+    ' Convenience function for debug logging
+    LogEvent action, details, DEBUG_LEVEL
+End Sub
+
+Public Sub LogWarning(action As String, details As String)
+    ' Convenience function for warning logging
+    LogEvent action, details, WARNING_LEVEL
+End Sub
+
+Public Sub LogCritical(action As String, details As String)
+    ' Convenience function for critical logging
+    LogEvent action, details, CRITICAL_LEVEL
+End Sub
+
+' ============================================================================
+' TIMER-BASED AUTO FLUSH
+' ============================================================================
+
+Public Sub EnableAutoFlush()
+    ' Enable automatic buffer flushing every 60 seconds
+    Application.OnTime Now + TimeValue("00:01:00"), "AutoFlushCallback"
+End Sub
+
+Public Sub AutoFlushCallback()
+    ' Auto-flush callback (must be public for OnTime)
+    
+    If mLoggerInitialized Then
+        FlushLogBuffer
+        
+        ' Schedule next auto-flush
+        Application.OnTime Now + TimeValue("00:01:00"), "AutoFlushCallback"
+    End If
+End Sub
