@@ -62,4 +62,3 @@ ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
 End Sub
 
-' Add similar transformations for other Subs/Functions in this file.

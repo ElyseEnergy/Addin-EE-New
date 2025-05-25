@@ -206,4 +206,4 @@ ErrorHandler:
     ElyseMessageBox_System.ShowErrorMessage "Ribbon Error", "An unexpected error occurred while processing the action for '" & control.id & "'. The error has been logged."
 End Sub
 
-' Add similar transformations for other Ribbon callbacks (getLabel, getImage, etc.)
+

@@ -246,4 +246,3 @@ ErrorHandler:
     GetQueryLastRefreshDate = CDate(0) ' Return default on error
 End Function
 
-' Add similar transformations for other Subs/Functions in this file.

@@ -245,4 +245,4 @@ Public Function GetUserSelection(queries As Collection) As String
     End If
 End Function
 
-' Add similar transformations for other Subs/Functions in this file.
+
