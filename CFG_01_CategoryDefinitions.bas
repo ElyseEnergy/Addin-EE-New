@@ -55,8 +55,8 @@ Public Sub InitCategories()
         AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
         AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
         AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"
-        'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
-        'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
+        AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
+        AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
 
     
 End Sub
@@ -140,26 +140,19 @@ End Sub
 Public Function GetCategoryByID(ByVal id As Long) As String
     Const PROC_NAME As String = "GetCategoryByID"
     On Error GoTo ErrorHandler
-
-    ' ... logic to find category ...
-    ' If Not found Then
-    '   Debug.Print "Category with ID " & id & " not found."
-    '   GetCategoryByID = ""
-    ' Else
-    '   Debug.Print "Category " & id & " found: " & categoryName
-    '   GetCategoryByID = categoryName
-    ' End If
     
-    Dim categoryName As String
-    ' Replace with actual logic and logging
-    If id = 1 Then ' Placeholder
-        categoryName = "SampleCategory"
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Found", "Category " & id & " found: " & categoryName, PROC_NAME, MODULE_NAME
-        GetCategoryByID = categoryName
-    Else
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Category with ID " & id & " not found.", PROC_NAME, MODULE_NAME
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Looking for category with ID " & id, PROC_NAME, MODULE_NAME
+    
+    ' Validate ID range
+    If id <= 0 Or id > CategoriesCount Then
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_InvalidID", "Category ID " & id & " is out of valid range (1-" & CategoriesCount & ")", PROC_NAME, MODULE_NAME
         GetCategoryByID = ""
+        Exit Function
     End If
+    
+    ' Return category name
+    GetCategoryByID = Categories(id).categoryName
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Success", "Found category: " & GetCategoryByID, PROC_NAME, MODULE_NAME
     Exit Function
 
 ErrorHandler:
