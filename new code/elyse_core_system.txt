@@ -14,7 +14,7 @@ Public Const API_BASE_URL As String = "https://api-logs.elyse-energy.com/v1"
 Public Const API_LOGS_ENDPOINT As String = "/logs"
 Public Const API_TICKETS_ENDPOINT As String = "/tickets"
 Public Const API_TOKEN As String = "Bearer elyse_energy_token_2025"
-Public Const SUPPORT_EMAIL As String = "support@elyse.energie"
+Public Const SUPPORT_EMAIL As String = "support_data@elyse.energy"
 
 ' System Configuration
 Public Const TICKET_SUBJECT_PREFIX As String = "[ELYSE TICKET] "
