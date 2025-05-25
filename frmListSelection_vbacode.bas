@@ -156,105 +156,79 @@ Private Sub AdjustLayout()
     Dim buttonAreaHeightPx As Long
     Dim availableWidthForControls As Long
     
-    Dim marginPx As Long, spacingPx As Long, btnHeightPx As Long, btnWidthPx As Long
+    Dim marginPx As Long, spacingPx As Long
+    Dim btnHeightPx As Long, btnWidthPx As Long
 
-    marginPx = Application.PointsToPixels(MARGIN_LST, 0) ' Use horizontal for width calculations
-    spacingPx = Application.PointsToPixels(BUTTON_SPACING_LST, 0)
+    ' Convert measurements to pixels
+    marginPx = Application.PointsToPixels(MARGIN_LST, 1)
+    spacingPx = Application.PointsToPixels(VERTICAL_SPACING_LST, 1)
     btnHeightPx = Application.PointsToPixels(BUTTON_HEIGHT_LST, 1)
     btnWidthPx = Application.PointsToPixels(BUTTON_WIDTH_LST, 0)
-    promptHeightPx = 0 ' Initialize
 
+    ' Start at top margin
     currentY = marginPx
+
+    ' Calculate available width for controls
     availableWidthForControls = Me.InsideWidth - (2 * marginPx)
     If availableWidthForControls < Application.PointsToPixels(MIN_FORM_WIDTH_LST - 2 * MARGIN_LST, 0) Then
         availableWidthForControls = Application.PointsToPixels(MIN_FORM_WIDTH_LST - 2 * MARGIN_LST, 0)
     End If
 
-    ' Position Prompt Label (lblPrompt) if it exists
-    Dim lblPromptExists As Boolean
-    lblPromptExists = False
+    ' Position and size prompt label if it exists
     On Error Resume Next
-    If Not Me.Controls("lblPrompt") Is Nothing Then lblPromptExists = True
+    If Not Me.Controls("lblPrompt") Is Nothing Then
+        With Me.Controls("lblPrompt")
+            .Top = currentY
+            .Left = marginPx
+            .Width = availableWidthForControls
+            .AutoSize = True
+            promptHeightPx = .Height
+            .AutoSize = False
+            currentY = currentY + promptHeightPx + spacingPx
+        End With
+    End If
     On Error GoTo 0
 
-    If lblPromptExists And Me.Controls("lblPrompt").Caption <> "" Then
-        With Me.Controls("lblPrompt")
-            .Left = marginPx
-            .Top = currentY
-            .Width = availableWidthForControls
-            .WordWrap = True
-            .AutoSize = True ' Let it determine its height based on content and width
-            promptHeightPx = .Height
-            If promptHeightPx < Application.PointsToPixels(15,1) Then promptHeightPx = Application.PointsToPixels(15,1)
-            .AutoSize = False ' Lock height after measuring
-            .Height = promptHeightPx
-        End With
-        currentY = currentY + promptHeightPx + Application.PointsToPixels(VERTICAL_SPACING_LST / 2, 1)
-    ElseIf lblPromptExists Then ' Prompt exists but is empty, hide it or give minimal space
-         Me.Controls("lblPrompt").Visible = False
-         promptHeightPx = 0
-    End If
-
-    ' Position ListBox (ListBox1)
+    ' Position and size ListBox
     With Me.ListBox1
-        .Left = marginPx
         .Top = currentY
+        .Left = marginPx
         .Width = availableWidthForControls
-        ' Height will be calculated based on remaining space
     End With
 
-    ' Calculate space for buttons
-    buttonAreaHeightPx = btnHeightPx + marginPx + Application.PointsToPixels(VERTICAL_SPACING_LST,1)
-    
-    ' Calculate ListBox height
-    listHeightPx = Me.InsideHeight - currentY - buttonAreaHeightPx
-    If listHeightPx < Application.PointsToPixels(50, 1) Then listHeightPx = Application.PointsToPixels(50, 1) ' Min list height
-    Me.ListBox1.Height = listHeightPx
-    currentY = currentY + listHeightPx + Application.PointsToPixels(VERTICAL_SPACING_LST, 1)
-
-    ' Position Buttons (CommandButton1 - OK, CommandButton2 - Cancel)
+    ' Calculate and position buttons at bottom
     Dim totalButtonWidth As Long
-    totalButtonWidth = (2 * btnWidthPx) + spacingPx
+    totalButtonWidth = (2 * btnWidthPx) + Application.PointsToPixels(BUTTON_SPACING_LST, 0)
+    
+    ' Position buttons
     Dim buttonStartX As Long
     buttonStartX = (Me.InsideWidth - totalButtonWidth) / 2
-    If buttonStartX < marginPx Then buttonStartX = marginPx
 
-    Me.CommandButton1.Top = currentY
-    Me.CommandButton1.Left = buttonStartX
-    Me.CommandButton1.Width = btnWidthPx
-    Me.CommandButton1.Height = btnHeightPx
+    Me.CommandButton1.Move buttonStartX, _
+                          Me.InsideHeight - btnHeightPx - marginPx, _
+                          btnWidthPx, _
+                          btnHeightPx
 
-    Me.CommandButton2.Top = currentY
-    Me.CommandButton2.Left = buttonStartX + btnWidthPx + spacingPx
-    Me.CommandButton2.Width = btnWidthPx
-    Me.CommandButton2.Height = btnHeightPx
-    
-    currentY = currentY + btnHeightPx + marginPx
+    Me.CommandButton2.Move buttonStartX + btnWidthPx + Application.PointsToPixels(BUTTON_SPACING_LST, 0), _
+                          Me.InsideHeight - btnHeightPx - marginPx, _
+                          btnWidthPx, _
+                          btnHeightPx
 
-    ' Set Final Form Height and Width
-    Me.Height = currentY + (Me.Height - Me.InsideHeight) ' Add back title bar/border height
+    ' Calculate and set ListBox height
+    listHeightPx = Me.InsideHeight - currentY - btnHeightPx - (2 * marginPx)
+    If listHeightPx < Application.PointsToPixels(100, 1) Then ' Minimum ListBox height
+        listHeightPx = Application.PointsToPixels(100, 1)
+        Me.Height = currentY + listHeightPx + btnHeightPx + (2 * marginPx) + (Me.Height - Me.InsideHeight)
+    End If
+    Me.ListBox1.Height = listHeightPx
 
-    ' Ensure min/max form dimensions (similar to frmCustomMessageBox)
-    Dim screenWidthPx As Long, screenHeightPx As Long
-    screenWidthPx = Application.PointsToPixels(Application.Width, 0)
+    ' Ensure the form doesn't exceed screen bounds
+    Dim screenHeightPx As Long
     screenHeightPx = Application.PointsToPixels(Application.Height, 1)
-
-    If Me.Width < Application.PointsToPixels(MIN_FORM_WIDTH_LST, 0) Then Me.Width = Application.PointsToPixels(MIN_FORM_WIDTH_LST, 0)
-    If Me.Width > screenWidthPx * MAX_FORM_WIDTH_FACTOR_LST Then Me.Width = screenWidthPx * MAX_FORM_WIDTH_FACTOR_LST
-
-    If Me.Height < Application.PointsToPixels(MIN_FORM_HEIGHT_LST, 1) Then Me.Height = Application.PointsToPoints(MIN_FORM_HEIGHT_LST, 1)
-    If Me.Height > screenHeightPx * MAX_FORM_HEIGHT_FACTOR_LST Then Me.Height = screenHeightPx * MAX_FORM_HEIGHT_FACTOR_LST
-    
-    ' Re-check listbox height if form height was capped
-    If currentY + (Me.Height - Me.InsideHeight) > Me.Height Then
-        Dim diff As Long
-        diff = (currentY + (Me.Height - Me.InsideHeight)) - Me.Height
-        If Me.ListBox1.Height - diff > Application.PointsToPixels(30,1) Then
-            Me.ListBox1.Height = Me.ListBox1.Height - diff
-            ' Reposition buttons if necessary (though currentY based on InsideHeight should be mostly fine)
-            Me.CommandButton1.Top = Me.ListBox1.Top + Me.ListBox1.Height + Application.PointsToPixels(VERTICAL_SPACING_LST, 1)
-            Me.CommandButton2.Top = Me.CommandButton1.Top
-        End If
+    If Me.Height > screenHeightPx * MAX_FORM_HEIGHT_FACTOR_LST Then
+        Me.Height = screenHeightPx * MAX_FORM_HEIGHT_FACTOR_LST
+        ' Readjust ListBox height
+        Me.ListBox1.Height = Me.InsideHeight - currentY - btnHeightPx - (2 * marginPx)
     End If
 End Sub
 

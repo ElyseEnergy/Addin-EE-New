@@ -7,8 +7,12 @@ Private Const MIN_FORM_HEIGHT_MD As Long = 200 ' Min height for markdown display
 Private Const MAX_FORM_WIDTH_FACTOR_MD As Single = 0.8 ' Max width as factor of screen width
 Private Const MAX_FORM_HEIGHT_FACTOR_MD As Single = 0.8 ' Max height as factor of screen height
 
-Private Const BUTTON_WIDTH_MD As Long = 80
-Private Const BUTTON_HEIGHT_MD As Long = 25
+' Standard button dimensions from SYS_MessageBox
+Private Const BUTTON_WIDTH_MD As Long = 80 ' Must match STANDARD_BUTTON_WIDTH in SYS_MessageBox
+Private Const BUTTON_HEIGHT_MD As Long = 24 ' Must match STANDARD_BUTTON_HEIGHT in SYS_MessageBox
+Private Const BUTTON_PADDING_MD As Long = 10 ' Must match STANDARD_BUTTON_PADDING in SYS_MessageBox
+
+' Form-specific spacing
 Private Const VERTICAL_SPACING_MD As Long = 10
 Private Const MARGIN_MD As Long = 12
 Private Const MIN_CONTENT_HEIGHT_MD As Long = 100
@@ -78,52 +82,72 @@ End Function
 Private Sub AdjustLayout()
     Dim currentY As Long
     Dim marginPx As Long, spacingPx As Long, btnHeightPx As Long, btnWidthPx As Long
+    Dim buttonAreaHeight As Long
     
     ' Convert points to pixels
-    marginPx = Application.PointsToPixels(MARGIN_MD, 0)
+    marginPx = Application.PointsToPixels(MARGIN_MD, 1)
     spacingPx = Application.PointsToPixels(VERTICAL_SPACING_MD, 1)
     btnHeightPx = Application.PointsToPixels(BUTTON_HEIGHT_MD, 1)
     btnWidthPx = Application.PointsToPixels(BUTTON_WIDTH_MD, 0)
     
-    ' Position Content TextBox
-    currentY = marginPx
-    Me.txtContent.Left = marginPx
-    Me.txtContent.Top = currentY
-    Me.txtContent.Width = Me.InsideWidth - (2 * marginPx)
+    ' Calculate total height needed for button area
+    buttonAreaHeight = btnHeightPx + (2 * spacingPx)
     
-    ' Calculate height for content (all available space minus margins and button area)
-    Dim contentHeight As Long
-    contentHeight = Me.InsideHeight - (2 * marginPx) - spacingPx - btnHeightPx
-    If contentHeight < Application.PointsToPixels(MIN_CONTENT_HEIGHT_MD, 1) Then
-        contentHeight = Application.PointsToPixels(MIN_CONTENT_HEIGHT_MD, 1)
+    ' Ensure minimum form dimensions, accounting for button area
+    If Me.Width < Application.PointsToPixels(MIN_FORM_WIDTH_MD, 0) Then
+        Me.Width = Application.PointsToPixels(MIN_FORM_WIDTH_MD, 0)
     End If
-    Me.txtContent.Height = contentHeight
     
-    ' Position OK button at the bottom
-    currentY = Me.txtContent.Top + Me.txtContent.Height + spacingPx
-    Me.cmdOK.Top = currentY
-    Me.cmdOK.Left = (Me.InsideWidth - btnWidthPx) / 2 ' Center horizontally
-    Me.cmdOK.Width = btnWidthPx
-    Me.cmdOK.Height = btnHeightPx
+    If Me.Height < Application.PointsToPixels(MIN_FORM_HEIGHT_MD + buttonAreaHeight, 1) Then
+        Me.Height = Application.PointsToPixels(MIN_FORM_HEIGHT_MD + buttonAreaHeight, 1)
+    End If
+      ' Position Content TextBox
+    currentY = marginPx
+    With Me.txtContent
+        .Left = marginPx
+        .Top = currentY
+        .Width = Me.InsideWidth - (2 * marginPx)
+        
+        ' Calculate height for content, ensuring no overlap with button area
+        Dim contentHeight As Long
+        contentHeight = Me.InsideHeight - (2 * marginPx) - buttonAreaHeight
+        
+        ' Ensure minimum content height
+        If contentHeight < Application.PointsToPixels(MIN_CONTENT_HEIGHT_MD, 1) Then
+            contentHeight = Application.PointsToPixels(MIN_CONTENT_HEIGHT_MD, 1)
+            ' Adjust form height to accommodate minimum content height
+            Me.Height = currentY + contentHeight + buttonAreaHeight + (Me.Height - Me.InsideHeight)
+        End If
+        
+        .Height = contentHeight
+    End With
+      ' Position OK button at the bottom center with proper spacing
+    With Me.cmdOK
+        .Top = Me.txtContent.Top + Me.txtContent.Height + spacingPx
+        .Left = (Me.InsideWidth - btnWidthPx) / 2
+        .Width = btnWidthPx
+        .Height = btnHeightPx
+        
+        ' Ensure button is not too close to bottom
+        If .Top + .Height + marginPx > Me.InsideHeight Then
+            Me.Height = .Top + .Height + marginPx + (Me.Height - Me.InsideHeight)
+        End If
+    End With
     
-    ' Calculate final form height
-    Me.Height = currentY + btnHeightPx + marginPx + (Me.Height - Me.InsideHeight)
-    
-    ' Ensure min/max dimensions
+    ' Ensure the form doesn't exceed screen bounds
     Dim screenWidthPx As Long, screenHeightPx As Long
     screenWidthPx = Application.PointsToPixels(Application.Width, 0)
     screenHeightPx = Application.PointsToPixels(Application.Height, 1)
     
-    If Me.Width < Application.PointsToPixels(MIN_FORM_WIDTH_MD, 0) Then Me.Width = Application.PointsToPixels(MIN_FORM_WIDTH_MD, 0)
-    If Me.Width > screenWidthPx * MAX_FORM_WIDTH_FACTOR_MD Then Me.Width = screenWidthPx * MAX_FORM_WIDTH_FACTOR_MD
+    ' Apply maximum size constraints
+    If Me.Width > screenWidthPx * MAX_FORM_WIDTH_FACTOR_MD Then
+        Me.Width = screenWidthPx * MAX_FORM_WIDTH_FACTOR_MD
+    End If
     
-    If Me.Height < Application.PointsToPixels(MIN_FORM_HEIGHT_MD, 1) Then Me.Height = Application.PointsToPixels(MIN_FORM_HEIGHT_MD, 1)
-    If Me.Height > screenHeightPx * MAX_FORM_HEIGHT_FACTOR_MD Then Me.Height = screenHeightPx * MAX_FORM_HEIGHT_FACTOR_MD
-    
-    ' If form height was capped, adjust content height
-    contentHeight = Me.InsideHeight - Me.cmdOK.Height - marginPx * 2 - spacingPx
-    If contentHeight >= Application.PointsToPixels(MIN_CONTENT_HEIGHT_MD, 1) Then
-        Me.txtContent.Height = contentHeight
+    If Me.Height > screenHeightPx * MAX_FORM_HEIGHT_FACTOR_MD Then
+        Me.Height = screenHeightPx * MAX_FORM_HEIGHT_FACTOR_MD
+        ' Readjust content height
+        Me.txtContent.Height = Me.InsideHeight - (2 * marginPx) - spacingPx - btnHeightPx
     End If
 End Sub
 

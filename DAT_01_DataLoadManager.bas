@@ -3,18 +3,15 @@
 ' Description: Manages data loading operations from various sources
 ' =============================================================================
 Option Explicit
-Private Const MODULE_NAME As String = "DataLoadManager"
 
-' Dependencies
+' Constants
+Private Const MODULE_NAME As String = "DataLoadManager"
+Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
+
+' Message Titles
 Private Const MSG_TITLE_ERROR As String = "Erreur"
 Private Const MSG_TITLE_INFO As String = "Information"
 Private Const MSG_TITLE_WARNING As String = "Avertissement"
-
-' Module: DataLoaderManager
-' Gère le chargement et l'affichage des données pour toutes les catégories
-Option Explicit
-Private Const MODULE_NAME As String = "DataLoaderManager"
-Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
 
 Public Enum DataLoadResult
     Success = 1

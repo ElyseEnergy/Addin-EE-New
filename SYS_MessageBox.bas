@@ -13,6 +13,11 @@ Option Explicit
 ' - ElyseCore_System (enums, constants, utilities)
 ' - ElyseLogger_Module (logging functions)
 
+' Button size constants
+Private Const STANDARD_BUTTON_WIDTH As Long = 80
+Private Const STANDARD_BUTTON_HEIGHT As Long = 24
+Private Const STANDARD_BUTTON_PADDING As Long = 10
+
 ' ============================================================================
 ' MESSAGEBOX CONFIGURATION CLASSES
 ' ============================================================================
@@ -122,39 +127,34 @@ End Function
 ' ============================================================================
 
 Public Function ShowRangeSelectorBox(formTitle As String, promptMessage As String, Optional defaultAddress As String = "") As String
-    Dim frm As Object \' frmRangeSelector
-    Dim selectedRange As String
+    ' Function utilisant la fonction native d'Excel pour sélectionner une plage
+    Dim selectedRange As Range
     
     On Error GoTo ErrorHandler
     
-    Set frm = VBA.UserForms.Add("frmRangeSelector") \' Create an instance of the UserForm
-    
-    \' Call the method to set up and show the form
-    frm.ShowForm formTitle, promptMessage, defaultAddress
-    
-    \' Apply corporate styling
-    ApplyCorporateStyling frm, INFO_MESSAGE \' Or a new message type if specific styling is needed
-    
-    \' Retrieve results
-    If Not frm.WasCancelled Then
-        selectedRange = frm.SelectedRangeAddress
-    Else
-        selectedRange = "" \' Or handle cancellation as needed, e.g., raise an error
+    ' Afficher le message à l'utilisateur
+    If Len(promptMessage) > 0 Then
+        MsgBox promptMessage, vbInformation, formTitle
     End If
     
-    ShowRangeSelectorBox = selectedRange
+    ' Utiliser la fonction native d'Excel
+    On Error Resume Next
+    Set selectedRange = Application.InputBox(prompt:=formTitle, _
+                                          Type:=8) ' Type 8 = Plage de cellules
+    On Error GoTo ErrorHandler
     
-    Unload frm
-    Set frm = Nothing
+    ' Vérifier si l'utilisateur a annulé
+    If selectedRange Is Nothing Then
+        ShowRangeSelectorBox = ""
+    Else
+        ShowRangeSelectorBox = selectedRange.Address
+    End If
+    
     Exit Function
 
 ErrorHandler:
-    Debug.Print "Error in ShowRangeSelectorBox: " & Err.Description
-    ShowRangeSelectorBox = "" \' Return empty or handle error appropriately
-    If Not frm Is Nothing Then
-        Unload frm
-        Set frm = Nothing
-    End If
+    LogError "ShowRangeSelectorBox", "Error: " & Err.Number & " - " & Err.Description
+    ShowRangeSelectorBox = ""
 End Function
 
 ' ============================================================================
@@ -517,7 +517,6 @@ Public Sub ApplyCorporateStyling(frm As Object, messageType As MessageType)
     Set colors = GetCorporateColorScheme(messageType)
 
     If colors Is Nothing Then
-        Debug.Print "ApplyCorporateStyling: Color scheme not found for MessageType: " & messageType
         Exit Sub
     End If
 
@@ -527,69 +526,57 @@ Public Sub ApplyCorporateStyling(frm As Object, messageType As MessageType)
 
     ' Common styling for known form types
     If TypeName(frm) = "frmCustomMessageBox" Then
-        frm.StyleForm colors ' frmCustomMessageBox should have a StyleForm method
-        ApplyFontToControls frm, EE_PrimaryFont, EE_SecondaryFont
-
+        StandardizeButtonSizes frm
     ElseIf TypeName(frm) = "frmListSelection" Then
-        frm.StyleForm colors ' frmListSelection should have a StyleForm method
-        ApplyFontToControls frm, EE_PrimaryFont, EE_SecondaryFont
-
+        StandardizeButtonSizes frm
     ElseIf TypeName(frm) = "frmMarkdownDisplay" Then
-        frm.StyleForm colors ' frmMarkdownDisplay should have a StyleForm method
-        ApplyFontToControls frm, EE_PrimaryFont, EE_SecondaryFont
-        
+        StandardizeButtonSizes frm
     ElseIf TypeName(frm) = "frmRangeSelector" Then
-        frm.StyleForm colors ' frmRangeSelector should have a StyleForm method
-        ApplyFontToControls frm, EE_PrimaryFont, EE_SecondaryFont
-        
+        StandardizeButtonSizes frm
     ElseIf TypeName(frm) = "frmTicketInput" Then
-        frm.StyleForm colors ' frmTicketInput should have a StyleForm method
-        ApplyFontToControls frm, EE_PrimaryFont, EE_SecondaryFont
-        
-    Else
-        ' Generic styling for unknown forms (less specific)
-        Dim ctrl As MSForms.Control
-        For Each ctrl In frm.Controls
-            If TypeOf ctrl Is MSForms.Label Then
-                ctrl.ForeColor = colors("text")
-                ctrl.Font.Name = EE_SecondaryFont
-            ElseIf TypeOf ctrl Is MSForms.CommandButton Then
-                ctrl.BackColor = colors("primary")
-                ctrl.ForeColor = colors("button_text")
-                ctrl.Font.Name = EE_PrimaryFont
-            ElseIf TypeOf ctrl Is MSForms.TextBox Or TypeOf ctrl Is MSForms.ComboBox Then
-                ctrl.BackColor = colors("input_bg")
-                ctrl.ForeColor = colors("input_text")
-                ctrl.BorderColor = colors("input_border")
-                ctrl.Font.Name = EE_SecondaryFont
-            ElseIf TypeOf ctrl Is MSForms.CheckBox Or TypeOf ctrl Is MSForms.OptionButton Then
-                ctrl.ForeColor = colors("text")
-                ctrl.Font.Name = EE_SecondaryFont
-            End If
-        Next ctrl
+        StandardizeButtonSizes frm
     End If
 
     On Error GoTo 0
 End Sub
 
-Private Sub ApplyFontToControls(frm As Object, primaryFont As String, secondaryFont As String)
+Private Sub StandardizeButtonSizes(frm As Object)
     Dim ctrl As MSForms.Control
     On Error Resume Next
+    
     For Each ctrl In frm.Controls
-        Select Case TypeName(ctrl)
-            Case "Label", "CommandButton", "CheckBox", "OptionButton", "ToggleButton", "Frame"
-                If ctrl.Name Like "lblTitle*" Or ctrl.Name Like "lblFormTitle*" Then
-                    ctrl.Font.Name = primaryFont
-                    ctrl.Font.Bold = True ' Titles are often bold
-                Else
-                    ctrl.Font.Name = secondaryFont ' Use secondary for most text labels
-                End If
-            Case "TextBox", "ComboBox", "ListBox"
-                ctrl.Font.Name = secondaryFont
-            Case "RefEdit"
-                ' Font for RefEdit is tricky, often system-controlled.
-        End Select
+        If TypeName(ctrl) = "CommandButton" Then
+            ctrl.Width = STANDARD_BUTTON_WIDTH
+            ctrl.Height = STANDARD_BUTTON_HEIGHT
+        End If
     Next ctrl
+    
+    ' Réorganiser les boutons horizontalement si nécessaire
+    Dim totalButtons As Long
+    Dim currentX As Long
+    Dim bottomPadding As Long
+    
+    totalButtons = 0
+    For Each ctrl In frm.Controls
+        If TypeName(ctrl) = "CommandButton" Then
+            totalButtons = totalButtons + 1
+        End If
+    Next ctrl
+    
+    If totalButtons > 0 Then
+        ' Calculer la position de départ pour centrer les boutons
+        bottomPadding = 12 ' Espace entre le bas du formulaire et les boutons
+        currentX = (frm.Width - (totalButtons * STANDARD_BUTTON_WIDTH + (totalButtons - 1) * STANDARD_BUTTON_PADDING)) / 2
+        
+        For Each ctrl In frm.Controls
+            If TypeName(ctrl) = "CommandButton" Then
+                ctrl.Left = currentX
+                ctrl.Top = frm.Height - STANDARD_BUTTON_HEIGHT - bottomPadding
+                currentX = currentX + STANDARD_BUTTON_WIDTH + STANDARD_BUTTON_PADDING
+            End If
+        Next ctrl
+    End If
+    
     On Error GoTo 0
 End Sub
 

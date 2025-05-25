@@ -177,7 +177,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     
     If sheetIdx = 0 Or fieldIdx = 0 Or memoIdx = 0 Then
         ElyseMain_Orchestrator.LogWarning "RagicDict.LoadData.ColumnsNotFound", "Colonnes requises non trouvées dans le tableau Ragic. sheetIdx=" & sheetIdx & ", fieldIdx=" & fieldIdx & ", memoIdx=" & memoIdx, "LoadDictionaryData", "RagicDictionary"
-        DataLoaderManager.CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
+        CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
         Exit Sub
     End If
 
@@ -199,15 +199,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     ' Debug.Print "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count
     ElyseMain_Orchestrator.LogInfo "RagicDict.LoadData.DictCount", "Nombre de clés chargées dans RagicFieldDict : " & RagicFieldDict.Count, "LoadDictionaryData", "RagicDictionary"
     
-    ' Dim c As Long
-    ' c = 0
-    ' For Each key In RagicFieldDict.Keys
-    '     Debug.Print key & " => " & RagicFieldDict(key)
-    '     c = c + 1
-    '     If c > 10 Then Exit For
-    ' Next key
-
-    DataLoaderManager.CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
+    CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
 End Sub
 
 Public Function IsFieldHidden(sheetName As String, fieldName As String) As Boolean
@@ -250,6 +242,12 @@ Public Sub TestIsFieldHidden_BudgetGroupes()
     ' Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Année'"
     ' Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Année")
     ElyseMain_Orchestrator.LogInfo "RagicDict.Test.Result2", "Test IsFieldHidden ('↳ Budget Groupes', 'Année'): " & IsFieldHidden("↳ Budget Groupes", "Année"), "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+End Sub
+
+Private Sub CleanupPowerQuery(ByVal queryName As String)
+    On Error Resume Next
+    ThisWorkbook.Queries(queryName).Delete
+    On Error GoTo 0
 End Sub
 
 

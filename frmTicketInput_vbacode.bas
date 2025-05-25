@@ -231,140 +231,152 @@ Public Sub StyleForm(colors As Object)
 End Sub
 
 Private Sub AdjustLayout()
-    Const BaseMargin As Long = 10 ' Points
-    Const ControlSpacing As Long = 6 ' Points
-    Const LabelHeight As Long = 15 ' Points
-    Const TextBoxHeight As Long = 18 ' Points (single line)
-    Const ComboBoxHeight As Long = 20 ' Points
-    Const CheckBoxHeight As Long = 18 ' Points
-    Const ButtonHeight As Long = 25 ' Points
-    Const ButtonWidth As Long = 90 ' Points
-    Const MinDescHeight As Long = 60 ' Points
-    Const MaxDescHeight As Long = 200 ' Points
-
-    Dim currentY As Single
-    Dim controlX As Single
-    Dim labelWidth As Single
-    Dim controlWidth As Single
-    Dim marginPx As Long, spacingPx As Long, lblHeightPx As Long, txtHeightPx As Long
-    Dim cmbHeightPx As Long, chkHeightPx As Long, btnHeightPx As Long, btnWidthPx As Long
-    Dim minDescHeightPx As Long, maxDescHeightPx As Long
-    Dim descHeightPx As Long
-
-    ' Convert points to pixels for positioning
-    marginPx = Application.PointsToPixels(BaseMargin, 1)
-    spacingPx = Application.PointsToPixels(ControlSpacing, 1)
-    lblHeightPx = Application.PointsToPixels(LabelHeight, 1)
-    txtHeightPx = Application.PointsToPixels(TextBoxHeight, 1)
-    cmbHeightPx = Application.PointsToPixels(ComboBoxHeight, 1)
-    chkHeightPx = Application.PointsToPixels(CheckBoxHeight, 1)
-    btnHeightPx = Application.PointsToPixels(ButtonHeight, 1)
-    btnWidthPx = Application.PointsToPixels(ButtonWidth, 0)
-    minDescHeightPx = Application.PointsToPixels(MinDescHeight, 1)
-    maxDescHeightPx = Application.PointsToPixels(MaxDescHeight, 1)
-
+    Const LABEL_WIDTH As Long = 80 ' Points
+    Const CONTROL_HEIGHT As Long = 20 ' Points
+    Const DESCRIPTION_MIN_HEIGHT As Long = 100 ' Points
+    
+    Dim currentY As Long
+    Dim marginPx As Long, spacingPx As Long
+    Dim labelWidthPx As Long, controlHeightPx As Long
+    Dim availableWidth As Long
+    
+    ' Convert measurements to pixels
+    marginPx = Application.PointsToPixels(10, 1) ' 10 points margin
+    spacingPx = Application.PointsToPixels(6, 1) ' 6 points spacing
+    labelWidthPx = Application.PointsToPixels(LABEL_WIDTH, 0)
+    controlHeightPx = Application.PointsToPixels(CONTROL_HEIGHT, 1)
+    
+    ' Start position
     currentY = marginPx
-    controlX = marginPx * 2 + Application.PointsToPixels(80, 0) ' X position for input controls (after labels)
-    labelWidth = Application.PointsToPixels(75, 0) ' Width for labels
-    controlWidth = Me.InsideWidth - controlX - marginPx
-    If controlWidth < Application.PointsToPixels(100,0) Then controlWidth = Application.PointsToPixels(100,0)
-
-    ' Form Title Label (lblFormTitle)
+    
+    ' Calculate available width for controls
+    availableWidth = Me.InsideWidth - (2 * marginPx) - labelWidthPx - spacingPx
+    
+    ' Position title if it exists
     If Not Me.lblFormTitle Is Nothing Then
-        Me.lblFormTitle.Left = marginPx
-        Me.lblFormTitle.Top = currentY
-        Me.lblFormTitle.Width = Me.InsideWidth - (2 * marginPx)
-        Me.lblFormTitle.Height = lblHeightPx * 1.5 ' Larger for title
-        currentY = currentY + Me.lblFormTitle.Height + spacingPx
-    End If
-
-    ' Subject
-    PositionControlPair Me.lblSubject, Me.txtSubject, "Subject:", currentY, marginPx, labelWidth, controlX, controlWidth, lblHeightPx, txtHeightPx, spacingPx
-    
-    ' Priority
-    PositionControlPair Me.lblPriority, Me.cmbPriority, "Priority:", currentY, marginPx, labelWidth, controlX, controlWidth, lblHeightPx, cmbHeightPx, spacingPx
-
-    ' Category
-    PositionControlPair Me.lblCategory, Me.cmbCategory, "Category:", currentY, marginPx, labelWidth, controlX, controlWidth, lblHeightPx, cmbHeightPx, spacingPx
-
-    ' Description Label
-    If Not Me.lblDescription Is Nothing Then
-        Me.lblDescription.Caption = "Description:"
-        Me.lblDescription.Left = marginPx
-        Me.lblDescription.Top = currentY
-        Me.lblDescription.Width = labelWidth
-        Me.lblDescription.Height = lblHeightPx
-        currentY = currentY + Me.lblDescription.Height + Application.PointsToPixels(2,1) ' Small gap before textbox
+        With Me.lblFormTitle
+            .Left = marginPx
+            .Top = currentY
+            .Width = Me.InsideWidth - (2 * marginPx)
+            currentY = currentY + .Height + spacingPx
+        End With
     End If
     
-    ' Description TextBox
-    If Not Me.txtDescription Is Nothing Then
-        Me.txtDescription.Left = marginPx
-        Me.txtDescription.Top = currentY
-        Me.txtDescription.Width = Me.InsideWidth - (2 * marginPx)
-        ' Estimate height based on content, or use fixed range
-        descHeightPx = Application.PointsToPixels(100, 1) ' Default description height
-        ' Add logic to estimate based on text lines if needed, or use a scrollable fixed height
-        If descHeightPx < minDescHeightPx Then descHeightPx = minDescHeightPx
-        If descHeightPx > maxDescHeightPx Then descHeightPx = maxDescHeightPx
-        Me.txtDescription.Height = descHeightPx
-        currentY = currentY + Me.txtDescription.Height + spacingPx
-    End If
-
-    ' Checkboxes (Include Logs, Include Screenshot)
-    If Not Me.chkIncludeLogs Is Nothing Then
-        Me.chkIncludeLogs.Left = marginPx
-        Me.chkIncludeLogs.Top = currentY
-        Me.chkIncludeLogs.Width = Application.PointsToPixels(150,0)
-        Me.chkIncludeLogs.Height = chkHeightPx
-        currentY = currentY + Me.chkIncludeLogs.Height + spacingPx
-    End If
+    ' Position Subject field
+    With Me.lblSubject
+        .Left = marginPx
+        .Top = currentY
+        .Width = labelWidthPx
+    End With
     
-    If Not Me.chkIncludeScreenshot Is Nothing Then
-        Me.chkIncludeScreenshot.Left = marginPx
-        Me.chkIncludeScreenshot.Top = currentY
-        Me.chkIncludeScreenshot.Width = Application.PointsToPixels(150,0)
-        Me.chkIncludeScreenshot.Height = chkHeightPx
-        currentY = currentY + Me.chkIncludeScreenshot.Height + spacingPx * 2 ' More space before buttons
-    End If
-
-    ' Buttons (Submit, Cancel)
+    With Me.txtSubject
+        .Left = marginPx + labelWidthPx + spacingPx
+        .Top = currentY
+        .Width = availableWidth
+        .Height = controlHeightPx
+    End With
+    
+    currentY = currentY + controlHeightPx + spacingPx
+    
+    ' Position Priority field
+    With Me.lblPriority
+        .Left = marginPx
+        .Top = currentY
+        .Width = labelWidthPx
+    End With
+    
+    With Me.cmbPriority
+        .Left = marginPx + labelWidthPx + spacingPx
+        .Top = currentY
+        .Width = availableWidth / 2 - spacingPx
+        .Height = controlHeightPx
+    End With
+    
+    ' Position Category field (on same line as Priority)
+    With Me.lblCategory
+        .Left = marginPx + labelWidthPx + spacingPx + (availableWidth / 2)
+        .Top = currentY
+        .Width = labelWidthPx
+    End With
+    
+    With Me.cmbCategory
+        .Left = .Left + labelWidthPx + spacingPx
+        .Top = currentY
+        .Width = (availableWidth / 2) - labelWidthPx - spacingPx
+        .Height = controlHeightPx
+    End With
+    
+    currentY = currentY + controlHeightPx + spacingPx
+    
+    ' Position Description field
+    With Me.lblDescription
+        .Left = marginPx
+        .Top = currentY
+        .Width = labelWidthPx
+    End With
+    
+    With Me.txtDescription
+        .Left = marginPx + labelWidthPx + spacingPx
+        .Top = currentY
+        .Width = availableWidth
+        .Height = Application.PointsToPixels(DESCRIPTION_MIN_HEIGHT, 1)
+    End With
+    
+    currentY = currentY + .Height + spacingPx
+    
+    ' Position Checkboxes
+    With Me.chkIncludeLogs
+        .Left = marginPx + labelWidthPx + spacingPx
+        .Top = currentY
+        .Width = availableWidth / 2
+    End With
+    
+    With Me.chkIncludeScreenshot
+        .Left = .Left + .Width + spacingPx
+        .Top = currentY
+        .Width = availableWidth / 2
+    End With
+    
+    currentY = currentY + controlHeightPx + spacingPx
+    
+    ' Position Buttons at bottom
+    Dim btnWidth As Long, btnHeight As Long, btnSpacing As Long
+    btnWidth = Application.PointsToPixels(80, 0)
+    btnHeight = Application.PointsToPixels(25, 1)
+    btnSpacing = Application.PointsToPixels(10, 0)
+    
+    ' Calculate button positions to center them
     Dim totalButtonWidth As Long
-    totalButtonWidth = (2 * btnWidthPx) + spacingPx ' For two buttons
+    totalButtonWidth = (2 * btnWidth) + btnSpacing
     Dim buttonStartX As Long
     buttonStartX = (Me.InsideWidth - totalButtonWidth) / 2
-    If buttonStartX < marginPx Then buttonStartX = marginPx
-
-    If Not Me.cmdSubmit Is Nothing Then
-        Me.cmdSubmit.Top = currentY
-        Me.cmdSubmit.Left = buttonStartX
-        Me.cmdSubmit.Width = btnWidthPx
-        Me.cmdSubmit.Height = btnHeightPx
-    End If
-
-    If Not Me.cmdCancel Is Nothing Then
-        Me.cmdCancel.Top = currentY
-        Me.cmdCancel.Left = buttonStartX + btnWidthPx + spacingPx
-        Me.cmdCancel.Width = btnWidthPx
-        Me.cmdCancel.Height = btnHeightPx
-    End If
     
-    If Not Me.cmdSubmit Is Nothing Then
-      currentY = currentY + Me.cmdSubmit.Height + marginPx
-    ElseIf Not Me.cmdCancel Is Nothing Then
-      currentY = currentY + Me.cmdCancel.Height + marginPx
-    Else
-      currentY = currentY + marginPx ' Just bottom margin if no buttons
-    End If
-
-    ' Set Form Height
-    Me.Height = currentY + (Me.Height - Me.InsideHeight) ' Add title bar and border height
+    With Me.cmdSubmit
+        .Top = currentY
+        .Left = buttonStartX
+        .Width = btnWidth
+        .Height = btnHeight
+    End With
     
-    ' Min/Max form height constraints (similar to frmCustomMessageBox)
+    With Me.cmdCancel
+        .Top = currentY
+        .Left = buttonStartX + btnWidth + btnSpacing
+        .Width = btnWidth
+        .Height = btnHeight
+    End With
+    
+    ' Set final form height
+    Me.Height = currentY + btnHeight + marginPx + (Me.Height - Me.InsideHeight)
+    
+    ' Ensure the form doesn't exceed screen bounds
     Dim screenHeightPx As Long
     screenHeightPx = Application.PointsToPixels(Application.Height, 1)
-    If Me.Height < Application.PointsToPixels(300, 1) Then Me.Height = Application.PointsToPixels(300, 1) ' Min height
-    If Me.Height > screenHeightPx * 0.85 Then Me.Height = screenHeightPx * 0.85 ' Max height
+    If Me.Height > screenHeightPx * 0.9 Then
+        Me.Height = screenHeightPx * 0.9
+        ' Adjust description box height to fit
+        Me.txtDescription.Height = Me.txtDescription.Height - _
+            (Me.Height - (screenHeightPx * 0.9))
+    End If
 End Sub
 
 Private Sub PositionControlPair(lbl As MSForms.Label, ctrl As Object, caption As String, ByRef currentY As Single, ByVal marginPx As Long, ByVal labelWidth As Long, ByVal controlX As Long, ByVal controlWidth As Long, ByVal lblHeightPx As Long, ByVal ctrlHeightPx As Long, ByVal spacingPx As Long)

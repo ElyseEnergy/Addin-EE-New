@@ -3,6 +3,34 @@
 Option Explicit
 Private Const MODULE_NAME As String = "H2_Waters_Electrolysis_Manager"
 
+Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessage As String) As DataLoadResult
+    On Error GoTo ErrorHandler
+    
+    Dim category As CategoryInfo
+    Set category = CategoryDefinitions_System.GetCategoryByName(categoryName)
+    If category Is Nothing Then
+        ElyseMessageBox_System.ShowErrorMessage "Erreur", _
+            "Catégorie '" & categoryName & "' non trouvée"
+        ProcessCategory = DataLoadResult.Error
+        Exit Function
+    End If
+    
+    Dim loadInfo As DataLoadInfo
+    Set loadInfo = New DataLoadInfo
+    Set loadInfo.Category = category
+    
+    ProcessCategory = DataLoadManager.ProcessDataLoad(loadInfo)
+    Exit Function
+    
+ErrorHandler:
+    If Len(errorMessage) > 0 Then
+        ElyseMessageBox_System.ShowErrorMessage "Erreur", errorMessage
+    Else
+        ElyseMessageBox_System.ShowErrorMessage "Erreur", _
+            "Une erreur s'est produite : " & Err.Description
+    End If
+    ProcessCategory = DataLoadResult.Error
+End Function
 
 ' Wrappers sans callback pour permettre l'appel direct
 Public Sub ProcessH2ElectrolysisMain()
@@ -148,9 +176,17 @@ Public Sub ProcessH2Electrolysis(ByVal control As IRibbonControl, Optional ByRef
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données d'électrolyse de l'eau.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "H2 waters electrolysis", "Erreur lors du traitement des données d'électrolyse"
+    Dim result As DataLoadResult
+    result = ProcessCategory("H2 waters electrolysis", "Erreur lors du traitement des données d'électrolyse")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données d'électrolyse de l'eau terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données d'électrolyse de l'eau terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données d'électrolyse de l'eau annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données d'électrolyse de l'eau.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -163,9 +199,17 @@ Public Sub ProcessCO2Capture(ByVal control As IRibbonControl, Optional ByRef ret
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données CO2 Capture.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "CO2 Capture", "Erreur lors du traitement des données CO2 Capture"
+    Dim result As DataLoadResult
+    result = ProcessCategory("CO2 Capture", "Erreur lors du traitement des données CO2 Capture")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données CO2 Capture terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données CO2 Capture terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données CO2 Capture annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données CO2 Capture.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -178,9 +222,17 @@ Public Sub ProcessCO2General(ByVal control As IRibbonControl, Optional ByRef ret
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données CO2 General Parameters.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "CO2 general parameters", "Erreur lors du traitement des données CO2 General Parameters"
+    Dim result As DataLoadResult
+    result = ProcessCategory("CO2 general parameters", "Erreur lors du traitement des données CO2 General Parameters")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données CO2 General Parameters terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données CO2 General Parameters terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données CO2 General Parameters annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données CO2 General Parameters.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -193,9 +245,17 @@ Public Sub ProcessCompression(ByVal control As IRibbonControl, Optional ByRef re
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données de compression.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Compression", "Erreur lors du traitement des données de compression"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Compression", "Erreur lors du traitement des données de compression")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données de compression terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données de compression terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données de compression annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données de compression.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -208,9 +268,17 @@ Public Sub ProcessH2General(ByVal control As IRibbonControl, Optional ByRef retu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données H2 General Parameters.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "H2 general parameters", "Erreur lors du traitement des données H2 General Parameters"
+    Dim result As DataLoadResult
+    result = ProcessCategory("H2 general parameters", "Erreur lors du traitement des données H2 General Parameters")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données H2 General Parameters terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données H2 General Parameters terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données H2 General Parameters annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données H2 General Parameters.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -223,9 +291,17 @@ Public Sub ProcessMeOHCO2(ByVal control As IRibbonControl, Optional ByRef return
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données MeOH CO2.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "MeOH - CO2-to-Methanol Synthesis", "Erreur lors du traitement des données MeOH CO2"
+    Dim result As DataLoadResult
+    result = ProcessCategory("MeOH - CO2-to-Methanol Synthesis", "Erreur lors du traitement des données MeOH CO2")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données MeOH CO2 terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données MeOH CO2 terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données MeOH CO2 annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données MeOH CO2.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -238,9 +314,17 @@ Public Sub ProcessMeOHBiomass(ByVal control As IRibbonControl, Optional ByRef re
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données MeOH Biomass.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "MeOH - Biomass Gasification Synthesis", "Erreur lors du traitement des données MeOH Biomass"
+    Dim result As DataLoadResult
+    result = ProcessCategory("MeOH - Biomass Gasification Synthesis", "Erreur lors du traitement des données MeOH Biomass")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données MeOH Biomass terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données MeOH Biomass terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données MeOH Biomass annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données MeOH Biomass.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -253,9 +337,17 @@ Public Sub ProcessSAFBtJ(ByVal control As IRibbonControl, Optional ByRef returnV
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données SAF BtJ.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "SAF - BtJ/e-BtJ Synthesis", "Erreur lors du traitement des données SAF BtJ"
+    Dim result As DataLoadResult
+    result = ProcessCategory("SAF - BtJ/e-BtJ Synthesis", "Erreur lors du traitement des données SAF BtJ")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données SAF BtJ terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données SAF BtJ terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données SAF BtJ annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données SAF BtJ.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -268,9 +360,17 @@ Public Sub ProcessSAFMtJ(ByVal control As IRibbonControl, Optional ByRef returnV
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données SAF MtJ.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "SAF - MtJ Synthesis", "Erreur lors du traitement des données SAF MtJ"
+    Dim result As DataLoadResult
+    result = ProcessCategory("SAF - MtJ Synthesis", "Erreur lors du traitement des données SAF MtJ")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données SAF MtJ terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données SAF MtJ terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données SAF MtJ annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données SAF MtJ.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -283,9 +383,17 @@ Public Sub ProcessChiller(ByVal control As IRibbonControl, Optional ByRef return
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Chiller.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Chiller", "Erreur lors du traitement des données Chiller"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Chiller", "Erreur lors du traitement des données Chiller")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Chiller terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Chiller terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Chiller annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Chiller.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -298,9 +406,17 @@ Public Sub ProcessCoolingWater(ByVal control As IRibbonControl, Optional ByRef r
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Cooling Water Production.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Cooling Water Production", "Erreur lors du traitement des données Cooling Water Production"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Cooling Water Production", "Erreur lors du traitement des données Cooling Water Production")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Cooling Water Production terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Cooling Water Production terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Cooling Water Production annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Cooling Water Production.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -313,9 +429,17 @@ Public Sub ProcessHeatProd(ByVal control As IRibbonControl, Optional ByRef retur
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Heat Production.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Heat Production", "Erreur lors du traitement des données Heat Production"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Heat Production", "Erreur lors du traitement des données Heat Production")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Heat Production terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Heat Production terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Heat Production annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Heat Production.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -328,9 +452,17 @@ Public Sub ProcessOtherUtil(ByVal control As IRibbonControl, Optional ByRef retu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Other utilities.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Other utilities", "Erreur lors du traitement des données Other utilities"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Other utilities", "Erreur lors du traitement des données Other utilities")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Other utilities terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Other utilities terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Other utilities annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Other utilities.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -343,9 +475,17 @@ Public Sub ProcessPowerLoss(ByVal control As IRibbonControl, Optional ByRef retu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Power losses.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Power losses", "Erreur lors du traitement des données Power losses"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Power losses", "Erreur lors du traitement des données Power losses")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Power losses terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Power losses terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Power losses annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Power losses.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -358,9 +498,17 @@ Public Sub ProcessWastewater(ByVal control As IRibbonControl, Optional ByRef ret
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données WasteWater Treatment.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "WasteWater Treatment", "Erreur lors du traitement des données WasteWater Treatment"
+    Dim result As DataLoadResult
+    result = ProcessCategory("WasteWater Treatment", "Erreur lors du traitement des données WasteWater Treatment")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données WasteWater Treatment terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données WasteWater Treatment terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données WasteWater Treatment annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données WasteWater Treatment.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -373,9 +521,17 @@ Public Sub ProcessWaterTreat(ByVal control As IRibbonControl, Optional ByRef ret
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données Water Treatment.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Water Treatment", "Erreur lors du traitement des données Water Treatment"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Water Treatment", "Erreur lors du traitement des données Water Treatment")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Water Treatment terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données Water Treatment terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données Water Treatment annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données Water Treatment.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -388,9 +544,17 @@ Public Sub ProcessMetriquesBase(ByVal control As IRibbonControl, Optional ByRef 
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des métriques de base.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Métriques de base", "Erreur lors du traitement des métriques de base"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Métriques de base", "Erreur lors du traitement des métriques de base")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques de base terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques de base terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des métriques de base annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des métriques de base.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -403,9 +567,17 @@ Public Sub ProcessMetriquesExpert(ByVal control As IRibbonControl, Optional ByRe
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des métriques expert.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Métriques expert", "Erreur lors du traitement des métriques expert"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Métriques expert", "Erreur lors du traitement des métriques expert")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques expert terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques expert terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des métriques expert annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des métriques expert.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -418,9 +590,17 @@ Public Sub ProcessTimingsReference(ByVal control As IRibbonControl, Optional ByR
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des timings de référence.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Timings de référence", "Erreur lors du traitement des timings de référence"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Timings de référence", "Erreur lors du traitement des timings de référence")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des timings de référence terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des timings de référence terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des timings de référence annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des timings de référence.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -433,9 +613,17 @@ Public Sub ProcessMetriquesRED(ByVal control As IRibbonControl, Optional ByRef r
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des métriques RED III.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Métriques RED III", "Erreur lors du traitement des métriques RED III"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Métriques RED III", "Erreur lors du traitement des métriques RED III")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques RED III terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des métriques RED III terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des métriques RED III annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des métriques RED III.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -448,9 +636,17 @@ Public Sub ProcessEmissions(ByVal control As IRibbonControl, Optional ByRef retu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des émissions.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Emissions", "Erreur lors du traitement des émissions"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Emissions", "Erreur lors du traitement des émissions")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des émissions terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des émissions terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des émissions annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des émissions.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -463,9 +659,17 @@ Public Sub ProcessInfraLog(ByVal control As IRibbonControl, Optional ByRef retur
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des données d'infrastructure et logistique.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Infra et logistique", "Erreur lors du traitement des données d'infrastructure et logistique"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Infra et logistique", "Erreur lors du traitement des données d'infrastructure et logistique")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données d'infrastructure et logistique terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des données d'infrastructure et logistique terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des données d'infrastructure et logistique annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des données d'infrastructure et logistique.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -478,9 +682,17 @@ Public Sub ProcessBudgetCorpo(ByVal control As IRibbonControl, Optional ByRef re
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement du budget corpo.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Budget Corpo", "Erreur lors du traitement du budget corpo"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Budget Corpo", "Erreur lors du traitement du budget corpo")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du budget corpo terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du budget corpo terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement du budget corpo annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement du budget corpo.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -493,9 +705,17 @@ Public Sub ProcessDetailsBudgets(ByVal control As IRibbonControl, Optional ByRef
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des détails budgets.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Détails Budgets", "Erreur lors du traitement des détails budgets"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Détails Budgets", "Erreur lors du traitement des détails budgets")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des détails budgets terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des détails budgets terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des détails budgets annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des détails budgets.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -508,9 +728,17 @@ Public Sub ProcessDIB(ByVal control As IRibbonControl, Optional ByRef returnValu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des DIB.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "DIB", "Erreur lors du traitement des DIB"
+    Dim result As DataLoadResult
+    result = ProcessCategory("DIB", "Erreur lors du traitement des DIB")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des DIB terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des DIB terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des DIB annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des DIB.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -523,9 +751,17 @@ Public Sub ProcessDemandesAchat(ByVal control As IRibbonControl, Optional ByRef 
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des demandes d'achat.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Demandes d'achat", "Erreur lors du traitement des demandes d'achat"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Demandes d'achat", "Erreur lors du traitement des demandes d'achat")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des demandes d'achat terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des demandes d'achat terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des demandes d'achat annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des demandes d'achat.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -538,9 +774,17 @@ Public Sub ProcessReceptions(ByVal control As IRibbonControl, Optional ByRef ret
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des réceptions.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Réceptions", "Erreur lors du traitement des réceptions"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Réceptions", "Erreur lors du traitement des réceptions")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des réceptions terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des réceptions terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des réceptions annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des réceptions.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -553,9 +797,17 @@ Public Sub ProcessScenarios(ByVal control As IRibbonControl, Optional ByRef retu
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des scénarios techniques.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Scénarios techniques", "Erreur lors du traitement des scénarios techniques"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Scénarios techniques", "Erreur lors du traitement des scénarios techniques")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des scénarios techniques terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des scénarios techniques terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des scénarios techniques annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des scénarios techniques.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -568,9 +820,17 @@ Public Sub ProcessPlanningPhases(ByVal control As IRibbonControl, Optional ByRef
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des plannings de phases.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Plannings de phases", "Erreur lors du traitement des plannings de phases"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Plannings de phases", "Erreur lors du traitement des plannings de phases")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des plannings de phases terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des plannings de phases terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des plannings de phases annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des plannings de phases.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -583,9 +843,17 @@ Public Sub ProcessPlanningSous(ByVal control As IRibbonControl, Optional ByRef r
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement des plannings de sous phases.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Plannings de sous phases", "Erreur lors du traitement des plannings de sous phases"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Plannings de sous phases", "Erreur lors du traitement des plannings de sous phases")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des plannings de sous phases terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement des plannings de sous phases terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement des plannings de sous phases annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement des plannings de sous phases.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -598,9 +866,17 @@ Public Sub ProcessBudgetProjet(ByVal control As IRibbonControl, Optional ByRef r
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement du budget projet.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Budget Projet", "Erreur lors du traitement du budget projet"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Budget Projet", "Erreur lors du traitement du budget projet")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du budget projet terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du budget projet terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement du budget projet annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement du budget projet.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -613,9 +889,17 @@ Public Sub ProcessDevex(ByVal control As IRibbonControl, Optional ByRef returnVa
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement du Devex.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Devex", "Erreur lors du traitement du Devex"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Devex", "Erreur lors du traitement du Devex")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Devex terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Devex terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement du Devex annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement du Devex.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -628,9 +912,17 @@ Public Sub ProcessCapex(ByVal control As IRibbonControl, Optional ByRef returnVa
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement du Capex.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Capex", "Erreur lors du traitement du Capex"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Capex", "Erreur lors du traitement du Capex")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Capex terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Capex terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement du Capex annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement du Capex.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:
@@ -643,9 +935,17 @@ Public Sub ProcessCapexEPC(ByVal control As IRibbonControl, Optional ByRef retur
 
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Traitement du Capex EPC.", PROC_NAME, MODULE_NAME
     
-    DataLoaderManager.ProcessCategory "Capex EPC", "Erreur lors du traitement du Capex EPC"
+    Dim result As DataLoadResult
+    result = ProcessCategory("Capex EPC", "Erreur lors du traitement du Capex EPC")
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Capex EPC terminé.", PROC_NAME, MODULE_NAME
+    If result = DataLoadResult.Success Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Traitement du Capex EPC terminé.", PROC_NAME, MODULE_NAME
+    ElseIf result = DataLoadResult.Cancelled Then
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Cancelled", "Traitement du Capex EPC annulé.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", "Erreur lors du traitement du Capex EPC.", PROC_NAME, MODULE_NAME
+    End If
+    
     Exit Sub
 
 ErrorHandler:

@@ -66,9 +66,8 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     Dim category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
         category = categories(i)
-        
-        Debug.Print "Nettoyage de " & category.PowerQueryName
-        DataLoaderManager.CleanupPowerQuery category.PowerQueryName
+          Debug.Print "Nettoyage de " & category.PowerQueryName
+        DAT_01_DataLoadManager.CleanupPowerQuery category.PowerQueryName
     Next i
     
     MsgBox "Nettoyage terminé", vbInformation

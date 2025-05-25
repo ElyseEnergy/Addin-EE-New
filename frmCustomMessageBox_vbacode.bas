@@ -217,36 +217,39 @@ Private Sub AdjustFormLayout()
     ' --- Adjust Message Label (Label2) ---
     currentY = Application.PointsToPixels(MARGIN, 1) ' Start Y position for content
 
+    ' Calculate message area width based on icon presence
     If Me.Image1.Visible Or Me.Label1.Visible Then
         Me.Label2.Left = Me.Image1.Left + Me.Image1.Width + Application.PointsToPixels(ICON_TEXT_SPACING, 0)
-        ' Ensure Label2.Top aligns with Icon.Top or slightly below if icon is tall
-        Me.Label2.Top = Me.Image1.Top
         messageAreaWidth = Me.InsideWidth - Me.Label2.Left - Application.PointsToPixels(MARGIN, 0)
     Else
         Me.Label2.Left = Application.PointsToPixels(MARGIN, 0)
-        Me.Label2.Top = currentY
         messageAreaWidth = Me.InsideWidth - Application.PointsToPixels(MARGIN * 2, 0)
     End If
     
-    If messageAreaWidth < Application.PointsToPixels(MIN_FORM_WIDTH / 2, 0) Then messageAreaWidth = Application.PointsToPixels(MIN_FORM_WIDTH / 2, 0)
+    ' Ensure minimum message width
+    If messageAreaWidth < Application.PointsToPixels(MIN_FORM_WIDTH / 2, 0) Then
+        messageAreaWidth = Application.PointsToPixels(MIN_FORM_WIDTH / 2, 0)
+    End If
     Me.Label2.Width = messageAreaWidth
 
-    ' Estimate Label2 height (this is the trickiest part without direct API)
-    ' Temporarily use AutoSize to get an idea of the height needed.
-    ' This works if Label2.Width is set and WordWrap is True.
+    ' Calculate required height for message
     Me.Label2.AutoSize = True
     requiredLabelHeight = Me.Label2.Height
     Me.Label2.AutoSize = False
     Me.Label2.Height = requiredLabelHeight
+
+    ' Position message vertically
+    Me.Label2.Top = currentY
     
-    ' Determine max height of icon area vs message area for currentY advancement
+    ' Calculate final content height
     Dim contentHeight As Long
     If Me.Image1.Visible Or Me.Label1.Visible Then
-        contentHeight = Application.PointsToPixels(ICON_HEIGHT, 1) ' Use fixed icon height
-        If Me.Label2.Height > contentHeight Then contentHeight = Me.Label2.Height
+        contentHeight = Application.Max(Me.Image1.Height, Me.Label2.Height)
     Else
         contentHeight = Me.Label2.Height
     End If
+
+    ' Update vertical position for buttons
     currentY = currentY + contentHeight + Application.PointsToPixels(VERTICAL_SPACING, 1)
 
     ' --- Position Buttons ---
@@ -255,44 +258,29 @@ Private Sub AdjustFormLayout()
         If buttonControls(i).Visible Then visibleButtonCount = visibleButtonCount + 1
     Next i
 
-    totalButtonWidth = (visibleButtonCount * Application.PointsToPixels(BUTTON_WIDTH, 0)) + ((visibleButtonCount - 1) * Application.PointsToPixels(BUTTON_SPACING, 0))
-    If totalButtonWidth < 0 Then totalButtonWidth = 0
+    ' Calculate total width needed for buttons
+    totalButtonWidth = (visibleButtonCount * BUTTON_WIDTH) + ((visibleButtonCount - 1) * BUTTON_SPACING)
+    
+    ' Start X position for first button (centered)
+    currentX = (Me.InsideWidth - totalButtonWidth) / 2
 
-    currentX = (Me.InsideWidth - totalButtonWidth) / 2 ' Starting X for the first button (or group)
-
+    ' Position each visible button
+    Dim visibleIndex As Integer
+    visibleIndex = 0
     For i = 1 To 3
-        Set btn = buttonControls(i)
-        If btn.Visible Then
-            btn.Top = currentY
-            btn.Left = currentX
-            currentX = currentX + btn.Width + Application.PointsToPixels(BUTTON_SPACING, 0)
+        If buttonControls(i).Visible Then
+            With buttonControls(i)
+                .Top = currentY
+                .Left = currentX + (visibleIndex * (BUTTON_WIDTH + BUTTON_SPACING))
+                .Width = BUTTON_WIDTH
+                .Height = BUTTON_HEIGHT
+            End With
+            visibleIndex = visibleIndex + 1
         End If
     Next i
-    
-    If visibleButtonCount > 0 Then
-        currentY = currentY + Application.PointsToPixels(BUTTON_HEIGHT, 1) + Application.PointsToPixels(MARGIN, 1)
-    Else
-        currentY = currentY + Application.PointsToPixels(MARGIN, 1) ' Just bottom margin if no buttons
-    End If
 
-    ' --- Set Final Form Height ---
-    Me.Height = currentY
-    
-    ' Ensure min/max form height
-    Dim screenHeightPx As Long
-    screenHeightPx = Application.PointsToPixels(Application.Height, 1) ' Application.Height is in points
-    If Me.Height < Application.PointsToPixels(MIN_FORM_HEIGHT, 1) Then Me.Height = Application.PointsToPixels(MIN_FORM_HEIGHT, 1)
-    If Me.Height > screenHeightPx * MAX_FORM_HEIGHT_FACTOR Then Me.Height = screenHeightPx * MAX_FORM_HEIGHT_FACTOR
-    
-    ' Final check on Label2 height if form height was capped
-    If currentY > Me.Height Then
-         Dim diff As Long
-         diff = currentY - Me.Height
-         Me.Label2.Height = Me.Label2.Height - diff
-         ' Reposition buttons if Label2 height changed significantly due to form capping
-         ' This can get complex; for now, assume capping is rare or minor.
-    End If
-
+    ' Set final form height
+    Me.Height = currentY + BUTTON_HEIGHT + MARGIN + (Me.Height - Me.InsideHeight)
 End Sub
 
 ' --- Event Handlers for Buttons ---
