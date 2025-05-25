@@ -123,6 +123,7 @@ End Function
 
 Private Function ShowTicketCreationForm(ticketData As TicketData) As String
     ' Show the ticket creation form with pre-populated data
+    Dim frm As Object ' frmTicketInput
     
     If mTicketFormOpen Then
         ShowTicketCreationForm = "FORM_ALREADY_OPEN"
@@ -130,183 +131,124 @@ Private Function ShowTicketCreationForm(ticketData As TicketData) As String
     End If
     
     mTicketFormOpen = True
-    mCurrentTicketData = ticketData
+    mCurrentTicketData = ticketData ' Store initial data
     
-    ' Generate ticket ID
-    mTicketCounter = mTicketCounter + 1
-    mLastTicketID = "ELY" & Format(Now, "yyyymmdd") & Format(mTicketCounter, "000")
-    
-    ' For actual implementation, this would show TicketCreationForm UserForm
-    ' This is a placeholder implementation
-    Dim result As String
-    result = ShowTicketFormPlaceholder(ticketData)
-    
-    mTicketFormOpen = False
-    ShowTicketCreationForm = result
-End Function
-
-Private Function ShowTicketFormPlaceholder(ticketData As TicketData) As String
-    ' Placeholder implementation for ticket form
-    ' In actual implementation, this would be a rich HTML editor form or a UserForm
-
-    Dim formHtml As String
-    formHtml = BuildTicketFormHTML(ticketData)
-
-    ' For now, show simplified input
-    Dim userSubject As String
-    Dim userDescription As String
-
-    ' --- OLD InputBox calls ---
-    ' userSubject = InputBox("Ticket Subject:", "Create Support Ticket", ticketData.Subject)
-    ' If userSubject = "" Then
-    '     ShowTicketFormPlaceholder = "CANCELLED"
-    '     Exit Function
-    ' End If
-    '
-    ' userDescription = InputBox("Ticket Description:" & vbCrLf & vbCrLf & "Current description:" & vbCrLf & ticketData.Description, "Create Support Ticket", "Please describe your issue in detail...")
-    ' If userDescription = "" Or userDescription = "Please describe your issue in detail..." Then
-    '     ShowTicketFormPlaceholder = "CANCELLED"
-    '     Exit Function
-    ' End If
-    ' --- END OLD InputBox calls ---
-
-    ' --- REPLACEMENT with SYS_MessageBox (Placeholder - UserForm needed for text input) ---
-    ' TODO: Implement a UserForm (e.g., TicketCreationForm) for proper subject and description input.
-    ' The following is a temporary placeholder.
-    SYS_MessageBox.ShowInfoMessage "Ticket Subject Input (Placeholder)", "Please enter the ticket subject in the actual UserForm. For now, using: " & ticketData.Subject
-    userSubject = ticketData.Subject ' Using pre-filled subject as placeholder cannot get input.
-    If userSubject = "" Then userSubject = "[Subject Placeholder - UserForm Needed]
-
-
-    SYS_MessageBox.ShowInfoMessage "Ticket Description Input (Placeholder)", "Please enter the ticket description in the actual UserForm. For now, using a generic description."
-    userDescription = ticketData.Description ' Using pre-filled description as placeholder.
-    If userDescription = "" Then userDescription = "[Description Placeholder - UserForm Needed]"
-    ' --- END REPLACEMENT ---
-    
-    ' Update ticket data
-    mCurrentTicketData.Subject = userSubject ' Ensure mCurrentTicketData is updated
-    mCurrentTicketData.Description = userDescription
-
-    ' Send the ticket
-    If SendTicketViaOutlook(mCurrentTicketData) Then ' Use mCurrentTicketData
-        ShowTicketFormPlaceholder = mLastTicketID
-    Else
-        ShowTicketFormPlaceholder = "SEND_FAILED"
+    ' Generate ticket ID if not already set (e.g. for new manual tickets)
+    If mLastTicketID = "" Or ticketData.Source = "manual" Then
+        mTicketCounter = GetNextTicketCounter() ' Ensure counter is loaded and incremented
+        mLastTicketID = "ELY" & Format(Now, "yyyymmdd") & Format(mTicketCounter, "0000") ' Changed to 4 digits for counter
     End If
+    
+    Set frm = VBA.UserForms.Add("frmTicketInput")
+    frm.ShowForm mCurrentTicketData, "Support Ticket - ID: " & mLastTicketID
+    
+    ' Apply corporate styling (assuming ApplyCorporateStyling is in SYS_MessageBox or accessible)
+    ' Need to ensure SYS_MessageBox.ApplyCorporateStyling can handle frmTicketInput
+    ' Or call a local ApplyStyling method if defined in SYS_TicketSystem
+    On Error Resume Next ' In case styling function is not ready
+    SYS_MessageBox.ApplyCorporateStyling frm, INFO_MESSAGE ' Or a new MessageType for tickets
+    On Error GoTo 0
+
+    If frm.Submitted Then
+        mCurrentTicketData = frm.TicketDetails ' Get updated data from form
+        
+        ' Send the ticket
+        If SendTicketViaOutlook(mCurrentTicketData) Then
+            ShowTicketCreationForm = mLastTicketID
+            SaveLastTicketCounter mTicketCounter ' Save counter after successful submission
+        Else
+            ShowTicketCreationForm = "SEND_FAILED"
+        End If
+    Else
+        ShowTicketCreationForm = "CANCELLED"
+        ' If cancelled, we might not want to reuse the mLastTicketID unless it's a retry.
+        ' For simplicity, current mLastTicketID might be offered again if user reopens form for same initial event.
+    End If
+    
+    Unload frm
+    Set frm = Nothing
+    mTicketFormOpen = False
 End Function
 
-Private Function BuildTicketFormHTML(ticketData As TicketData) As String
-    ' Build HTML for rich ticket creation form
+' Remove or comment out ShowTicketFormPlaceholder as it's replaced by frmTicketInput
+' Private Function ShowTicketFormPlaceholder(ticketData As TicketData) As String
+'     ' Placeholder implementation for ticket form
+'     ' In actual implementation, this would be a rich HTML editor form or a UserForm
+
+'     Dim formHtml As String
+'     formHtml = BuildTicketFormHTML(ticketData)
+
+'     ' For now, show simplified input
+'     Dim userSubject As String
+'     Dim userDescription As String
+
+'     ' --- OLD InputBox calls ---
+'     ' userSubject = InputBox("Ticket Subject:", "Create Support Ticket", ticketData.Subject)
+'     ' If userSubject = "" Then
+'     '     ShowTicketFormPlaceholder = "CANCELLED"
+'     '     Exit Function
+'     ' End If
+'     '
+'     ' userDescription = InputBox("Ticket Description:" & vbCrLf & vbCrLf & "Current description:" & vbCrLf & ticketData.Description, "Create Support Ticket", "Please describe your issue in detail...")
+'     ' If userDescription = "" Or userDescription = "Please describe your issue in detail..." Then
+'     '     ShowTicketFormPlaceholder = "CANCELLED"
+'     '     Exit Function
+'     ' End If
+'     ' --- END OLD InputBox calls ---
+
+'     ' --- REPLACEMENT with SYS_MessageBox (Placeholder - UserForm needed for text input) ---
+'     ' TODO: Implement a UserForm (e.g., TicketCreationForm) for proper subject and description input.
+'     ' The following is a temporary placeholder.
+'     SYS_MessageBox.ShowInfoMessage "Ticket Subject Input (Placeholder)", "Please enter the ticket subject in the actual UserForm. For now, using: " & ticketData.Subject
+'     userSubject = ticketData.Subject ' Using pre-filled subject as placeholder cannot get input.
+'     If userSubject = "" Then userSubject = "[Subject Placeholder - UserForm Needed]
+
+
+'     SYS_MessageBox.ShowInfoMessage "Ticket Description Input (Placeholder)", "Please enter the ticket description in the actual UserForm. For now, using a generic description."
+'     userDescription = ticketData.Description ' Using pre-filled description as placeholder.
+'     If userDescription = "" Then userDescription = "[Description Placeholder - UserForm Needed]"
+'     ' --- END REPLACEMENT ---
     
-    Dim html As String
-    html = "<!DOCTYPE html><html><head><meta charset='utf-8'>"
-    html = html & "<title>Elyse Energy - Support Ticket</title>"
-    html = html & "<style>"
-    html = html & "body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f8f8ff; }"
-    html = html & ".header { background: #2E8B57; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }"
-    html = html & ".form-group { margin-bottom: 15px; }"
-    html = html & "label { display: block; font-weight: bold; margin-bottom: 5px; color: #2F4F4F; }"
-    html = html & "input, textarea, select { width: 100%; padding: 8px; border: 1px solid #708090; border-radius: 4px; }"
-    html = html & "textarea { min-height: 150px; font-family: 'Consolas', monospace; }"
-    html = html & ".toolbar { background: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-bottom: none; }"
-    html = html & ".toolbar button { margin: 2px; padding: 6px 12px; border: 1px solid #999; background: white; cursor: pointer; }"
-    html = html & ".submit-btn { background: #2E8B57; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; }"
-    html = html & ".cancel-btn { background: #708090; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }"
-    html = html & "</style></head><body>"
-    
-    ' Header
-    html = html & "<div class='header'>"
-    html = html & "<h2>🎫 Elyse Energy Support Ticket</h2>"
-    html = html & "<p>Ticket ID: " & mLastTicketID & " | User: " & GetUserIdentity() & "</p>"
-    html = html & "</div>"
-    
-    ' Form fields
-    html = html & "<form id='ticketForm'>"
-    
-    ' Subject
-    html = html & "<div class='form-group'>"
-    html = html & "<label for='subject'>Subject *</label>"
-    html = html & "<input type='text' id='subject' name='subject' value='" & ticketData.Subject & "' required>"
-    html = html & "</div>"
-    
-    ' Priority
-    html = html & "<div class='form-group'>"
-    html = html & "<label for='priority'>Priority</label>"
-    html = html & "<select id='priority' name='priority'>"
-    html = html & "<option value='Low'>Low</option>"
-    html = html & "<option value='Medium' selected>Medium</option>"
-    html = html & "<option value='High'>High</option>"
-    html = html & "<option value='Critical'>Critical</option>"
-    html = html & "</select>"
-    html = html & "</div>"
-    
-    ' Category
-    html = html & "<div class='form-group'>"
-    html = html & "<label for='category'>Category</label>"
-    html = html & "<select id='category' name='category'>"
-    html = html & "<option value='Technical Error'>Technical Error</option>"
-    html = html & "<option value='User Interface'>User Interface</option>"
-    html = html & "<option value='Data Issue'>Data Issue</option>"
-    html = html & "<option value='Feature Request'>Feature Request</option>"
-    html = html & "<option value='Other'>Other</option>"
-    html = html & "</select>"
-    html = html & "</div>"
-    
-    ' Description with rich editor
-    html = html & "<div class='form-group'>"
-    html = html & "<label for='description'>Description *</label>"
-    html = html & "<div class='toolbar'>"
-    html = html & "<button type='button' onclick='formatText(""bold"")'>Bold</button>"
-    html = html & "<button type='button' onclick='formatText(""italic"")'>Italic</button>"
-    html = html & "<button type='button' onclick='insertList()'>• List</button>"
-    html = html & "<button type='button' onclick='insertTable()'>Table</button>"
-    html = html & "</div>"
-    html = html & "<textarea id='description' name='description' placeholder='Describe your issue in detail...'>" & ticketData.Description & "</textarea>"
-    html = html & "</div>"
-    
-    ' Options
-    html = html & "<div class='form-group'>"
-    html = html & "<label><input type='checkbox' name='includeLogs' " & IIf(ticketData.IncludeLogs, "checked", "") & "> Include recent activity logs</label><br>"
-    html = html & "<label><input type='checkbox' name='includeScreenshot'> Include screenshot</label>"
-    html = html & "</div>"
-    
-    ' Buttons
-    html = html & "<div class='form-group'>"
-    html = html & "<button type='submit' class='submit-btn'>Send Ticket</button>"
-    html = html & "<button type='button' class='cancel-btn' onclick='window.close()'>Cancel</button>"
-    html = html & "</div>"
-    
-    html = html & "</form>"
-    
-    ' JavaScript
-    html = html & "<script>"
-    html = html & "function formatText(command) {"
-    html = html & "  var textarea = document.getElementById('description');"
-    html = html & "  var start = textarea.selectionStart;"
-    html = html & "  var end = textarea.selectionEnd;"
-    html = html & "  var selectedText = textarea.value.substring(start, end);"
-    html = html & "  var replacement = '';"
-    html = html & "  if (command === 'bold') replacement = '**' + selectedText + '**';"
-    html = html & "  if (command === 'italic') replacement = '*' + selectedText + '*';"
-    html = html & "  textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);"
-    html = html & "}"
-    html = html & "function insertList() {"
-    html = html & "  var textarea = document.getElementById('description');"
-    html = html & "  var pos = textarea.selectionStart;"
-    html = html & "  var listText = '\\n- Item 1\\n- Item 2\\n- Item 3\\n';"
-    html = html & "  textarea.value = textarea.value.substring(0, pos) + listText + textarea.value.substring(pos);"
-    html = html & "}"
-    html = html & "function insertTable() {"
-    html = html & "  var textarea = document.getElementById('description');"
-    html = html & "  var pos = textarea.selectionStart;"
-    html = html & "  var tableText = '\\n| Column 1 | Column 2 | Column 3 |\\n|----------|----------|----------|\\n| Cell 1   | Cell 2   | Cell 3   |\\n| Cell 4   | Cell 5   | Cell 6   |\\n';"
-    html = html & "  textarea.value = textarea.value.substring(0, pos) + tableText + textarea.value.substring(pos);"
-    html = html & "}"
-    html = html & "</script>"
-    
-    html = html & "</body></html>"
-    
-    BuildTicketFormHTML = html
+'     ' Update ticket data
+'     mCurrentTicketData.Subject = userSubject ' Ensure mCurrentTicketData is updated
+'     mCurrentTicketData.Description = userDescription
+
+'     ' Send the ticket
+'     If SendTicketViaOutlook(mCurrentTicketData) Then ' Use mCurrentTicketData
+'         ShowTicketFormPlaceholder = mLastTicketID
+'     Else
+'         ShowTicketFormPlaceholder = "SEND_FAILED"
+'     End If
+' End Function
+
+' Helper function to manage ticket counter (example, could be stored in a hidden sheet or setting)
+Private Function GetNextTicketCounter() As Long
+    ' Placeholder: In a real app, load from a persistent store (e.g., hidden sheet, registry, settings file)
+    ' For now, just increment a module-level variable. This will reset each session.
+    ' A more robust solution would be needed for production.
+    Static sTicketCounter As Long ' Static to persist across calls within a session
+    If sTicketCounter = 0 Then
+        sTicketCounter = CLng(GetSetting(Application.Name & " - ElyseAddin", "TicketSystem", "LastTicketNumber", "0"))
+    End If
+    sTicketCounter = sTicketCounter + 1
+    GetNextTicketCounter = sTicketCounter
+End Function
+
+Private Sub SaveLastTicketCounter(counter As Long)
+    ' Placeholder: Save to a persistent store
+    SaveSetting Application.Name & " - ElyseAddin", "TicketSystem", "LastTicketNumber", CStr(counter)
+End Sub
+
+' --- Add to SYS_TicketSystem for ComboBox population in frmTicketInput ---
+Public Function GetPriorityEnumArray() As Variant
+    GetPriorityEnumArray = Array("Low", "Medium", "High", "Critical", "Urgent")
+    ' Corresponds to TicketPriority enum, but string representation for UI
+    ' Could also build this by iterating enum if VBA supported that easily for custom enums
+End Function
+
+Public Function GetCategoryEnumArray() As Variant
+    GetCategoryEnumArray = Array("Technical Error", "User Interface", "Data Issue", "Feature Request", "Calculation Error", "Performance Issue", "Other")
+    ' Corresponds to TicketCategory enum
 End Function
 
 ' ============================================================================
@@ -556,51 +498,6 @@ Private Sub AttachRecentLogs(mailItem As Object)
 End Sub
 
 ' ============================================================================
-' UTILITY FUNCTIONS
-' ============================================================================
-
-Private Function GetPriorityFromMessageType(msgType As MessageType) As String
-    ' Determine ticket priority from message type
-    
-    Select Case msgType
-        Case ERROR_MESSAGE: GetPriorityFromMessageType = GetPriorityString(HIGH_PRIORITY)
-        Case WARNING_MESSAGE: GetPriorityFromMessageType = GetPriorityString(MEDIUM_PRIORITY)
-        Case INFO_MESSAGE: GetPriorityFromMessageType = GetPriorityString(LOW_PRIORITY)
-        Case SUCCESS_MESSAGE: GetPriorityFromMessageType = GetPriorityString(LOW_PRIORITY)
-        Case CONFIRMATION_MESSAGE: GetPriorityFromMessageType = GetPriorityString(MEDIUM_PRIORITY)
-        Case Else: GetPriorityFromMessageType = GetPriorityString(MEDIUM_PRIORITY)
-    End Select
-End Function
-
-Private Function GetPriorityString(priority As TicketPriority) As String
-    ' Convert priority enum to string
-    
-    Select Case priority
-        Case LOW_PRIORITY: GetPriorityString = "Low"
-        Case MEDIUM_PRIORITY: GetPriorityString = "Medium"
-        Case HIGH_PRIORITY: GetPriorityString = "High"
-        Case CRITICAL_PRIORITY: GetPriorityString = "Critical"
-        Case URGENT_PRIORITY: GetPriorityString = "Urgent"
-        Case Else: GetPriorityString = "Medium"
-    End Select
-End Function
-
-Private Function GetCategoryString(category As TicketCategory) As String
-    ' Convert category enum to string
-    
-    Select Case category
-        Case TECHNICAL_ERROR: GetCategoryString = "Technical Error"
-        Case USER_INTERFACE: GetCategoryString = "User Interface"
-        Case DATA_ISSUE: GetCategoryString = "Data Issue"
-        Case FEATURE_REQUEST: GetCategoryString = "Feature Request"
-        Case CALCULATION_ERROR: GetCategoryString = "Calculation Error"
-        Case PERFORMANCE_ISSUE: GetCategoryString = "Performance Issue"
-        Case OTHER_ISSUE: GetCategoryString = "Other"
-        Case Else: GetCategoryString = "Other"
-    End Select
-End Function
-
-' ============================================================================
 ' PUBLIC API FUNCTIONS
 ' ============================================================================
 
@@ -650,4 +547,54 @@ Public Function GetTicketSystemStatus() As Object
     status("support_email") = SUPPORT_EMAIL
     
     Set GetTicketSystemStatus = status
+End Function
+
+Public Function GetPriorityString(priorityValue As Variant) As String
+    If IsNumeric(priorityValue) Then
+        Dim p As TicketPriority
+        p = CLng(priorityValue)
+        Select Case p
+            Case LOW_PRIORITY: GetPriorityString = "Low"
+            Case MEDIUM_PRIORITY: GetPriorityString = "Medium"
+            Case HIGH_PRIORITY: GetPriorityString = "High"
+            Case CRITICAL_PRIORITY: GetPriorityString = "Critical"
+            Case URGENT_PRIORITY: GetPriorityString = "Urgent"
+            Case Else: GetPriorityString = "Medium" ' Default
+        End Select
+    Else
+        GetPriorityString = CStr(priorityValue) ' Assume it's already a string
+    End If
+End Function
+
+Public Function GetCategoryString(categoryValue As Variant) As String
+    If IsNumeric(categoryValue) Then
+        Dim c As TicketCategory
+        c = CLng(categoryValue)
+        Select Case c
+            Case TECHNICAL_ERROR: GetCategoryString = "Technical Error"
+            Case USER_INTERFACE: GetCategoryString = "User Interface"
+            Case DATA_ISSUE: GetCategoryString = "Data Issue"
+            Case FEATURE_REQUEST: GetCategoryString = "Feature Request"
+            Case CALCULATION_ERROR: GetCategoryString = "Calculation Error"
+            Case PERFORMANCE_ISSUE: GetCategoryString = "Performance Issue"
+            Case OTHER_ISSUE: GetCategoryString = "Other"
+            Case Else: GetCategoryString = "Other" ' Default
+        End Select
+    Else
+        GetCategoryString = CStr(categoryValue) ' Assume it's already a string
+    End If
+End Function
+
+' Ensure GetPriorityFromMessageType returns a string compatible with ComboBox
+Public Function GetPriorityFromMessageType(msgType As MessageType) As String
+    Select Case msgType
+        Case ERROR_MESSAGE, CRITICAL_MESSAGE
+            GetPriorityFromMessageType = GetPriorityString(CRITICAL_PRIORITY)
+        Case WARNING_MESSAGE
+            GetPriorityFromMessageType = GetPriorityString(HIGH_PRIORITY)
+        Case INFO_MESSAGE, SUCCESS_MESSAGE, GENERAL_MESSAGE
+            GetPriorityFromMessageType = GetPriorityString(MEDIUM_PRIORITY)
+        Case Else
+            GetPriorityFromMessageType = GetPriorityString(MEDIUM_PRIORITY)
+    End Select
 End Function
