@@ -177,11 +177,8 @@ Public Function HandleError(ByVal moduleName As String, ByVal procedureName As S
         
     ' Call the logger's LogError, which in turn calls LogToRagic.
     ' LogToRagic has been updated to accept and unpack an ErrorContext object.
-    ElyseLogger_Module.LogErrorWithContext logAction, logDetails, ctx ' Assumes LogErrorWithContext exists or LogError is adapted
-
-    ' Determine severity and action
-    ctx.Severity = DetermineErrorSeverity(ctx.ErrorNumber, ctx.ErrorDescription)
-    ctx.ActionTaken = ExecuteErrorAction(ctx, additionalInfo)
+    ElyseLogger_Module.LogErrorWithContext logAction, logDetails, ctx ' Assumes LogErrorWithContext exists or LogError is adapted    ' Determine severity and action    ctx.Severity = DetermineErrorSeverityAsString(ctx.ErrorNumber, ctx.ErrorDescription)
+    ctx.ActionTaken = ExecuteErrorActionAndGetResult(ctx, additionalInfo)
 
     Set HandleError = ctx
     
@@ -224,23 +221,23 @@ Public Sub LogErrorWithContext(actionCode As String, message As String, errorCtx
 End Sub
 
 
-Private Function DetermineErrorSeverity(errorNum As Long, errorDesc As String) As String
+Private Function DetermineErrorSeverityAsString(errorNum As Long, errorDesc As String) As String
     ' TODO: Implement logic to determine severity based on error number or description
     ' Example:
-    If errorNum = 0 Then DetermineErrorSeverity = "INFO" ' Not an error
+    If errorNum = 0 Then DetermineErrorSeverityAsString = "INFO" ' Not an error
     ElseIf InStr(1, errorDesc, "critical", vbTextCompare) > 0 Then
-        DetermineErrorSeverity = "CRITICAL"
+        DetermineErrorSeverityAsString = "CRITICAL"
     ElseIf errorNum > 0 And errorNum < 100 Then ' Example: Application-defined errors
-        DetermineErrorSeverity = "HIGH"
+        DetermineErrorSeverityAsString = "HIGH"
     ElseIf errorNum >= 500 And errorNum <= 600 Then ' Example: File errors
-        DetermineErrorSeverity = "MEDIUM"
+        DetermineErrorSeverityAsString = "MEDIUM"
     Else
-        DetermineErrorSeverity = "LOW" ' Default
+        DetermineErrorSeverityAsString = "LOW" ' Default
     End If
-    ElyseLogger_Module.LogDebug "DetermineErrorSeverity", "Severity for Err#" & errorNum & " determined as: " & DetermineErrorSeverity, "DetermineErrorSeverity", "ElyseErrorHandler_Module"
+    ElyseLogger_Module.LogDebug "DetermineErrorSeverityAsString", "Severity for Err#" & errorNum & " determined as: " & DetermineErrorSeverityAsString, "DetermineErrorSeverity", "ElyseErrorHandler_Module"
 End Function
 
-Private Function ExecuteErrorAction(ctx As ErrorContext, Optional additionalInfo As String = "") As String
+Private Function ExecuteErrorActionAndGetResult(ctx As ErrorContext, Optional additionalInfo As String = "") As String
     ' TODO: Implement logic to decide what action to take (e.g., show message, retry, abort)
     Dim action As String
     action = "LOGGED" ' Default action
@@ -278,9 +275,8 @@ Private Function ExecuteErrorAction(ctx As ErrorContext, Optional additionalInfo
         Case Else
             ' Default: just logged
     End Select
-    
-    ElyseLogger_Module.LogDebug "ExecuteErrorAction", "Action taken for Err#" & ctx.ErrorNumber & " (" & ctx.Severity & "): " & action, "ExecuteErrorAction", "ElyseErrorHandler_Module"
-    ExecuteErrorAction = action
+      ElyseLogger_Module.LogDebug "ExecuteErrorActionAndGetResult", "Action taken for Err#" & ctx.ErrorNumber & " (" & ctx.Severity & "): " & action, "ExecuteErrorActionAndGetResult", "ElyseErrorHandler_Module"
+    ExecuteErrorActionAndGetResult = action
 End Function
 
 ' ============================================================================
