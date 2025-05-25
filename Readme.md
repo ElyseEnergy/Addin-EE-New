@@ -1,7 +1,27 @@
 ﻿# Add-in Elyse Energy
 
 ## Description
-Add-in Excel pour la gestion et l'analyse des données énergétiques d'Elyse Energy. Cet add-in fournit une interface unifiée pour accéder et manipuler les données techniques, financières et de projet.
+Add-in Excel pour la gestion et l'analyse des données énergétiques d'Elyse Energy. Cet add-in fournit une interface unifiée pour accéder et manipuler les données techniques, financières et de projet, avec une architecture robuste incluant la gestion des erreurs, le logging, et l'intégration SharePoint.
+
+## Guide de Démarrage Rapide
+
+### Installation pour Utilisateurs
+1. Copier le fichier `Addin Elyse Energy.xlam` dans le dossier des add-ins Excel
+   - Windows : `C:\Users\[Username]\AppData\Roaming\Microsoft\AddIns`
+2. Ouvrir Excel et aller dans Fichier > Options > Add-ins
+3. Cliquer sur "Gérer : Add-ins Excel" puis "Atteindre..."
+4. Cocher "Addin Elyse Energy" et cliquer sur OK
+5. Le ruban "Elyse Energy" apparaîtra dans l'interface Excel
+
+### Installation pour Développeurs
+1. Cloner le repository
+2. Ouvrir le fichier `Addin Elyse Energy.xlsm` dans Excel
+3. Configurer les variables d'environnement dans `CFG_04_EnvironmentVariables.bas`
+4. Exécuter la procédure `InitializeElyseSystem` dans `APP_MainOrchestrator.bas`
+5. Pour déboguer, utiliser le mode DEBUG_MODE :
+   ```vb
+   InitializeElyseSystem DEBUG_MODE
+   ```
 
 ## Structure du Projet
 
