@@ -20,6 +20,9 @@ Private mLogBuffer As Collection
 Private mLastFlushTime As Date
 Private mLoggerInitialized As Boolean
 Private mCurrentLogLevel As LogLevel
+Private mLoggerActive As Boolean
+Private mLogToFile As Boolean
+Private Const LOG_FILE_PATH As String = "elyse_log.txt"
 
 ' ============================================================================
 ' LOGGER INITIALIZATION
@@ -38,6 +41,8 @@ Public Function InitializeLogger(Optional logLevel As LogLevel = INFO_LEVEL) As 
     ' Set logging configuration
     mCurrentLogLevel = logLevel
     mLastFlushTime = Now
+    mLoggerActive = True
+    mLogToFile = True ' Can be made configurable
     
     ' Initialize log buffer
     Set mLogBuffer = New Collection
@@ -92,6 +97,14 @@ Public Sub LogEvent(action As String, details As String, Optional level As LogLe
     
     ' Add to buffer
     AddToLogBuffer logEntry
+    
+    ' Handle immediate output based on log level
+    If mLoggerActive Then
+        Dim logMessage As String
+        logMessage = GetLogLevelString(level) & " [" & action & "] " & details
+        PrintToImmediate logMessage
+        If mLogToFile Then WriteToLogFile GetLogLevelString(level), logMessage
+    End If
     
     ' Auto-flush if critical or buffer full
     If level >= ERROR_LEVEL Or mLogBuffer.Count >= LOG_BUFFER_SIZE Then
@@ -445,92 +458,59 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
     Set fieldData = CreateObject("Scripting.Dictionary")
 
     ' Populate common fields
-    fieldData(RAGIC_FIELD_TIMESTAMP) = Format(Now, "yyyy/MM/dd HH:mm:ss") ' Ragic often prefers yyyy/MM/dd for dates
+    fieldData(RAGIC_FIELD_TIMESTAMP) = Format(Now, "yyyy/MM/dd HH:mm:ss")
     fieldData(RAGIC_FIELD_USER) = GetCurrentUserIdentifier()
-    fieldData(RAGIC_FIELD_ACTION) = Left(action, 255) ' Ensure within typical text limits
+    fieldData(RAGIC_FIELD_ACTION) = Left(action, 255)
     fieldData(RAGIC_FIELD_DETAILS) = details
     fieldData(RAGIC_FIELD_LEVEL) = logLevel
     fieldData(RAGIC_FIELD_SESSION_ID) = GetSessionID()
+
+    ' Add system context
     fieldData(RAGIC_FIELD_EXCEL_VERSION) = Application.Version
-    
-    On Error Resume Next ' Gracefully handle if workbook/sheet properties are not available
-    fieldData(RAGIC_FIELD_WORKBOOK_NAME) = ActiveWorkbook.Name
-    fieldData(RAGIC_FIELD_ACTIVE_SHEET) = ActiveSheet.Name
-    If TypeName(Selection) = "Range" Then
-        fieldData(RAGIC_FIELD_SELECTED_RANGE) = Selection.Address
-    End If
-    fieldData(RAGIC_FIELD_FILE_LOCATION) = ActiveWorkbook.FullName
-    
-    ' SharePoint fields integration
-    If ElyseCore_System.IsFeatureEnabled("SharePointIntegration") And Not ActiveWorkbook Is Nothing Then
-        ' Check if ElyseSharePoint_Integration module is available and function exists
-        ' This requires ElyseSharePoint_Integration to be structured to provide these details.
-        ' For now, we assume functions GetSharePointDocIDForWorkbook and GetSharePointUrlForWorkbook exist in ElyseSharePoint_Integration
-        Dim spDocId As String
-        Dim spUrl As String
-        
-        ' Use Application.Run to safely call functions in another module if it's loaded
-        ' This avoids compile errors if the module isn't present, though it should be.
-        On Error Resume Next ' For Application.Run calls
-        spDocId = Application.Run("ElyseSharePoint_Integration.GetSharePointDocIDForWorkbook", ActiveWorkbook)
-        spUrl = Application.Run("ElyseSharePoint_Integration.GetSharePointUrlForWorkbook", ActiveWorkbook)
-        On Error GoTo RagicLogErrorHandler ' Restore main error handler after Application.Run attempts
-        
-        If spDocId <> "" And spDocId <> "Error" Then ' Check for actual value or error string from function
-            fieldData(RAGIC_FIELD_SP_DOC_ID) = spDocId
-        Else
-            fieldData(RAGIC_FIELD_SP_DOC_ID) = "N/A" ' Or some other placeholder
-        End If
-        
-        If spUrl <> "" And spUrl <> "Error" Then
-            fieldData(RAGIC_FIELD_SP_URL) = spUrl
-        Else
-            fieldData(RAGIC_FIELD_SP_URL) = "N/A"
-        End If
-    Else
-        fieldData(RAGIC_FIELD_SP_DOC_ID) = "N/A_SP_Disabled_Or_No_WB"
-        fieldData(RAGIC_FIELD_SP_URL) = "N/A_SP_Disabled_Or_No_WB"
-    End If
-    
     fieldData(RAGIC_FIELD_USER_DOMAIN) = Environ("USERDOMAIN")
     fieldData(RAGIC_FIELD_COMPUTER_NAME) = Environ("COMPUTERNAME")
-    On Error GoTo RagicLogErrorHandler ' Reset error handling
 
-    ' If ErrorContext is provided, add more specific error details
-    If Not errorCtx Is Nothing Then
-        If errorCtx.ModuleName <> "" And errorCtx.ProcedureName <> "" Then
-            fieldData(RAGIC_FIELD_ACTION) = Left(errorCtx.ModuleName & "." & errorCtx.ProcedureName, 255)
-        ElseIf errorCtx.ProcedureName <> "" Then
-             fieldData(RAGIC_FIELD_ACTION) = Left(errorCtx.ProcedureName, 255)
+    ' Add Excel context if available
+    On Error Resume Next
+    If Not ActiveWorkbook Is Nothing Then
+        fieldData(RAGIC_FIELD_WORKBOOK_NAME) = ActiveWorkbook.Name
+        fieldData(RAGIC_FIELD_ACTIVE_SHEET) = ActiveSheet.Name
+        fieldData(RAGIC_FIELD_FILE_LOCATION) = ActiveWorkbook.FullName
+        If TypeName(Selection) = "Range" Then
+            fieldData(RAGIC_FIELD_SELECTED_RANGE) = Selection.Address
         End If
-        
-        Dim errorDetailMsg As String
-        errorDetailMsg = "Err #" & errorCtx.ErrorNumber & ": " & errorCtx.ErrorDescription
-        If errorCtx.ErrorSource <> "" Then errorDetailMsg = errorDetailMsg & " (Source: " & errorCtx.ErrorSource & ")"
-        If details <> "" Then errorDetailMsg = errorDetailMsg & "; Original Details: " & details
-        
-        fieldData(RAGIC_FIELD_DETAILS) = Left(errorDetailMsg, 32000) ' Ragic free text can be large
-        
-        ' Populate specific error context fields if they exist in Ragic and are defined in ElyseCore_System
+    End If
+    On Error GoTo RagicLogErrorHandler
+
+    ' If error context is provided, add rich error details
+    If Not errorCtx Is Nothing Then
+        ' Add basic error info
         If RAGIC_FIELD_ERROR_NUMBER <> "" Then fieldData(RAGIC_FIELD_ERROR_NUMBER) = errorCtx.ErrorNumber
         If RAGIC_FIELD_ERROR_SOURCE <> "" Then fieldData(RAGIC_FIELD_ERROR_SOURCE) = Left(errorCtx.ErrorSource, 255)
-        If RAGIC_FIELD_ERROR_DESCRIPTION <> "" Then fieldData(RAGIC_FIELD_ERROR_DESCRIPTION) = Left(errorCtx.ErrorDescription, 1000) ' Adjust length as needed
+        If RAGIC_FIELD_ERROR_DESCRIPTION <> "" Then fieldData(RAGIC_FIELD_ERROR_DESCRIPTION) = Left(errorCtx.ErrorDescription, 1000)
+        
+        ' Add location info
         If RAGIC_FIELD_MODULE_NAME <> "" Then fieldData(RAGIC_FIELD_MODULE_NAME) = Left(errorCtx.ModuleName, 255)
         If RAGIC_FIELD_PROCEDURE_NAME <> "" Then fieldData(RAGIC_FIELD_PROCEDURE_NAME) = Left(errorCtx.ProcedureName, 255)
         If RAGIC_FIELD_LINE_NUMBER <> "" And errorCtx.LineNumber > 0 Then fieldData(RAGIC_FIELD_LINE_NUMBER) = errorCtx.LineNumber
-        ' Add other RAGIC_FIELD_... from errorCtx as needed
+
+        ' Add severity and recovery info if available
+        If RAGIC_FIELD_ERROR_SEVERITY <> "" Then fieldData(RAGIC_FIELD_ERROR_SEVERITY) = errorCtx.Severity
+        If RAGIC_FIELD_RECOVERY_ATTEMPTED <> "" Then fieldData(RAGIC_FIELD_RECOVERY_ATTEMPTED) = errorCtx.RecoveryAttempted
+        If RAGIC_FIELD_TICKET_CREATED <> "" Then fieldData(RAGIC_FIELD_TICKET_CREATED) = errorCtx.TicketCreated
     End If
 
-    ' Build payload string (URL-encoded form data)
-    Dim key As Variant
+    ' Build payload string
     payload = ""
+    Dim key As Variant
     For Each key In fieldData.Keys
         If fieldData(key) <> "" Then ' Only send fields with values
             If payload <> "" Then payload = payload & "&"
             payload = payload & key & "=" & EncodeURL(CStr(fieldData(key)))
         End If
     Next key
-    
+
+    ' Configure and send request
     Dim ragicPostUrl As String
     ragicPostUrl = RAGIC_LOG_API_URL
     If InStr(1, ragicPostUrl, "?") = 0 Then
@@ -539,11 +519,12 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
         ragicPostUrl = ragicPostUrl & "&api=true"
     End If
     
-    http.Open "POST", ragicPostUrl, False
-    http.setRequestHeader "Authorization", "Basic " & EncodeBase64("APIKEY:" & RAGIC_LOG_API_KEY) ' Basic Auth with API Key
+    http.Open "POST", ragicPostUrl, False ' Synchronous for reliability
+    http.setRequestHeader "Authorization", "Basic " & EncodeBase64("APIKEY:" & RAGIC_LOG_API_KEY)
     http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
     http.send payload
 
+    ' Handle response
     If http.Status >= 200 And http.Status < 300 Then
         Debug.Print "Log entry successfully sent to Ragic. Action: " & action
     Else
@@ -558,8 +539,8 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
 
 RagicLogErrorHandler:
     Debug.Print "Error in LogToRagic: " & Err.Number & " - " & Err.Description
-    Set http = Nothing
-    Set fieldData = Nothing
+    ' Continue execution - don't let logging failures disrupt main flow
+    Resume Next
 End Sub
 
 ' Helper for URL encoding
@@ -595,6 +576,8 @@ End Function
 
 ' Example modification for LogError (apply similar pattern to others)
 Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", Optional errorCtx As ErrorContext = Nothing)
+    ' Specialized logging for errors with error context support
+    
     Dim logMessage As String
     logMessage = "ERROR [" & actionCode & "] "
     If moduleName <> "" And procedureName <> "" Then
@@ -603,30 +586,27 @@ Public Sub LogError(actionCode As String, errorCode As Long, message As String, 
         logMessage = logMessage & procedureName & " "
     End If
     logMessage = logMessage & "(Code: " & errorCode & "): " & message
-    
-    If mLoggerActive Then ' Assuming mLoggerActive and mCurrentLogLevel are still part of this module's internal state
-        Select Case mCurrentLogLevel
-            Case DEBUG_LEVEL, INFO_LEVEL, WARNING_LEVEL, ERROR_LEVEL, CRITICAL_LEVEL ' Assuming these constants are defined
-                PrintToImmediate logMessage ' Assuming PrintToImmediate is a helper in this module
-                If mLogToFile Then WriteToLogFile "ERROR", logMessage ' Assuming mLogToFile and WriteToLogFile exist
-        End Select
-    End If
-    
-    ' Ragic Logging Integration
-    Dim errorDetails As String
-    errorDetails = message ' Base details
-    If Not errorCtx Is Nothing Then
-        ' If context is provided, LogToRagic will use it for richer details
-         Call LogToRagic("ERROR", actionCode, errorDetails, errorCtx)
+
+    ' Create error context if not provided
+    Dim ctxToUse As ErrorContext
+    If errorCtx Is Nothing Then
+        ctxToUse.ErrorNumber = errorCode
+        ctxToUse.ErrorDescription = message
+        ctxToUse.ProcedureName = procedureName
+        ctxToUse.ModuleName = moduleName
+        ctxToUse.Timestamp = Now
     Else
-        ' Create a minimal context if none provided, or pass Nothing
-        Dim tempCtx As ErrorContext
-        tempCtx.ErrorNumber = errorCode
-        tempCtx.ErrorDescription = message
-        tempCtx.ProcedureName = procedureName
-        tempCtx.ModuleName = moduleName
-        Call LogToRagic("ERROR", actionCode, errorDetails, tempCtx)
+        ctxToUse = errorCtx
     End If
+    
+    ' Log through main system with context
+    If mLoggerActive Then
+        PrintToImmediate logMessage
+        If mLogToFile Then WriteToLogFile "ERROR", logMessage
+    End If
+    
+    ' Log to Ragic with error context
+    Call LogToRagic("ERROR", actionCode, message, ctxToUse)
 End Sub
 
 Public Sub LogInfo(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -760,4 +740,34 @@ Public Sub LogUserAction(actionCode As String, description As String, Optional B
     If controlName <> "" Then details = details & " (Control: " & controlName & ")"
     
     Call LogToRagic("INFO", action, details)
+End Sub
+
+' ============================================================================
+' LOGGING HELPER FUNCTIONS
+' ============================================================================
+
+Private Sub PrintToImmediate(message As String)
+    ' Print to immediate window with timestamp
+    Debug.Print Format(Now, "yyyy-mm-dd hh:nn:ss") & " " & message
+End Sub
+
+Private Sub WriteToLogFile(level As String, message As String)
+    ' Write to log file with error handling
+    On Error GoTo ErrorHandler
+    
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim logFile As Object
+    Set logFile = fso.OpenTextFile(LOG_FILE_PATH, 8, True) ' 8 = ForAppending, create if doesn't exist
+    
+    logFile.WriteLine Format(Now, "yyyy-mm-dd hh:nn:ss") & " " & level & " " & message
+    logFile.Close
+    
+    Exit Sub
+    
+ErrorHandler:
+    ' If we fail to write to file, at least print to immediate window
+    Debug.Print "Failed to write to log file: " & Err.Description
+    PrintToImmediate message
 End Sub
