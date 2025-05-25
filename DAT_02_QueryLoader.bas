@@ -1,7 +1,11 @@
 ﻿Option Explicit
 Private Const MODULE_NAME As String = "LoadQueries"
+Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
 
 Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
+    Const PROC_NAME As String = "LoadQuery"
+    On Error GoTo ErrorHandler
+    
     Dim lo As ListObject
     Dim sanitizedName As String
     
@@ -34,7 +38,8 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
         .Refresh BackgroundQuery:=False
     End With
     If Err.Number <> 0 Then
-        MsgBox "Erreur lors du chargement de la requête " & QueryName & ": " & Err.Description, vbExclamation
+        ElyseMessageBox_System.ShowErrorMessage "Erreur de chargement", _
+            "Erreur lors du chargement de la requête " & QueryName & ": " & Err.Description
     End If
     On Error GoTo 0
     
@@ -43,6 +48,10 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     If Not lo Is Nothing Then
         lo.Name = sanitizedName
     End If
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
@@ -78,82 +87,55 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
     Set ChooseMultipleValuesFromListWithAll = selectedValues
 End Function
 
-Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
-        Dim i As Long
-        Dim userChoice As String
-        Dim listPrompt As String
-        
-        ' Construire la liste pour l'InputBox
-        listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
-        For i = 1 To UBound(values)
-            listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
-        Next i
+Function ChooseMultipleValuesFromArrayWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
+    Const PROC_NAME As String = "ChooseMultipleValuesFromArrayWithAll"
+    On Error GoTo ErrorHandler
     
-        userChoice = InputBox(listPrompt, "Sélection", "1")
-        If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
-            Exit Function
-        End If
-        
-        Dim selectedValues As New Collection
-        userChoice = Trim(userChoice)
-        
-        ' Cas spécial : sélection de toutes les valeurs avec *
-        If userChoice = "*" Then
-            For i = 1 To UBound(values)
-                selectedValues.Add values(i)
-            Next i
-        Else
-            ' Sélection de valeurs spécifiques
-            Dim selectedIndexes As Variant
-            selectedIndexes = Split(userChoice, ",")
-            Dim hasValidSelection As Boolean
-            hasValidSelection = False
-            
-            For i = LBound(selectedIndexes) To UBound(selectedIndexes)
-                Dim idx As Long
-                idx = Val(Trim(selectedIndexes(i)))
-                If idx >= 1 And idx <= UBound(values) Then
-                    selectedValues.Add values(idx)
-                    hasValidSelection = True
-                End If
-            Next i
-            
-            ' Si aucune sélection valide n'a été trouvée
-            If Not hasValidSelection Then
-                MsgBox "Veuillez entrer des numéros valides entre 1 et " & UBound(values) & vbCrLf & _
-                       "Ou * pour sélectionner toutes les valeurs" & vbCrLf & _
-                       "Exemple: 1,2,3", vbExclamation
-                Exit Function
-            End If
-        End If
-        
-        Set ChooseMultipleValuesFromArrayWithAll = selectedValues
-    End Function
+    Dim selectedValues As New Collection
+    
+    ' Use custom list selection form with AllowMultiSelect=True
+    Dim modeItems As Collection
+    Set modeItems = New Collection
+    
+    ' Add the "All" option at the top
+    modeItems.Add "* : Toutes"
+    
+    ' Add numbered options
+    Dim i As Long
+    For i = 1 To displayList.Count
+        modeItems.Add i & ". " & displayList(i)
+    Next i
+    
+    Dim result As Long
+    result = ElyseMain_Orchestrator.SelectFromList( _
+        "Sélection des valeurs", _
+        prompt, _
+        modeItems)
+    
+    ' Handle selection
+    If result = 1 Then ' "All" option selected
+        For i = 1 To idList.Count
+            selectedValues.Add idList(i)
+        Next i
+    ElseIf result > 1 Then ' Specific item selected
+        selectedValues.Add idList(result - 1) ' -1 because we added "All" at the top
+    End If
+    
+    Set ChooseMultipleValuesFromArrayWithAll = selectedValues
+    Exit Function
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    Set ChooseMultipleValuesFromArrayWithAll = New Collection ' Return empty collection on error
+End Function
 
 Public Sub ExecuteQuery(ByVal queryName As String)
     Const PROC_NAME As String = "ExecuteQuery"
     On Error GoTo ErrorHandler
-
+    
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Executing query: " & queryName, PROC_NAME, MODULE_NAME
 
-    ' Dim wb As Workbook ' Original
-    ' Dim pq As Object ' Power Query connection/query object, original
-    ' Set wb = ThisWorkbook ' Original
-
-    ' On Error Resume Next ' Original error handling might have been inline
-    ' Set pq = wb.Connections(queryName).OLEDBConnection.ADOConnection ' Example of how one might try to get a query; this is not standard for PQ
-    ' On Error GoTo 0 ' Original error handling reset
-
-    ' If pq Is Nothing Then
-    '   Debug.Print "Query '" & queryName & "' not found or not a Power Query connection."
-    '   MsgBox "Query '" & queryName & "' could not be found or is not a valid Power Query connection.", vbExclamation, "Query Error"
-    '   Exit Sub
-    ' End If
-    
-    ' Debug.Print "Refreshing query: " & queryName
-    ' pq.Refresh ' This is not how Power Queries are typically refreshed directly in VBA for all cases.
-    ' More common: ThisWorkbook.Connections(queryName).Refresh or ActiveWorkbook.Queries(queryName).Refresh
-
+    ' Verify if query exists and refresh
     Dim queryFound As Boolean
     queryFound = False
     
@@ -187,9 +169,6 @@ Public Sub ExecuteQuery(ByVal queryName As String)
 
 ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
-    ' If Err.Number <> 0 Then ' Check if it was a real error vs. just not found handled above
-    '    ElyseMessageBox_System.ShowErrorMessage "Query Execution Error", "An error occurred while executing query '" & queryName & "'. Details: " & Err.Description
-    ' End If
 End Sub
 
 Public Function ListAllQueries() As Collection
@@ -227,6 +206,43 @@ Public Function ListAllQueries() As Collection
 ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
     Set ListAllQueries = New Collection ' Return empty collection on error
+End Function
+
+Public Function GetUserSelection(queries As Collection) As String
+    Dim listPrompt As String
+    Dim i As Long
+    
+    ' Build the prompt string
+    listPrompt = "Choisissez une requête à charger :" & vbCrLf & vbCrLf
+    For i = 1 To queries.Count
+        listPrompt = listPrompt & i & ". " & queries(i) & vbCrLf
+    Next i
+    
+    ' Get user input using the message box system
+    Dim userChoice As String
+    userChoice = ElyseMessageBox_System.ShowInputDialog(MSG_TITLE_SELECT, listPrompt, "1")
+    
+    ' Validate user input
+    If userChoice = "" Then
+        GetUserSelection = ""
+        Exit Function
+    End If
+    
+    If IsNumeric(userChoice) Then
+        Dim choiceNum As Long
+        choiceNum = CLng(userChoice)
+        If choiceNum >= 1 And choiceNum <= queries.Count Then
+            GetUserSelection = queries(choiceNum)
+        Else
+            ElyseMessageBox_System.ShowErrorMessage MSG_TITLE_ERROR, _
+                "Veuillez entrer un numéro entre 1 et " & queries.Count
+            GetUserSelection = ""
+        End If
+    Else
+        ElyseMessageBox_System.ShowErrorMessage MSG_TITLE_ERROR, _
+            "Veuillez entrer un numéro valide"
+        GetUserSelection = ""
+    End If
 End Function
 
 ' Add similar transformations for other Subs/Functions in this file.

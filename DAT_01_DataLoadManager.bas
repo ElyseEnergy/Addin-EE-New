@@ -1,7 +1,20 @@
+' =============================================================================
+' MODULE: DataLoadManager
+' Description: Manages data loading operations from various sources
+' =============================================================================
+Option Explicit
+Private Const MODULE_NAME As String = "DataLoadManager"
+
+' Dependencies
+Private Const MSG_TITLE_ERROR As String = "Erreur"
+Private Const MSG_TITLE_INFO As String = "Information"
+Private Const MSG_TITLE_WARNING As String = "Avertissement"
+
 ' Module: DataLoaderManager
 ' Gère le chargement et l'affichage des données pour toutes les catégories
 Option Explicit
 Private Const MODULE_NAME As String = "DataLoaderManager"
+Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
 
 Public Enum DataLoadResult
     Success = 1
@@ -11,80 +24,33 @@ End Enum
 
 ' Fonction principale de traitement
 Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
-    ' Initialiser la feuille PQ_DATA si besoin
-    If wsPQData Is Nothing Then Utilities.InitializePQData
-    
+    Const PROC_NAME As String = "ProcessDataLoad"
+    On Error GoTo ErrorHandler
+
     ' 1. Vérifier/Créer la requête PQ
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
-        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
+        ElyseMessageBox_System.ShowErrorMessage "Erreur PowerQuery", _
+            "Erreur lors de la création de la requête PowerQuery. Veuillez vérifier la configuration."
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
     ' 2. Charger les données
-    Dim lastCol As Long
-    lastCol = Utilities.GetLastColumn(wsPQData)
-    LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+    LoadQueries.LoadQuery category.PowerQueryName, wsPQData, _
+        wsPQData.Cells(1, wsPQData.Cells(1, wsPQData.Columns.Count).End(xlToLeft).Column + 1)
     
-    ' 3. Gérer la sélection des valeurs
+    ' 3. Sélectionner les valeurs
     Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
     If loadInfo.SelectedValues Is Nothing Then
-        ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.Category.PowerQueryName
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
-    End If
-    
-    ' Si un filtre est appliqué et qu'il n'y a pas de filtre secondaire,
-    ' proposer la sélection des fiches correspondantes
-    If loadInfo.Category.FilterLevel <> "Pas de filtrage" And loadInfo.Category.SecondaryFilterLevel = "" Then
-        Dim lo As ListObject
-        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-        Dim idList As New Collection
-        Dim displayList As New Collection
-        Dim i As Long, v As Variant
-        Dim displayColIndex As Long
-        displayColIndex = 2 ' Afficher la colonne 2 (nom)
-        ' Parcourir les lignes et ne garder que celles correspondant au(x) filtre(s) choisi(s)
-        For i = 1 To lo.DataBodyRange.Rows.Count
-            For Each v In loadInfo.SelectedValues
-                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.Category.FilterLevel).Index).Value = v Then
-                    idList.Add lo.DataBodyRange.Rows(i).Columns(1).Value
-                    displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
-                End If
-            Next v
-        Next i        ' Proposer la sélection des fiches parmi displayList
-        Dim finalSelection As Collection
-        On Error Resume Next
-        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
-        Dim errorOccurred As Boolean
-        errorOccurred = (Err.Number <> 0)
-        On Error GoTo 0
-        
-    ' Si l'utilisateur a annulé ou une erreur s'est produite
-    If errorOccurred Or finalSelection Is Nothing Then
-        ' Nettoyer la requête avant de sortir
-        CleanupPowerQuery loadInfo.Category.PowerQueryName
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    End If
-        
-        ' Si aucune fiche n'a été sélectionnée
-        If finalSelection.Count = 0 Then
-            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
-            ' Nettoyer la requête avant de sortir
-            CleanupPowerQuery loadInfo.Category.PowerQueryName
-            ProcessDataLoad = DataLoadResult.Cancelled
-            Exit Function
-        End If
-        
-        Set loadInfo.SelectedValues = finalSelection
     End If
     
     ' 4. Gérer le mode d'affichage
     Dim displayModeResult As Variant
     displayModeResult = GetDisplayMode(loadInfo)
-    If displayModeResult = -999 Then ' Code d'erreur spécifique
+    If displayModeResult = -999 Then
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
@@ -105,27 +71,38 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     
     ' 7. S'assurer que la destination est visible
     With loadInfo.FinalDestination
-        .Parent.Activate  ' Activer la feuille de destination
-        .Select          ' Sélectionner la cellule de départ
-        .Parent.Range(.Address).Select  ' Sélectionner le range complet
-        ActiveWindow.ScrollRow = .Row   ' S'assurer que le haut du tableau est visible
-        ActiveWindow.ScrollColumn = .Column  ' S'assurer que la gauche du tableau est visible
+        .Parent.Activate
+        .Select
+        .Parent.Range(.Address).Select
+        ActiveWindow.ScrollRow = .Row
+        ActiveWindow.ScrollColumn = .Column
     End With
     
-    ' 8. Nettoyer la requête PowerQuery après le collage réussi
-    CleanupPowerQuery loadInfo.Category.PowerQueryName
-    
+    ' Succès !
+    ElyseMessageBox_System.ShowSuccessMessage "Chargement réussi", _
+        "Les données ont été chargées avec succès à l'emplacement sélectionné."
     ProcessDataLoad = DataLoadResult.Success
+    Exit Function
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    ProcessDataLoad = DataLoadResult.Error
 End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(category As CategoryInfo) As Collection
+    Const PROC_NAME As String = "GetSelectedValues"
+    On Error GoTo ErrorHandler
+    
     Dim lo As ListObject
-    Dim dict As Object
-    Dim arrValues() As String
     Dim i As Long, j As Long
-    Dim cell As Range
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    Dim selectedPrimary As Collection
     Dim v As Variant
+    Dim secondaryValue As Variant
+    Dim errorOccurred As Boolean
+    Dim temp As Variant
     
     Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(category.PowerQueryName))
     ' S'assurer que la table existe, sinon la charger
@@ -151,116 +128,54 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             displayArray(i) = lo.DataBodyRange.Rows(i).Columns(2).Value
         Next i
         
-        ' Présenter les valeurs à l'utilisateur
-        Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(displayArray, _
-            "Choisissez une ou plusieurs fiches à charger (ex: 1,3,5 ou *) :")
-            
-        If Err.Number <> 0 Then
-            Set GetSelectedValues = Nothing
-            Exit Function
-        End If
-        On Error GoTo 0
+        ' Présenter les valeurs à l'utilisateur avec le sélecteur de liste personnalisé
+        Set GetSelectedValues = ElyseMain_Orchestrator.SelectMultipleFromList( _
+            "Sélection des fiches", _
+            "Choisissez une ou plusieurs fiches à charger:", _
+            displayArray)
         
-        ' Gérer la sélection initiale
-        Dim selectedIndices As Collection
-        Set selectedIndices = GetSelectedValues
-        
-        ' Si l'utilisateur a annulé ou n'a rien sélectionné
-        If selectedIndices Is Nothing Then
+        If GetSelectedValues Is Nothing Or GetSelectedValues.Count = 0 Then
+            ElyseMessageBox_System.ShowWarningMessage "Sélection vide", _
+                "Aucune fiche sélectionnée. L'opération a été annulée."
             Set GetSelectedValues = Nothing
             Exit Function
         End If
         
-        ' Convertir les valeurs en IDs
-        Set GetSelectedValues = New Collection
-        For Each v In selectedIndices
-            ' v est la valeur affichée, on doit retrouver la ligne correspondante
+        Exit Function
+    End If
+    
+    ' Pour les autres cas avec filtrage
+    On Error Resume Next
+    Set selectedPrimary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(GetUniqueValues(lo, category.FilterLevel), _
+        "Choisissez " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
+    errorOccurred = (Err.Number <> 0)
+    On Error GoTo ErrorHandler
+    
+    If errorOccurred Or selectedPrimary Is Nothing Then
+        Set GetSelectedValues = Nothing
+        Exit Function
+    End If
+    
+    If category.SecondaryFilterLevel <> "" Then
+        ' Traitement du filtre secondaire
+        For Each v In selectedPrimary
             For i = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(i).Columns(2).Value = v Then
-                    GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
-                    Exit For
+                If Trim(CStr(lo.DataBodyRange.Rows(i).Columns(GetFilterColumnIndex(lo, category.FilterLevel)).Value)) = Trim(CStr(v)) Then
+                    secondaryValue = lo.DataBodyRange.Rows(i).Columns(GetFilterColumnIndex(lo, category.SecondaryFilterLevel)).Value
+                    If Not dict.exists(secondaryValue) Then dict.Add secondaryValue, secondaryValue
                 End If
             Next i
         Next v
         
-        ' Vérifier si des IDs ont été ajoutés
-        If GetSelectedValues.Count = 0 Then
-            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
-            Set GetSelectedValues = Nothing
-            Exit Function
-        End If
-    Else
-        ' Créer un dictionnaire pour stocker les valeurs uniques
-        Set dict = CreateObject("Scripting.Dictionary")
-
-        ' Extraire les valeurs uniques
-        For Each cell In lo.ListColumns(category.FilterLevel).DataBodyRange
-            If Not dict.Exists(cell.Value) Then
-                dict.Add cell.Value, 1
-            End If
-        Next cell
-
-        ' Convertir le dictionnaire en tableau et trier
-        ReDim arrValues(1 To dict.Count)
-        i = 1
-        For Each v In dict.Keys
-            arrValues(i) = v
-            i = i + 1
-        Next v
-
-        ' Trier le tableau
-        For i = 1 To UBound(arrValues) - 1
-            For j = i + 1 To UBound(arrValues)
-                If arrValues(i) > arrValues(j) Then
-                    Dim temp As String
-                    temp = arrValues(i)
-                    arrValues(i) = arrValues(j)
-                    arrValues(j) = temp
-                End If
-            Next j
-        Next i
-
-        Dim selectedPrimary As Collection
-        On Error Resume Next
-        Set selectedPrimary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-            "Choisissez une ou plusieurs " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
-        Dim errorOccurred As Boolean
-        errorOccurred = (Err.Number <> 0)
-        On Error GoTo 0
-
-        If errorOccurred Or selectedPrimary Is Nothing Then
-            MsgBox "Opération annulée", vbInformation
-            Set GetSelectedValues = Nothing
-            Exit Function
-        End If
-
-        If selectedPrimary.Count = 0 Then
-            MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
-            Set GetSelectedValues = Nothing
-            Exit Function
-        End If
-
-        If category.SecondaryFilterLevel <> "" Then
-            ' Deuxième étape de filtrage
-            Set dict = CreateObject("Scripting.Dictionary")
-            For i = 1 To lo.DataBodyRange.Rows.Count
-                For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
-                        Dim secVal As String
-                        secVal = lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value
-                        If Not dict.Exists(secVal) Then dict.Add secVal, 1
-                        Exit For
-                    End If
-                Next v
-            Next i
-
+        If dict.Count > 0 Then
             ReDim arrValues(1 To dict.Count)
             i = 1
             For Each v In dict.Keys
                 arrValues(i) = v
                 i = i + 1
             Next v
-
+            
+            ' Trier les valeurs
             For i = 1 To UBound(arrValues) - 1
                 For j = i + 1 To UBound(arrValues)
                     If arrValues(i) > arrValues(j) Then
@@ -270,65 +185,30 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
                     End If
                 Next j
             Next i
-
-            Dim selectedSecondary As Collection
-            On Error Resume Next
-            Set selectedSecondary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-                "Choisissez une ou plusieurs " & category.SecondaryFilterLevel & " (ex: 1,3,5 ou *) :")
-            errorOccurred = (Err.Number <> 0)
-            On Error GoTo 0
-
-            If errorOccurred Or selectedSecondary Is Nothing Then
-                MsgBox "Opération annulée", vbInformation
-                Set GetSelectedValues = Nothing
-                Exit Function
-            End If
-
-            If selectedSecondary.Count = 0 Then
-                MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
-                Set GetSelectedValues = Nothing
-                Exit Function
-            End If
-
-            Set GetSelectedValues = New Collection
-            For i = 1 To lo.DataBodyRange.Rows.Count
-                Dim matchPrimary As Boolean
-                matchPrimary = False
-                For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
-                        matchPrimary = True
-                        Exit For
-                    End If
-                Next v
-                If matchPrimary Then
-                    For Each v In selectedSecondary
-                        If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value = v Then
-                            GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
-                            Exit For
-                        End If
-                    Next v
-                End If
-            Next i
-
-            If GetSelectedValues.Count = 0 Then
-                MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+            
+            ' Utiliser le sélecteur de liste personnalisé pour le filtre secondaire
+            Set GetSelectedValues = ElyseMain_Orchestrator.SelectMultipleFromList( _
+                "Sélection " & category.SecondaryFilterLevel, _
+                "Choisissez une ou plusieurs " & category.SecondaryFilterLevel & ":", _
+                arrValues)
+                
+            If GetSelectedValues Is Nothing Or GetSelectedValues.Count = 0 Then
+                ElyseMessageBox_System.ShowWarningMessage "Sélection vide", _
+                    "Aucune " & category.SecondaryFilterLevel & " sélectionnée. L'opération a été annulée."
                 Set GetSelectedValues = Nothing
                 Exit Function
             End If
         Else
             Set GetSelectedValues = selectedPrimary
         End If
+    Else
+        Set GetSelectedValues = selectedPrimary
     End If
     Exit Function
     
 ErrorHandler:
-    If Err.Number = 424 Then  ' "L'objet est requis" - typiquement quand l'utilisateur annule une InputBox
-        Set GetSelectedValues = Nothing
-    Else
-        MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
-        Set GetSelectedValues = Nothing
-    End If
-    Exit Function
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    Set GetSelectedValues = Nothing
 End Function
 
 ' Gère le mode d'affichage (normal/transposé)
@@ -351,33 +231,32 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
       ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
     
-    ' Afficher d'abord les prévisualisations dans une MsgBox
-    MsgBox "Prévisualisations des modes disponibles :" & vbCrLf & vbCrLf & _
-           previewNormal & vbCrLf & previewTransposed, _
-           vbInformation, "Aperçu des modes"
-           
-    ' Puis demander le choix avec une InputBox simple
-    Dim modePrompt As String
-    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
-                 "1 pour NORMAL" & vbCrLf & _
-                 "2 pour TRANSPOSE"
-    userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
-      ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
-    If userChoice = 0 Then
-        MsgBox "Opération annulée", vbInformation
+    ' Afficher d'abord les prévisualisations dans une MessageBox
+    ElyseMessageBox_System.ShowInfoMessage "Aperçu des modes", _
+        "Prévisualisations des modes disponibles :" & vbCrLf & vbCrLf & _
+        previewNormal & vbCrLf & previewTransposed
+
+    ' Puis demander le choix avec un dialogue personnalisé
+    Dim modeItems As Collection
+    Set modeItems = New Collection
+    modeItems.Add "Mode Normal (tableau classique)"
+    modeItems.Add "Mode Transposé (fiches en colonnes)"
+    
+    Dim modeChoice As Long
+    modeChoice = ElyseMain_Orchestrator.SelectFromList( _
+        "Choix du mode de collage", _
+        "Comment souhaitez-vous coller les fiches ?", _
+        modeItems)
+
+    ' Gérer l'annulation ou la sélection invalide
+    If modeChoice = 0 Then
+        ElyseMessageBox_System.ShowInfoMessage "Collage annulé", "L'opération a été annulée par l'utilisateur."
         GetDisplayMode = -999 ' Code d'erreur spécifique
         Exit Function
     End If
-    
-    ' Vérifier la validité de la réponse
-    If userChoice = 2 Then
-        GetDisplayMode = True
-    ElseIf userChoice = 1 Then
-        GetDisplayMode = False
-    Else
-        MsgBox "Veuillez entrer 1 ou 2", vbExclamation
-        GetDisplayMode = -999 ' Code d'erreur spécifique
-    End If
+
+    ' Traduire la sélection en booléen
+    GetDisplayMode = (modeChoice = 2) ' True pour transposé (2), False pour normal (1)
 End Function
 
 ' Génère les prévisualisations pour les deux modes
@@ -478,71 +357,37 @@ End Sub
 
 ' Gère la sélection de la destination
 Private Function GetDestination(loadInfo As DataLoadInfo) As Range
-    Dim lo As ListObject
-    Dim nbRows As Long, nbCols As Long
+    Const PROC_NAME As String = "GetDestination"
+    On Error GoTo ErrorHandler
+
     Dim okPlage As Boolean
+    Dim nbRows As Long, nbCols As Long
     Dim i As Long, j As Long
-    
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-    
-    ' Calculer la taille nécessaire
+
+    ' Calculer les dimensions requises
     If loadInfo.ModeTransposed Then
-        nbRows = lo.ListColumns.Count
-        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbRows = WorksheetFunction.Max(1, loadInfo.SelectedValues.Count + 1)
+        nbCols = WorksheetFunction.Max(1, GetVisibleColumnCount(loadInfo))
     Else
-        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
-        nbCols = lo.ListColumns.Count
+        nbRows = WorksheetFunction.Max(1, GetVisibleColumnCount(loadInfo))
+        nbCols = WorksheetFunction.Max(1, loadInfo.SelectedValues.Count + 1)
     End If
-      ' Informer l'utilisateur
-    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation      ' Demander la cellule de destination et vérifier la place
+
     Do
+        ' Utiliser le sélecteur de plage personnalisé
         Dim selectedRange As Range
-        
-        ' Activer Excel pour la sélection
-        Application.Interactive = True
-        Application.ScreenUpdating = True
-        
-        ' Demander à l'utilisateur de sélectionner une cellule
-        On Error GoTo ErrorHandler
-        Set selectedRange = Application.InputBox( _
-            Prompt:="Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", _
-            Title:="Destination", _
-            Type:=8)
+        Set selectedRange = ElyseMain_Orchestrator.SelectRange( _
+            "Sélection de la destination", _
+            "Sélectionnez la cellule supérieure gauche où coller les données.")
             
-        ' Vérifier si une plage valide a été sélectionnée
         If selectedRange Is Nothing Then
-            MsgBox "Aucune cellule sélectionnée. Opération annulée.", vbInformation
             Set GetDestination = Nothing
             Exit Function
         End If
-        
-        ' S'assurer que c'est une seule cellule
-        If selectedRange.Cells.Count > 1 Then
-            MsgBox "Veuillez sélectionner une seule cellule.", vbExclamation
-            GoTo ContinueLoop
-        End If
-        
-        Set GetDestination = selectedRange
-        GoTo CheckSpace
-        
-ErrorHandler:
-        If Err.Number = 424 Then  ' Erreur "L'objet est requis"
-            MsgBox "Opération annulée", vbInformation
-            Set GetDestination = Nothing
-            Exit Function
-        ElseIf Err.Number <> 0 Then
-            MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
-            Set GetDestination = Nothing
-            Exit Function
-        End If
-        Resume Next
-        
-ContinueLoop:
-        Err.Clear
-        Resume Next
-        
-CheckSpace:
-        
+
+        Set GetDestination = selectedRange.Cells(1, 1) ' Prendre uniquement la première cellule
+
+        ' Vérifier l'espace disponible
         okPlage = True
         For i = 0 To nbRows - 1
             For j = 0 To nbCols - 1
@@ -553,11 +398,24 @@ CheckSpace:
             Next j
             If Not okPlage Then Exit For
         Next i
-        
+
         If Not okPlage Then
-            MsgBox "La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.", vbExclamation
+            Dim response As Boolean
+            response = ElyseMessageBox_System.ShowConfirmationMessage("Destination non vide", _
+                "La plage sélectionnée n'est pas vide. Voulez-vous sélectionner un autre emplacement?")
+                
+            If Not response Then
+                Set GetDestination = Nothing ' L'utilisateur ne veut pas continuer
+                Exit Function
+            End If
         End If
     Loop Until okPlage
+
+    Exit Function
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    Set GetDestination = Nothing
 End Function
 
 ' Colle les données selon le mode choisi

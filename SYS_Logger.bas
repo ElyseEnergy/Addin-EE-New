@@ -7,6 +7,12 @@
 Option Explicit
 
 ' ============================================================================
+' MODULE INFORMATION
+' ============================================================================
+Private Const MODULE_NAME As String = "SYS_Logger"
+Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
+
+' ============================================================================
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' This module requires ElyseCore_System to be loaded first
@@ -77,103 +83,162 @@ Public Sub ShutdownLogger()
 End Sub
 
 ' ============================================================================
-' CORE LOGGING FUNCTIONS
+' CORE LOGGING FUNCTIONS WITH RAGIC INTEGRATION
 ' ============================================================================
 
-Public Sub LogEvent(action As String, details As String, Optional level As LogLevel = INFO_LEVEL, Optional includeContext As Boolean = True)
-    ' Main logging function
+Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    ' Specialized logging for errors with error context support
     
-    ' Check if we should log this level
-    If level < mCurrentLogLevel Then Exit Sub
-    
-    ' Ensure logger is initialized
-    If Not mLoggerInitialized Then
-        If Not InitializeLogger() Then Exit Sub
+    Dim logMessage As String
+    logMessage = "ERROR [" & actionCode & "] "
+    If moduleName <> "" And procedureName <> "" Then
+        logMessage = logMessage & moduleName & "." & procedureName & " "
+    ElseIf procedureName <> "" Then
+        logMessage = logMessage & procedureName & " "
     End If
-    
-    ' Create log entry
-    Dim logEntry As Object
-    Set logEntry = CreateLogEntry(action, details, level, includeContext)
-    
-    ' Add to buffer
-    AddToLogBuffer logEntry
-    
-    ' Handle immediate output based on log level
+    logMessage = logMessage & "(Code: " & errorCode & "): " & message
+
+    ' Log through main system with context
     If mLoggerActive Then
-        Dim logMessage As String
-        logMessage = GetLogLevelString(level) & " [" & action & "] " & details
         PrintToImmediate logMessage
-        If mLogToFile Then WriteToLogFile GetLogLevelString(level), logMessage
+        If mLogToFile Then WriteToLogFile "ERROR", logMessage
     End If
     
-    ' Auto-flush if critical or buffer full
-    If level >= ERROR_LEVEL Or mLogBuffer.Count >= LOG_BUFFER_SIZE Then
-        FlushLogBuffer
-    End If
+    ' Log to Ragic with error context
+    Call LogToRagic("ERROR", actionCode, message, errorCode, procedureName, moduleName)
 End Sub
 
-Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
-    ' Specialized logging for ribbon button clicks
-    Dim details As String
-    details = "Button ID: " & buttonId
+Public Sub LogInfo(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    Dim logMessage As String
+    logMessage = "INFO  [" & actionCode & "] "
+    If moduleName <> "" And procedureName <> "" Then
+        logMessage = logMessage & moduleName & "." & procedureName
+    ElseIf procedureName <> "" Then
+        logMessage = logMessage & procedureName
+    End If
+    logMessage = logMessage & ": " & message
     
-    If additionalInfo <> "" Then
-        details = details & " | Info: " & additionalInfo
+    If mLoggerActive Then
+        Select Case mCurrentLogLevel
+            Case DEBUG_LEVEL, INFO_LEVEL
+                PrintToImmediate logMessage
+                If mLogToFile Then WriteToLogFile "INFO", logMessage
+        End Select
     End If
     
-    LogEvent "ribbon_click", details, INFO_LEVEL
+    Call LogToRagic("INFO", actionCode, message, , procedureName, moduleName) 
 End Sub
 
-Public Sub LogFunctionCall(functionName As String, Optional parameters As String = "", Optional executionTime As Double = 0)
-    ' Specialized logging for function calls
-    Dim details As String
-    details = "Function: " & functionName
+Public Sub LogDebug(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    Dim logMessage As String
+    logMessage = "DEBUG [" & actionCode & "] "
+     If moduleName <> "" And procedureName <> "" Then
+        logMessage = logMessage & moduleName & "." & procedureName
+    ElseIf procedureName <> "" Then
+        logMessage = logMessage & procedureName
+    End If
+    logMessage = logMessage & ": " & message
     
-    If parameters <> "" Then
-        details = details & " | Parameters: " & parameters
+    If mLoggerActive Then
+        Select Case mCurrentLogLevel
+            Case DEBUG_LEVEL
+                PrintToImmediate logMessage
+                If mLogToFile Then WriteToLogFile "DEBUG", logMessage
+        End Select
     End If
     
-    If executionTime > 0 Then
-        details = details & " | Execution time: " & Format(executionTime, "0.000") & "s"
-    End If
-    
-    LogEvent "function_call", details, DEBUG_LEVEL
+    Call LogToRagic("DEBUG", actionCode, message, , procedureName, moduleName)
 End Sub
 
-Public Sub LogUserAction(actionType As String, description As String, Optional targetObject As String = "")
-    ' Specialized logging for user actions
-    Dim details As String
-    details = "Action: " & actionType & " | Description: " & description
+Public Sub LogWarning(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    Dim logMessage As String
+    logMessage = "WARN  [" & actionCode & "] "
+    If moduleName <> "" And procedureName <> "" Then
+        logMessage = logMessage & moduleName & "." & procedureName
+    ElseIf procedureName <> "" Then
+        logMessage = logMessage & procedureName
+    End If
+    logMessage = logMessage & ": " & message
     
-    If targetObject <> "" Then
-        details = details & " | Target: " & targetObject
+    If mLoggerActive Then
+        Select Case mCurrentLogLevel
+            Case DEBUG_LEVEL, INFO_LEVEL, WARNING_LEVEL
+                PrintToImmediate logMessage
+                If mLogToFile Then WriteToLogFile "WARNING", logMessage
+        End Select
     End If
     
-    LogEvent "user_action", details, INFO_LEVEL
+    Call LogToRagic("WARNING", actionCode, message, , procedureName, moduleName)
 End Sub
 
-Public Sub LogError(errorSource As String, errorNumber As Long, errorDescription As String, Optional stackTrace As String = "")
-    ' Specialized logging for errors
-    Dim details As String
-    details = "Source: " & errorSource & " | Error: " & errorNumber & " | Description: " & errorDescription
+Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    Dim logMessage As String
+    logMessage = "CRITICAL [" & actionCode & "] "
+    If moduleName <> "" And procedureName <> "" Then
+        logMessage = logMessage & moduleName & "." & procedureName
+    ElseIf procedureName <> "" Then
+        logMessage = logMessage & procedureName
+    End If
+    logMessage = logMessage & " (Code: " & errorCode & "): " & message
     
-    If stackTrace <> "" Then
-        details = details & " | Stack: " & stackTrace
+    If mLoggerActive Then
+        PrintToImmediate logMessage 
+        If mLogToFile Then WriteToLogFile "CRITICAL", logMessage
     End If
     
-    LogEvent "error", details, ERROR_LEVEL
+    Dim criticalDetails As String
+    criticalDetails = message
+    
+    Dim tempCtx As ErrorContext ' Create a context for critical errors too
+    tempCtx.ErrorNumber = errorCode
+    tempCtx.ErrorDescription = message
+    tempCtx.ProcedureName = procedureName
+    tempCtx.ModuleName = moduleName
+    tempCtx.Severity = "CRITICAL" ' Explicitly set
+    
+    Call LogToRagic("CRITICAL", actionCode, criticalDetails, errorCode, procedureName, moduleName)
 End Sub
 
-Public Sub LogPerformance(operationName As String, duration As Double, Optional additionalMetrics As String = "")
-    ' Specialized logging for performance metrics
-    Dim details As String
-    details = "Operation: " & operationName & " | Duration: " & Format(duration, "0.000") & "s"
+Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
+    Dim logMessage As String
+    logMessage = "CALL  ["
+    If moduleName <> "" Then logMessage = logMessage & moduleName & "."
+    logMessage = logMessage & procedureName & "] Called"
+    If params <> "" Then logMessage = logMessage & " with params: " & params
     
-    If additionalMetrics <> "" Then
-        details = details & " | Metrics: " & additionalMetrics
+    If mLoggerActive Then
+        If mCurrentLogLevel <= DEBUG_LEVEL Then
+            PrintToImmediate logMessage
+            If mLogToFile Then WriteToLogFile "CALL", logMessage
+        End If
     End If
     
-    LogEvent "performance", details, DEBUG_LEVEL
+    Dim action As String
+    action = "FunctionCall"
+    If moduleName <> "" Then action = action & ":" & moduleName
+    action = action & ":" & procedureName
+    
+    Call LogToRagic("DEBUG", action, "Params: " & params, , procedureName, moduleName)
+End Sub
+
+Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
+    Dim logMessage As String
+    logMessage = "USER  [" & actionCode & "] " & description
+    If controlName <> "" Then logMessage = logMessage & " (Control: " & controlName & ")"
+    
+    If mLoggerActive Then
+        PrintToImmediate logMessage 
+        If mLogToFile Then WriteToLogFile "USER", logMessage
+    End If
+    
+    Dim action As String
+    action = "UserAction:" & actionCode
+    
+    Dim details As String
+    details = description
+    If controlName <> "" Then details = details & " (Control: " & controlName & ")"
+    
+    Call LogToRagic("INFO", action, details, , procedureName, moduleName)
 End Sub
 
 ' ============================================================================
@@ -441,7 +506,7 @@ End Sub
 ' RAGIC LOGGING INTEGRATION
 ' ============================================================================
 
-Private Sub LogToRagic(logLevel As String, action As String, details As String, Optional errorCtx As ErrorContext = Nothing)
+Private Sub LogToRagic(logLevel As String, action As String, details As String, Optional errorCode As Long = 0, Optional procedureName As String = "", Optional moduleName As String = "")
     If Not gEnableRagicLogging Then Exit Sub
     If RAGIC_LOG_API_KEY = "" Or RAGIC_LOG_API_KEY = "YOUR_ACTUAL_RAGIC_API_KEY" Then
         Debug.Print "Ragic API Key not configured. Skipping Ragic log."
@@ -483,21 +548,21 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
     On Error GoTo RagicLogErrorHandler
 
     ' If error context is provided, add rich error details
-    If Not errorCtx Is Nothing Then
+    If errorCode <> 0 Then
         ' Add basic error info
-        If RAGIC_FIELD_ERROR_NUMBER <> "" Then fieldData(RAGIC_FIELD_ERROR_NUMBER) = errorCtx.ErrorNumber
-        If RAGIC_FIELD_ERROR_SOURCE <> "" Then fieldData(RAGIC_FIELD_ERROR_SOURCE) = Left(errorCtx.ErrorSource, 255)
-        If RAGIC_FIELD_ERROR_DESCRIPTION <> "" Then fieldData(RAGIC_FIELD_ERROR_DESCRIPTION) = Left(errorCtx.ErrorDescription, 1000)
+        If RAGIC_FIELD_ERROR_NUMBER <> "" Then fieldData(RAGIC_FIELD_ERROR_NUMBER) = errorCode
+        If RAGIC_FIELD_ERROR_SOURCE <> "" Then fieldData(RAGIC_FIELD_ERROR_SOURCE) = Left(Err.Source, 255)
+        If RAGIC_FIELD_ERROR_DESCRIPTION <> "" Then fieldData(RAGIC_FIELD_ERROR_DESCRIPTION) = Left(Err.Description, 1000)
         
         ' Add location info
-        If RAGIC_FIELD_MODULE_NAME <> "" Then fieldData(RAGIC_FIELD_MODULE_NAME) = Left(errorCtx.ModuleName, 255)
-        If RAGIC_FIELD_PROCEDURE_NAME <> "" Then fieldData(RAGIC_FIELD_PROCEDURE_NAME) = Left(errorCtx.ProcedureName, 255)
-        If RAGIC_FIELD_LINE_NUMBER <> "" And errorCtx.LineNumber > 0 Then fieldData(RAGIC_FIELD_LINE_NUMBER) = errorCtx.LineNumber
+        If RAGIC_FIELD_MODULE_NAME <> "" Then fieldData(RAGIC_FIELD_MODULE_NAME) = Left(moduleName, 255)
+        If RAGIC_FIELD_PROCEDURE_NAME <> "" Then fieldData(RAGIC_FIELD_PROCEDURE_NAME) = Left(procedureName, 255)
+        If RAGIC_FIELD_LINE_NUMBER <> "" And Err.Erl > 0 Then fieldData(RAGIC_FIELD_LINE_NUMBER) = Err.Erl
 
         ' Add severity and recovery info if available
-        If RAGIC_FIELD_ERROR_SEVERITY <> "" Then fieldData(RAGIC_FIELD_ERROR_SEVERITY) = errorCtx.Severity
-        If RAGIC_FIELD_RECOVERY_ATTEMPTED <> "" Then fieldData(RAGIC_FIELD_RECOVERY_ATTEMPTED) = errorCtx.RecoveryAttempted
-        If RAGIC_FIELD_TICKET_CREATED <> "" Then fieldData(RAGIC_FIELD_TICKET_CREATED) = errorCtx.TicketCreated
+        If RAGIC_FIELD_ERROR_SEVERITY <> "" Then fieldData(RAGIC_FIELD_ERROR_SEVERITY) = "CRITICAL"
+        If RAGIC_FIELD_RECOVERY_ATTEMPTED <> "" Then fieldData(RAGIC_FIELD_RECOVERY_ATTEMPTED) = "Yes"
+        If RAGIC_FIELD_TICKET_CREATED <> "" Then fieldData(RAGIC_FIELD_TICKET_CREATED) = "No"
     End If
 
     ' Build payload string
@@ -575,7 +640,7 @@ End Function
 ' ============================================================================
 
 ' Example modification for LogError (apply similar pattern to others)
-Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", Optional errorCtx As ErrorContext = Nothing)
+Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
     ' Specialized logging for errors with error context support
     
     Dim logMessage As String
@@ -587,18 +652,6 @@ Public Sub LogError(actionCode As String, errorCode As Long, message As String, 
     End If
     logMessage = logMessage & "(Code: " & errorCode & "): " & message
 
-    ' Create error context if not provided
-    Dim ctxToUse As ErrorContext
-    If errorCtx Is Nothing Then
-        ctxToUse.ErrorNumber = errorCode
-        ctxToUse.ErrorDescription = message
-        ctxToUse.ProcedureName = procedureName
-        ctxToUse.ModuleName = moduleName
-        ctxToUse.Timestamp = Now
-    Else
-        ctxToUse = errorCtx
-    End If
-    
     ' Log through main system with context
     If mLoggerActive Then
         PrintToImmediate logMessage
@@ -606,7 +659,7 @@ Public Sub LogError(actionCode As String, errorCode As Long, message As String, 
     End If
     
     ' Log to Ragic with error context
-    Call LogToRagic("ERROR", actionCode, message, ctxToUse)
+    Call LogToRagic("ERROR", actionCode, message, errorCode, procedureName, moduleName)
 End Sub
 
 Public Sub LogInfo(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -627,7 +680,7 @@ Public Sub LogInfo(actionCode As String, message As String, Optional ByVal proce
         End Select
     End If
     
-    Call LogToRagic("INFO", actionCode, message) 
+    Call LogToRagic("INFO", actionCode, message, , procedureName, moduleName) 
 End Sub
 
 Public Sub LogDebug(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -648,7 +701,7 @@ Public Sub LogDebug(actionCode As String, message As String, Optional ByVal proc
         End Select
     End If
     
-    Call LogToRagic("DEBUG", actionCode, message)
+    Call LogToRagic("DEBUG", actionCode, message, , procedureName, moduleName)
 End Sub
 
 Public Sub LogWarning(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -669,7 +722,7 @@ Public Sub LogWarning(actionCode As String, message As String, Optional ByVal pr
         End Select
     End If
     
-    Call LogToRagic("WARNING", actionCode, message)
+    Call LogToRagic("WARNING", actionCode, message, , procedureName, moduleName)
 End Sub
 
 Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -697,7 +750,7 @@ Public Sub LogCritical(actionCode As String, errorCode As Long, message As Strin
     tempCtx.ModuleName = moduleName
     tempCtx.Severity = "CRITICAL" ' Explicitly set
     
-    Call LogToRagic("CRITICAL", actionCode, criticalDetails, tempCtx)
+    Call LogToRagic("CRITICAL", actionCode, criticalDetails, errorCode, procedureName, moduleName)
 End Sub
 
 Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
@@ -719,7 +772,7 @@ Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As
     If moduleName <> "" Then action = action & ":" & moduleName
     action = action & ":" & procedureName
     
-    Call LogToRagic("DEBUG", action, "Params: " & params)
+    Call LogToRagic("DEBUG", action, "Params: " & params, , procedureName, moduleName)
 End Sub
 
 Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
@@ -739,7 +792,7 @@ Public Sub LogUserAction(actionCode As String, description As String, Optional B
     details = description
     If controlName <> "" Then details = details & " (Control: " & controlName & ")"
     
-    Call LogToRagic("INFO", action, details)
+    Call LogToRagic("INFO", action, details, , procedureName, moduleName)
 End Sub
 
 ' ============================================================================

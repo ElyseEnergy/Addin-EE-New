@@ -1,11 +1,22 @@
+' =============================================================================
+' MODULE: RagicFieldDictionary
+' Description: Manages the Ragic field dictionary mapping
+' =============================================================================
 Option Explicit
+Private Const MODULE_NAME As String = "RagicFieldDictionary"
 
-Public RagicFieldDict As Object
-Public wsPQDict As Worksheet
+' Constants for message dialogs
+Private Const MSG_TITLE_INFO As String = "Information"
+Private Const MSG_TITLE_ERROR As String = "Erreur"
+Private Const MSG_FIRST_LOAD As String = "Le premier chargement du dictionnaire Ragic peut prendre quelques instants." & vbCrLf & _
+                                       "Veuillez patienter pendant que nous configurons tout."
 
 ' Constantes pour les noms
 Private Const BASE_NAME As String = "RagicDictionary"
 Private Const RAGIC_PATH As String = "matching-matrix/6.csv"
+
+Public RagicFieldDict As Object
+Public wsPQDict As Worksheet
 
 Public Sub LoadRagicDictionary()
     ' Afficher un message à l'utilisateur
@@ -152,8 +163,8 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     If lo Is Nothing Then
         ' MsgBox "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT." & vbCrLf & _
         '        "Tableaux présents : " & ListAllTableNames(wsPQDict), vbExclamation
-        ElyseMain_Orchestrator.LogWarning "RagicDict.LoadData.TableNotFound", "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT. Tableaux présents : " & ListAllTableNames(wsPQDict), "LoadDictionaryData", "RagicDictionary"
-        ElyseMessageBox_System.ShowWarningMessage "Tableau non trouvé", "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT."
+        HandleDictionaryError tableName, "Tableaux présents : " & ListAllTableNames(wsPQDict)
+        ElyseMessageBox_System.ShowErrorMessage MSG_TITLE_ERROR, "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT."
         Exit Sub
     End If
 

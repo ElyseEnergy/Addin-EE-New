@@ -651,3 +651,35 @@ Public Sub ProcessCapexEPC(ByVal control As IRibbonControl, Optional ByRef retur
 ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
 End Sub
+
+Public Sub OnTechEcoAnalysis(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnTechEcoAnalysis"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening technical and economic analysis tool.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the technical and economic analysis logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The technical and economic analysis feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Technical and economic analysis completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnBusinessPlan(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnBusinessPlan"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening business plan tool.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the business plan logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The business plan feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Business plan process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
