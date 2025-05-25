@@ -1,9 +1,14 @@
 ' Module: RibbonVisibility
 ' Gère la visibilité des éléments du ruban
 Option Explicit
+
+' ============================================================================
+' MODULE DEPENDENCIES
+' ============================================================================
+' ElyseMain_Orchestrator est accessible via GetInstance()
+' Note: SYS_MessageBox et SYS_CoreSystem sont des modules, pas besoin de les instancier
+
 Private Const MODULE_NAME As String = "RibbonVisibility"
-' This module likely contains callbacks for the Ribbon XML (e.g., getVisible, getEnabled)
-' These callbacks need to be robust and not block the UI.
 
 ' Variable globale pour stocker l'instance du ruban
 Public gRibbon As IRibbonUI
@@ -12,6 +17,8 @@ Public gRibbon As IRibbonUI
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
     Debug.Print "Ribbon_Load appelé"
     Set gRibbon = ribbon
+    ' S'assurer que le système est initialisé avant d'utiliser les profils
+    ElyseMain_Orchestrator.Initialize
     InitializeDemoProfiles
     Debug.Print "gRibbon initialisé"
 End Sub
@@ -19,12 +26,12 @@ End Sub
 ' Callback pour le sélecteur de profil
 Public Sub OnSelectDemoProfile(control As IRibbonControl)
     Select Case control.id
-        Case "btnEngineerBasic": SetCurrentProfile AccessProfiles.Engineer_Basic
-        Case "btnProjectManager": SetCurrentProfile AccessProfiles.Project_Manager
-        Case "btnFinanceController": SetCurrentProfile AccessProfiles.Finance_Controller
-        Case "btnTechnicalDirector": SetCurrentProfile AccessProfiles.Technical_Director
-        Case "btnMultiProjectLead": SetCurrentProfile AccessProfiles.Business_Analyst  ' Changed from Multi_Project_Lead
-        Case "btnFullAdmin": SetCurrentProfile AccessProfiles.Full_Admin
+        Case "btnEngineerBasic": SetCurrentProfile Engineer_Basic
+        Case "btnProjectManager": SetCurrentProfile Project_Manager
+        Case "btnFinanceController": SetCurrentProfile Finance_Controller
+        Case "btnTechnicalDirector": SetCurrentProfile Technical_Director
+        Case "btnMultiProjectLead": SetCurrentProfile Business_Analyst  ' Changed from Multi_Project_Lead
+        Case "btnFullAdmin": SetCurrentProfile Full_Admin
     End Select
     
     InvalidateRibbon

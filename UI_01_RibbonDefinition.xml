@@ -25,16 +25,17 @@
                         <ns0:button id="btnMeOHBiomass" label="MeOH - Biomass Gasification Synthesis" onAction="ProcessMeOHBiomass" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFBtJ" label="SAF - BtJ/e-BtJ Synthesis" onAction="ProcessSAFBtJ" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnSAFMtJ" label="SAF - MtJ Synthesis" onAction="ProcessSAFMtJ" imageMso="AcceptInvitation"/>
-                    </ns0:menu>                    <ns0:menu id="menuMetriques" label="Métriques" imageMso="ViewCategory" size="large" getVisible="GetTechnologiesVisibility">
+                    </ns0:menu>                    
+                     <ns0:menu id="menuMetriques" label="Métriques" image="metrics" size="large" getVisible="GetTechnologiesVisibility">
                         <ns0:button id="btnMetriquesBase" label="Métriques de base" onAction="ProcessMetriquesBase" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnMetriquesExpert" label="Métriques expert" onAction="ProcessMetriquesExpert" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnTimingsReference" label="Timings de référence" onAction="ProcessTimingsReference" imageMso="AcceptInvitation"/>
                     </ns0:menu>
-                    <ns0:menu id="menuLCA" label="LCA" imageMso="ReviewingPane" size="large" getVisible="GetTechnologiesVisibility">
+                    <ns0:menu id="menuLCA" label="LCA" image="lca" size="large" getVisible="GetTechnologiesVisibility">
                         <ns0:button id="btnMetriquesRED" label="Métriques RED III" onAction="ProcessMetriquesRED" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnEmissions" label="Emissions" onAction="ProcessEmissions" imageMso="AcceptInvitation"/>
                     </ns0:menu>
-                    <ns0:button id="btnInfraLog" label="Logistique" onAction="ProcessInfraLog" imageMso="AcceptInvitation" size="large" getVisible="GetTechnologiesVisibility"/>                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
+                    <ns0:button id="btnInfraLog" label="Logistique" onAction="ProcessInfraLog" image="logistics" size="large" getVisible="GetTechnologiesVisibility"/>                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
                         <ns0:button id="btnChiller" label="Chiller" onAction="ProcessChiller" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="ProcessCoolingWater" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnHeatProd" label="Heat Production" onAction="ProcessHeatProd" imageMso="AcceptInvitation"/>

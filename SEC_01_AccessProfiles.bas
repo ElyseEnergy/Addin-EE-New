@@ -54,7 +54,7 @@ End Sub
 Private Sub AddProfile(id As DemoProfile, Name As String, _
                       eng As Boolean, fin As Boolean, tools As Boolean, _
                       allProj As Boolean, projects As Variant)
-    ReDim Preserve Profiles(1 To CInt(id))
+    ReDim Preserve Profiles(0 To CInt(id))
     ProfilesCount = CInt(id)
     
     Profiles(id).Name = Name
@@ -113,7 +113,15 @@ End Function
 
 ' Récupère le nom du profil actuel
 Public Function GetCurrentProfileName() As String
-    GetCurrentProfileName = Profiles(mCurrentProfile).Name
+    If Not Not Profiles Then
+        If mCurrentProfile >= LBound(Profiles) And mCurrentProfile <= UBound(Profiles) Then
+            GetCurrentProfileName = Profiles(mCurrentProfile).Name
+        Else
+            GetCurrentProfileName = "(Profil inconnu)"
+        End If
+    Else
+        GetCurrentProfileName = "(Profils non initialisés)"
+    End If
 End Function
 
 Public Function CheckUserAccess(ByVal userName As String) As Boolean
@@ -137,5 +145,11 @@ ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
     CheckUserAccess = False ' Ensure function returns a default value on error
 End Function
+
+Public Sub CleanupProfiles()
+    ProfilesCount = 0
+    Erase Profiles
+    ElyseMain_Orchestrator.LogDebug "CleanupProfiles", "Access profiles cleaned up", "CleanupProfiles", MODULE_NAME
+End Sub
 
 

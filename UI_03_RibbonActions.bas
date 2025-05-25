@@ -38,7 +38,7 @@ End Sub
 Public Sub ProcessCO2CaptureMain()
     ProcessCO2Capture Nothing, Nothing
 End Sub
-
+au
 Public Sub ProcessCO2GeneralMain()
     ProcessCO2General Nothing, Nothing
 End Sub
@@ -976,6 +976,135 @@ Public Sub OnBusinessPlan(ByVal control As IRibbonControl)
     ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The business plan feature is not yet implemented."
     
     ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Business plan process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnElecOptim(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnElecOptim"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening electricity optimization tool.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the electricity optimization logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The electricity optimization feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Electricity optimization process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnLCA(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnLCA"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening LCA tool.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the Life Cycle Analysis logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The Life Cycle Analysis feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Life Cycle Analysis process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnServerFiles(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnServerFiles"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening server files browser.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the server files browser logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The server files browser feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Server files browser closed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnSummarySheets(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnSummarySheets"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening summary sheets.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the summary sheets logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The summary sheets feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Summary sheets process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub OnOpex(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnOpex"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Opening OPEX management.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement the OPEX management logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The OPEX management feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "OPEX management process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessInjectAllPowerQueries"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Starting PowerQuery injection process.", PROC_NAME, MODULE_NAME
+    
+    ' Call the PowerQuery manager to inject all queries
+    ' TODO: Implement proper PowerQuery injection logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The PowerQuery injection feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "PowerQuery injection process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessCleanupAllPowerQueries"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Starting PowerQuery cleanup process.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement PowerQuery cleanup logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The PowerQuery cleanup feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "PowerQuery cleanup process completed.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessDebugRagicDictionary"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Starting Ragic dictionary debug process.", PROC_NAME, MODULE_NAME
+    
+    ' TODO: Implement Ragic dictionary debug logic
+    ElyseMessageBox_System.ShowInfoMessage "Not Implemented", "The Ragic dictionary debug feature is not yet implemented."
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Ragic dictionary debug process completed.", PROC_NAME, MODULE_NAME
     Exit Sub
 
 ErrorHandler:

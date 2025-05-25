@@ -557,17 +557,28 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
         End If
     Next key
 
+    ' Add APIKey to the payload for authentication
+    If RAGIC_LOG_API_KEY <> "" And RAGIC_LOG_API_KEY <> "YOUR_ACTUAL_RAGIC_API_KEY" Then
+        If payload <> "" Then payload = payload & "&"
+        payload = payload & "APIKey=" & EncodeURL(RAGIC_LOG_API_KEY)
+    End If
+
     ' Configure and send request
     Dim ragicPostUrl As String
     ragicPostUrl = RAGIC_LOG_API_URL
     If InStr(1, ragicPostUrl, "?") = 0 Then
-        ragicPostUrl = ragicPostUrl & "?api=true"
+        ragicPostUrl = ragicPostUrl & "?v=3&api=true" ' MODIFIED: Added v=3 and ensured api=true
     Else
-        ragicPostUrl = ragicPostUrl & "&api=true"
+        If InStr(1, ragicPostUrl, "api=") = 0 Then
+            ragicPostUrl = ragicPostUrl & "&api=true" ' Ensure api=true if other params exist
+        End If
+        If InStr(1, ragicPostUrl, "v=") = 0 Then
+            ragicPostUrl = ragicPostUrl & "&v=3" ' Ensure v=3 if other params exist
+        End If
     End If
     
     http.Open "POST", ragicPostUrl, False ' Synchronous for reliability
-    http.setRequestHeader "Authorization", "Basic " & EncodeBase64("APIKEY:" & RAGIC_LOG_API_KEY)
+    ' http.setRequestHeader "Authorization", "Basic " & EncodeBase64(RAGIC_LOG_API_KEY & ":") ' REMOVED: Using APIKey in payload instead
     http.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
     http.send payload
 
@@ -599,20 +610,3 @@ Private Function EncodeURL(str As String) As String
     Set ScriptControl = Nothing
 End Function
 
-' Helper for Base64 encoding (common for API keys)
-Private Function EncodeBase64(text As String) As String
-    Dim arrData() As Byte
-    arrData = StrConv(text, vbFromUnicode)
-
-    Dim objXML As Object
-    Dim objNode As Object
-
-    Set objXML = CreateObject("MSXML2.DOMDocument")
-    Set objNode = objXML.createElement("b64")
-    objNode.DataType = "bin.base64"
-    objNode.nodeTypedValue = arrData
-    EncodeBase64 = objNode.text
-
-    Set objNode = Nothing
-    Set objXML = Nothing
-End Function

@@ -6,6 +6,17 @@
 
 Option Explicit
 
+' Instance privée pour le pattern Singleton
+Private mInstance As APP_MainOrchestrator
+
+' Fonction publique pour accéder à l'instance unique
+Public Function GetInstance() As APP_MainOrchestrator
+    If mInstance Is Nothing Then
+        Set mInstance = New APP_MainOrchestrator
+    End If
+    Set GetInstance = mInstance
+End Function
+
 ' ============================================================================
 ' MODULE DEPENDENCIES
 ' ============================================================================
@@ -747,5 +758,3 @@ ErrorHandler:
     
     SampleDataProcessingWorkflow = False
 End Function
-
-' ============================================================================
