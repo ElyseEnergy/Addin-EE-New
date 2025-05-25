@@ -104,6 +104,9 @@ Private Function InitializeCoreModule() As Boolean
     mCoreSystemStatus = InitializeCoreSystem(mSystemMode)
     mModulesLoaded("core") = mCoreSystemStatus
     
+    ' Initialize Core System Extras (for Ragic logging flag, session ID)
+    ElyseCore_System.InitializeCoreSystemExtras
+
     InitializeCoreModule = mCoreSystemStatus
     Exit Function
     
@@ -346,16 +349,36 @@ Public Sub LogWarning(action As String, details As String)
     End If
 End Sub
 
-Public Sub LogError(action As String, errorNumber As Long, details As String)
-    If mLoggerStatus Then
-        LogEvent action, "Error " & errorNumber & ": " & details, ERROR_LEVEL
-    End If
+Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", Optional errorCtx As ErrorContext = Nothing)
+    If Not mSystemInitialized Then InitializeElyseSystem
+    If Not mLoggerInitialized Then Exit Sub ' Should have been initialized by InitializeElyseSystem
+
+    ' Pass the call to the logger module, including the optional ErrorContext
+    ElyseLogger_Module.LogError actionCode, errorCode, message, procedureName, moduleName, errorCtx
 End Sub
 
-Public Sub LogRibbon(buttonId As String)
-    If mLoggerStatus Then
-        LogRibbonAction buttonId
-    End If
+Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    If Not mSystemInitialized Then InitializeElyseSystem
+    If Not mLoggerInitialized Then Exit Sub
+    ElyseLogger_Module.LogCritical actionCode, errorCode, message, procedureName, moduleName
+End Sub
+
+Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
+    If Not mSystemInitialized Then InitializeElyseSystem
+    If Not mLoggerInitialized Then Exit Sub
+    ElyseLogger_Module.LogFunctionCall procedureName, moduleName, params
+End Sub
+
+Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
+    If Not mSystemInitialized Then InitializeElyseSystem
+    If Not mLoggerInitialized Then Exit Sub
+    ElyseLogger_Module.LogUserAction actionCode, description, controlName
+End Sub
+
+Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
+    If Not mSystemInitialized Then InitializeElyseSystem
+    If Not mLoggerInitialized Then Exit Sub
+    ElyseLogger_Module.LogRibbonAction buttonId, additionalInfo
 End Sub
 
 ' Enhanced MessageBox API
@@ -418,16 +441,14 @@ Public Function CreateSupportTicket() As String
         CreateSupportTicket = CreateManualTicket()
     Else
         CreateSupportTicket = "SYSTEM_NOT_AVAILABLE"
-    End If
-End Function
+    End Function
 
 Public Function CreateErrorTicket(errorMsg As String, Optional errorCode As Long = 0) As String
     If mTicketSystemStatus Then
         CreateErrorTicket = CreateQuickErrorTicket(errorMsg, errorCode)
     Else
         CreateErrorTicket = "SYSTEM_NOT_AVAILABLE"
-    End If
-End Function
+    End Function
 
 ' SharePoint API
 Public Function GetDocumentID() As String
@@ -561,4 +582,170 @@ End Function
 
 Private Function GetCoreSystemHealth() As Object
     Dim health As Object
-    Set health =
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' Example checks - these should be replaced with actual health check logic
+    health("status") = "OK"
+    health("last_restart") = mStartupTime
+    health("uptime_minutes") = DateDiff("n", mStartupTime, Now)
+    
+    GetCoreSystemHealth = health
+End Function
+
+Private Function GetLoggerHealth() As Object
+    Dim health As Object
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' Logger health check - ensure logger is initialized and functional
+    health("status") = IIf(mLoggerStatus, "OK", "Failed")
+    health("log_level") = IIf(mLoggerStatus, GetCurrentLogLevel(), "N/A")
+    
+    GetLoggerHealth = health
+End Function
+
+Private Function GetErrorHandlerHealth() As Object
+    Dim health As Object
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' Error handler health check - ensure error handler is initialized
+    health("status") = IIf(mErrorHandlerStatus, "OK", "Failed")
+    
+    GetErrorHandlerHealth = health
+End Function
+
+Private Function GetSharePointHealth() As Object
+    Dim health As Object
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' SharePoint health check - ensure SharePoint module is loaded
+    health("status") = IIf(mSharePointStatus, "OK", "Not Available")
+    
+    GetSharePointHealth = health
+End Function
+
+Private Function GetMessageBoxHealth() As Object
+    Dim health As Object
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' MessageBox health check - always available if module is loaded
+    health("status") = IIf(mMessageBoxStatus, "OK", "Not Available")
+    
+    GetMessageBoxHealth = health
+End Function
+
+Private Function GetTicketSystemHealth() As Object
+    Dim health As Object
+    Set health = CreateObject("Scripting.Dictionary")
+    
+    ' Ticket system health check - always available
+    health("status") = IIf(mTicketSystemStatus, "OK", "Not Available")
+    
+    GetTicketSystemHealth = health
+End Function
+
+Private Function CalculateOverallHealth(healthReport As Object) As Integer
+    ' Calculate an overall health score based on individual component health
+    Dim score As Integer
+    score = 100 ' Start with a perfect score
+    
+    ' Deduct points for each component that is not OK
+    If healthReport("core_system")("status") <> "OK" Then score = score - 20
+    If healthReport("logger")("status") <> "OK" Then score = score - 20
+    If healthReport("error_handler")("status") <> "OK" Then score = score - 20
+    If healthReport("sharepoint")("status") <> "OK" Then score = score - 20
+    If healthReport("messagebox")("status") <> "OK" Then score = score - 10
+    If healthReport("ticket_system")("status") <> "OK" Then score = score - 10
+    
+    CalculateOverallHealth = score
+End Function
+
+' ============================================================================
+' DEBUGGING AND DEVELOPMENT UTILITIES
+' ============================================================================
+
+Public Sub PrintDebugInfo()
+    ' Print current debug information to Immediate Window (Ctrl+G)
+    
+    Debug.Print "=== Elyse System Debug Info ==="
+    Debug.Print "System Initialized: " & mSystemInitialized
+    Debug.Print "Modules Loaded: " & GetLoadedModulesCount()
+    Debug.Print "System Mode: " & GetSystemModeString(mSystemMode)
+    Debug.Print "Startup Time: " & mStartupTime
+    Debug.Print "Shutdown In Progress: " & mShutdownInProgress
+    Debug.Print "Logger Status: " & mLoggerStatus
+    Debug.Print "Error Handler Status: " & mErrorHandlerStatus
+    Debug.Print "SharePoint Status: " & mSharePointStatus
+    Debug.Print "MessageBox Status: " & mMessageBoxStatus
+    Debug.Print "Ticket System Status: " & mTicketSystemStatus
+    Debug.Print "Core System Status: " & mCoreSystemStatus
+    Debug.Print "=============================="
+End Sub
+
+Public Function GetLoadedModulesCount() As Long
+    ' Get the count of successfully loaded modules
+    GetLoadedModulesCount = mModulesLoaded.Count
+End Function
+
+Public Function GetSystemModeString(Optional mode As SystemMode = -1) As String
+    ' Convert system mode to string for logging/display
+    If mode = -1 Then mode = mSystemMode
+    
+    Select Case mode
+        Case PRODUCTION_MODE: GetSystemModeString = "Production"
+        Case DEVELOPMENT_MODE: GetSystemModeString = "Development"
+        Case DEBUG_MODE: GetSystemModeString = "Debug"
+        Case Else: GetSystemModeString = "Unknown"
+    End Select
+End Function
+
+Public Function GetCurrentLogLevel() As LogLevel
+    ' Get the current log level based on system mode
+    Select Case mSystemMode
+        Case DEBUG_MODE: GetCurrentLogLevel = DEBUG_LEVEL
+        Case DEVELOPMENT_MODE: GetCurrentLogLevel = INFO_LEVEL
+        Case PRODUCTION_MODE: GetCurrentLogLevel = WARNING_LEVEL
+        Case Else: GetCurrentLogLevel = INFO_LEVEL
+    End Select
+End Function
+
+' ============================================================================
+' SAMPLE WORKFLOWS
+' ============================================================================
+
+Public Function SampleDataProcessingWorkflow(inputData As Variant) As Boolean
+    ' Sample workflow for processing data with error handling and logging
+    
+    LogInfo "sample_workflow_start", "Starting sample data processing workflow"
+    
+    On Error GoTo ErrorHandler
+    
+    ' Validate input data
+    If IsEmpty(inputData) Then
+        Err.Raise 1001, "SampleDataProcessingWorkflow", "Input data is empty"
+    End If
+    
+    ' Process each item in the input data
+    Dim item As Variant
+    For Each item In inputData
+        ' Simulate processing delay
+        Application.Wait Now + TimeValue("0:00:01")
+        
+        ' Log progress
+        LogDebug "data_processing", "Processing item: " & item
+    Next item
+    
+    LogInfo "sample_workflow_success", "Sample data processing workflow completed successfully"
+    SampleDataProcessingWorkflow = True
+    Exit Function
+    
+ErrorHandler:
+    LogError "sample_workflow_error", Err.Number, "Error in SampleDataProcessingWorkflow: " & Err.Description
+    
+    ' Integrated error handling with ticket option
+    Dim result As String
+    result = HandleErrorWithTicketOption("Sample Data Processing Error", "Error in sample data processing: " & Err.Description, "SampleDataProcessingWorkflow")
+    
+    SampleDataProcessingWorkflow = False
+End Function
+
+' ============================================================================

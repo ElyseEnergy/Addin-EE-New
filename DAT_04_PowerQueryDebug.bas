@@ -1,6 +1,7 @@
 ' Module : PQDebugTools
 ' Module de debug pour injecter et tester les requêtes PowerQuery
 Option Explicit
+Private Const MODULE_NAME As String = "PQDebugTools"
 
 ' Module de debug pour tester les requêtes PowerQuery dans l'éditeur
 
@@ -108,4 +109,76 @@ End Sub
 Private Sub TestField(sheetName As String, fieldName As String)
     Debug.Print "  Test de " & sheetName & "|" & fieldName & " :"
     Debug.Print "    Hidden = " & IsFieldHidden(sheetName, fieldName)
+End Sub
+
+Public Sub PrintQueryMCode(ByVal queryName As String)
+    Const PROC_NAME As String = "PrintQueryMCode"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Attempting to print M code for query: " & queryName, PROC_NAME, MODULE_NAME
+
+    Dim pq As Object ' WorkbookQuery
+    On Error Resume Next ' To check if query exists
+    Set pq = ThisWorkbook.Queries(queryName)
+    On Error GoTo ErrorHandler ' Reinstate error handling
+
+    If pq Is Nothing Then
+        ' Debug.Print "Query '" & queryName & "' not found."
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Query '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
+        ElyseMessageBox_System.ShowWarningMessage "M Code Error", "Query '" & queryName & "' not found."
+        Exit Sub
+    End If
+
+    ' Debug.Print "M Code for query: " & queryName
+    ' Debug.Print pq.Formula
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_MCodeHeader", "M Code for query: " & queryName, PROC_NAME, MODULE_NAME
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_MCodeBody", pq.Formula, PROC_NAME, MODULE_NAME ' Log M code as detail
+    
+    ' Optionally, display it if it was the original intent beyond Debug.Print
+    ' ElyseMessageBox_System.ShowInfoMessage "M Code: " & queryName, pq.Formula ' This might be too long for a message box
+    
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "M Code for query '" & queryName & "' logged.", PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+Public Sub ListQueryDependencies(ByVal queryName As String)
+    Const PROC_NAME As String = "ListQueryDependencies"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Listing dependencies for query: " & queryName, PROC_NAME, MODULE_NAME
+
+    Dim pq As Object ' WorkbookQuery
+    On Error Resume Next
+    Set pq = ThisWorkbook.Queries(queryName)
+    On Error GoTo ErrorHandler
+
+    If pq Is Nothing Then
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Query '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
+        ElyseMessageBox_System.ShowWarningMessage "Dependency Error", "Query '" & queryName & "' not found."
+        Exit Sub
+    End If
+
+    ' ThisWorkbook.Queries(queryName).Dependencies is not a direct property.
+    ' Dependency information is part of the M code or metadata not easily accessible directly as a collection.
+    ' This would typically require parsing the M code or using more advanced analysis.
+    ' For now, we will log that this feature is complex.
+    
+    ' Original: Debug.Print "Dependencies for query: " & queryName & " (feature not fully implemented in this example)"
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_ComplexFeature", "Dependency listing for Power Query is a complex feature. Logging M code for manual review.", PROC_NAME, MODULE_NAME
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_MCodeForDeps", "M Code (for dependency analysis): " & pq.Formula, PROC_NAME, MODULE_NAME
+    
+    ' If there was a way to get dependencies, it would look like:
+    ' Dim dep As Object
+    ' For Each dep In pq.Dependencies ' Assuming .Dependencies existed
+    '   Debug.Print " - " & dep.Name
+    '   ElyseMain_Orchestrator.LogDebug PROC_NAME & "_DepItem", "Depends on: " & dep.Name, PROC_NAME, MODULE_NAME
+    ' Next dep
+    
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
 End Sub

@@ -1,6 +1,7 @@
 ' Module : CategoryManager.bas
 ' Gère toutes les catégories et leurs configurations sous forme de module standard
 Option Explicit
+Private Const MODULE_NAME As String = "CategoryManager"
 
 Public Categories() As CategoryInfo
 Public CategoriesCount As Long
@@ -106,3 +107,64 @@ End Function
 Public Function GetAllCategories() As Variant
     GetAllCategories = Categories
 End Function
+
+Public Sub LoadCategories()
+    Const PROC_NAME As String = "LoadCategories"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Loading categories...", PROC_NAME, MODULE_NAME
+    
+    ' Example of replacing Debug.Print
+    ' Debug.Print "Fetching categories from source..." 
+    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Fetch", "Fetching categories from source...", PROC_NAME, MODULE_NAME
+    
+    ' ... category loading logic ...
+
+    ' Example of replacing MsgBox
+    ' If mCategories.Count = 0 Then
+    '   MsgBox "No categories found!", vbExclamation, "Load Categories"
+    ' End If
+    If GetCategoryCount() = 0 Then ' Assuming GetCategoryCount is a relevant check
+        ElyseMessageBox_System.ShowWarningMessage "Load Categories", "No categories found!"
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NoCategories", "No categories were found during load.", PROC_NAME, MODULE_NAME
+    Else
+        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Success", GetCategoryCount() & " categories loaded successfully.", PROC_NAME, MODULE_NAME
+    End If
+    Exit Sub
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    ' Potentially re-raise or handle specific cleanup if needed
+End Sub
+
+Public Function GetCategoryByID(ByVal id As Long) As String
+    Const PROC_NAME As String = "GetCategoryByID"
+    On Error GoTo ErrorHandler
+
+    ' ... logic to find category ...
+    ' If Not found Then
+    '   Debug.Print "Category with ID " & id & " not found."
+    '   GetCategoryByID = ""
+    ' Else
+    '   Debug.Print "Category " & id & " found: " & categoryName
+    '   GetCategoryByID = categoryName
+    ' End If
+    
+    Dim categoryName As String
+    ' Replace with actual logic and logging
+    If id = 1 Then ' Placeholder
+        categoryName = "SampleCategory"
+        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Found", "Category " & id & " found: " & categoryName, PROC_NAME, MODULE_NAME
+        GetCategoryByID = categoryName
+    Else
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Category with ID " & id & " not found.", PROC_NAME, MODULE_NAME
+        GetCategoryByID = ""
+    End If
+    Exit Function
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    GetCategoryByID = "" ' Default error return
+End Function
+
+' Add similar transformations for other Subs/Functions in this file.

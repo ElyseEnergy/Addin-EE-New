@@ -1,6 +1,7 @@
 ' Module: DataLoaderManager
 ' Gère le chargement et l'affichage des données pour toutes les catégories
 Option Explicit
+Private Const MODULE_NAME As String = "DataLoaderManager"
 
 Public Enum DataLoadResult
     Success = 1
@@ -804,5 +805,64 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     
     ProcessCategory = DataLoadResult.Success
 End Function
+
+Public Function LoadDataFromSource(ByVal sourceName As String) As Boolean
+    Const PROC_NAME As String = "LoadDataFromSource"
+    On Error GoTo ErrorHandler
+
+    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Attempting to load data from source: " & sourceName, PROC_NAME, MODULE_NAME
+
+    ' Dim success As Boolean ' Original variable
+    ' success = False ' Original variable
+    
+    ' If sourceName = "Database" Then
+    '   Debug.Print "Connecting to database..."
+    '   ' ... connection logic ...
+    '   If Connected Then
+    '       Debug.Print "Connection successful. Fetching data..."
+    '       ' ... fetch logic ...
+    '       success = True
+    '       Debug.Print "Data fetched successfully."
+    '   Else
+    '       Debug.Print "Failed to connect to database."
+    '       MsgBox "Could not connect to the database. Please check settings.", vbCritical, "Connection Error"
+    '       success = False
+    '   End If
+    ' Else
+    '   Debug.Print "Unknown data source: " & sourceName
+    '   MsgBox "The data source '" & sourceName & "' is not recognized.", vbExclamation, "Unknown Source"
+    '   success = False
+    ' End If
+    ' LoadDataFromSource = success
+
+    If sourceName = "Database" Then
+        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ConnectDB", "Connecting to database...", PROC_NAME, MODULE_NAME
+        ' ... connection logic ...
+        Dim isConnected As Boolean ' Placeholder
+        isConnected = True ' Placeholder for actual connection check
+        
+        If isConnected Then
+            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_ConnectSuccess", "Connection successful. Fetching data...", PROC_NAME, MODULE_NAME
+            ' ... fetch logic ...
+            LoadDataFromSource = True ' Assuming success
+            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_FetchSuccess", "Data fetched successfully from Database.", PROC_NAME, MODULE_NAME
+        Else
+            ElyseMain_Orchestrator.LogError PROC_NAME & "_ConnectFail", Err.Number, "Failed to connect to database.", PROC_NAME, MODULE_NAME ' Assuming Err object is set by connection attempt
+            ElyseMessageBox_System.ShowErrorMessage "Connection Error", "Could not connect to the database. Please check settings. Details have been logged."
+            LoadDataFromSource = False
+        End If
+    Else
+        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_UnknownSource", "Unknown data source: " & sourceName, PROC_NAME, MODULE_NAME
+        ElyseMessageBox_System.ShowWarningMessage "Unknown Source", "The data source '" & sourceName & "' is not recognized."
+        LoadDataFromSource = False
+    End If
+    Exit Function
+
+ErrorHandler:
+    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    LoadDataFromSource = False ' Default error return
+End Function
+
+' Add similar transformations for other Subs/Functions in this file.
 
 

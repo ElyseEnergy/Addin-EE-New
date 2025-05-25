@@ -42,7 +42,8 @@ Public Sub LoadRagicDictionary()
         On Error GoTo 0
         
         If updateError <> 0 Then
-            Debug.Print "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description
+            ' Debug.Print "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description
+            ElyseMain_Orchestrator.LogError "RagicDict.Load.QueryUpdate", Err.Number, "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
@@ -58,7 +59,8 @@ Public Sub LoadRagicDictionary()
         On Error GoTo 0
         
         If addError <> 0 Then
-            Debug.Print "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description
+            ' Debug.Print "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description
+            ElyseMain_Orchestrator.LogError "RagicDict.Load.QueryAdd", Err.Number, "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
@@ -129,7 +131,8 @@ Public Function NormalizeSheetName(sheetName As String) As String
 End Function
 
 Private Sub LoadDictionaryData(ByVal tableName As String)
-    Debug.Print "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict)
+    ' Debug.Print "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict)
+    ElyseMain_Orchestrator.LogDebug "RagicDict.LoadData.Tables", "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict), "LoadDictionaryData", "RagicDictionary"
     Dim lo As ListObject
     On Error Resume Next
     Set lo = wsPQDict.ListObjects(tableName)
@@ -147,8 +150,10 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     End If
 
     If lo Is Nothing Then
-        MsgBox "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT." & vbCrLf & _
-               "Tableaux présents : " & ListAllTableNames(wsPQDict), vbExclamation
+        ' MsgBox "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT." & vbCrLf & _
+        '        "Tableaux présents : " & ListAllTableNames(wsPQDict), vbExclamation
+        ElyseMain_Orchestrator.LogWarning "RagicDict.LoadData.TableNotFound", "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT. Tableaux présents : " & ListAllTableNames(wsPQDict), "LoadDictionaryData", "RagicDictionary"
+        ElyseMessageBox_System.ShowWarningMessage "Tableau non trouvé", "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT."
         Exit Sub
     End If
 
@@ -160,6 +165,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     On Error GoTo 0
     
     If sheetIdx = 0 Or fieldIdx = 0 Or memoIdx = 0 Then
+        ElyseMain_Orchestrator.LogWarning "RagicDict.LoadData.ColumnsNotFound", "Colonnes requises non trouvées dans le tableau Ragic. sheetIdx=" & sheetIdx & ", fieldIdx=" & fieldIdx & ", memoIdx=" & memoIdx, "LoadDictionaryData", "RagicDictionary"
         DataLoaderManager.CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
         Exit Sub
     End If
@@ -167,7 +173,8 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     Dim i As Long
     Dim nbLignes As Long
     nbLignes = lo.DataBodyRange.Rows.Count
-    Debug.Print "Nombre de lignes dans le dictionnaire : " & nbLignes
+    ' Debug.Print "Nombre de lignes dans le dictionnaire : " & nbLignes
+    ElyseMain_Orchestrator.LogInfo "RagicDict.LoadData.RowCount", "Nombre de lignes dans le dictionnaire Ragic source: " & nbLignes, "LoadDictionaryData", "RagicDictionary"
 
     Dim key As Variant
     For i = 1 To nbLignes
@@ -178,21 +185,24 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
         End If
     Next i
 
-    Debug.Print "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count
-    Dim c As Long
-    c = 0
-    For Each key In RagicFieldDict.Keys
-        Debug.Print key & " => " & RagicFieldDict(key)
-        c = c + 1
-        If c > 10 Then Exit For
-    Next key
+    ' Debug.Print "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count
+    ElyseMain_Orchestrator.LogInfo "RagicDict.LoadData.DictCount", "Nombre de clés chargées dans RagicFieldDict : " & RagicFieldDict.Count, "LoadDictionaryData", "RagicDictionary"
+    
+    ' Dim c As Long
+    ' c = 0
+    ' For Each key In RagicFieldDict.Keys
+    '     Debug.Print key & " => " & RagicFieldDict(key)
+    '     c = c + 1
+    '     If c > 10 Then Exit For
+    ' Next key
 
     DataLoaderManager.CleanupPowerQuery "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
 End Sub
 
 Public Function IsFieldHidden(sheetName As String, fieldName As String) As Boolean
     If RagicFieldDict Is Nothing Then
-        Debug.Print "RagicFieldDict est Nothing dans IsFieldHidden"
+        ' Debug.Print "RagicFieldDict est Nothing dans IsFieldHidden"
+        ElyseMain_Orchestrator.LogWarning "RagicDict.IsFieldHidden.NotInit", "RagicFieldDict non initialisé lors de l'appel à IsFieldHidden.", "IsFieldHidden", "RagicDictionary"
         Exit Function
     End If
     Dim key As String
@@ -215,17 +225,20 @@ End Function
 
 Public Sub TestIsFieldHidden_BudgetGroupes()
     If RagicFieldDict Is Nothing Then
-        Debug.Print "Dictionnaire non initialisé, chargement en cours..."
+        ' Debug.Print "Dictionnaire non initialisé, chargement en cours..."
+        ElyseMain_Orchestrator.LogInfo "RagicDict.Test.Init", "Dictionnaire non initialisé pour TestIsFieldHidden_BudgetGroupes, chargement...", "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
         LoadRagicDictionary
     End If
-    Debug.Print "Test IsFieldHidden pour Budget Groupes :"
-    Debug.Print "Champ 1 :"
-    Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Montant Total'"
-    Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Montant Total")
+    ' Debug.Print "Test IsFieldHidden pour Budget Groupes :"
+    ' Debug.Print "Champ 1 :"
+    ' Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Montant Total'"
+    ' Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Montant Total")
+    ElyseMain_Orchestrator.LogInfo "RagicDict.Test.Result1", "Test IsFieldHidden ('↳ Budget Groupes', 'Montant Total'): " & IsFieldHidden("↳ Budget Groupes", "Montant Total"), "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     
-    Debug.Print "Champ 2 :"
-    Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Année'"
-    Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Année")
+    ' Debug.Print "Champ 2 :"
+    ' Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Année'"
+    ' Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Année")
+    ElyseMain_Orchestrator.LogInfo "RagicDict.Test.Result2", "Test IsFieldHidden ('↳ Budget Groupes', 'Année'): " & IsFieldHidden("↳ Budget Groupes", "Année"), "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
 
 

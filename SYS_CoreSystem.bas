@@ -19,7 +19,6 @@ Public Const SUPPORT_EMAIL As String = "support_data@elyse.energy"
 ' System Configuration
 Public Const TICKET_SUBJECT_PREFIX As String = "[ELYSE TICKET] "
 Public Const LOG_BUFFER_SIZE As Integer = 50
-Public Const HEARTBEAT_INTERVAL_SECONDS As Integer = 30
 Public Const SESSION_TIMEOUT_MINUTES As Integer = 480 ' 8 hours
 
 ' Color Palette - Elyse Energy Corporate Identity
@@ -92,6 +91,36 @@ Private mStartupTime As Date
 ' Configuration cache
 Private mConfigCache As Object
 Private mColorScheme As Object
+
+' ============================================================================
+' RAGIC API CONFIGURATION FOR LOGGING
+' ============================================================================
+Public Const RAGIC_LOG_API_URL As String = "https://ragic.elyse.energy/default/matching-matrix/8" ' Add ?api=true or other params as needed
+Public Const RAGIC_LOG_API_KEY As String = "YOUR_ACTUAL_RAGIC_API_KEY" ' IMPORTANT: Store securely or manage appropriately
+
+' Ragic Form Field IDs for Logging (as strings for dictionary keys)
+Public Const RAGIC_FIELD_TIMESTAMP As String = "1005231"
+Public Const RAGIC_FIELD_USER As String = "1005232"
+Public Const RAGIC_FIELD_ACTION As String = "1005233" ' e.g., ProcedureName or a specific action being logged
+Public Const RAGIC_FIELD_DETAILS As String = "1005234" ' e.g., Error message or log details
+Public Const RAGIC_FIELD_LEVEL As String = "1005235" ' e.g., "ERROR", "INFO", "DEBUG"
+Public Const RAGIC_FIELD_SESSION_ID As String = "1005236"
+Public Const RAGIC_FIELD_EXCEL_VERSION As String = "1005237"
+Public Const RAGIC_FIELD_WORKBOOK_NAME As String = "1005238"
+Public Const RAGIC_FIELD_SP_DOC_ID As String = "1005239"
+Public Const RAGIC_FIELD_SP_URL As String = "1005240"
+Public Const RAGIC_FIELD_FILE_LOCATION As String = "1005241"
+Public Const RAGIC_FIELD_ACTIVE_SHEET As String = "1005242"
+Public Const RAGIC_FIELD_SELECTED_RANGE As String = "1005243"
+Public Const RAGIC_FIELD_USER_DOMAIN As String = "1005244"
+Public Const RAGIC_FIELD_COMPUTER_NAME As String = "1005245"
+' Key field for Ragic sheet, usually not sent for new record creation unless specified by Ragic API for updates.
+' Public Const RAGIC_FIELD_KEY_ID As String = "1005246"
+
+
+' Global flag to enable/disable Ragic logging
+Public gEnableRagicLogging As Boolean
+Private gSessionID As String
 
 ' ============================================================================
 ' SYSTEM INITIALIZATION AND CONFIGURATION
@@ -187,21 +216,11 @@ Public Function GetUserIdentity() As String
     GetUserIdentity = username
 End Function
 
-Public Function GetSystemInfo() As Object
-    ' Get comprehensive system information
-    Dim sysInfo As Object
-    Set sysInfo = CreateObject("Scripting.Dictionary")
-    
-    sysInfo("session_id") = mSessionID
-    sysInfo("username") = mUsername
-    sysInfo("computer_name") = mComputerName
-    sysInfo("user_domain") = mUserDomain
-    sysInfo("excel_version") = Application.Version
-    sysInfo("system_mode") = GetSystemModeString(mCurrentMode)
-    sysInfo("startup_time") = Format(mStartupTime, "yyyy-mm-dd hh:nn:ss")
-    sysInfo("current_time") = Format(Now, "yyyy-mm-dd hh:nn:ss")
-    
-    Set GetSystemInfo = sysInfo
+Public Function GetCurrentUserIdentifier() As String
+    On Error Resume Next
+    GetCurrentUserIdentifier = Application.UserName
+    If Err.Number <> 0 Then GetCurrentUserIdentifier = "UnknownUser"
+    On Error GoTo 0
 End Function
 
 ' ============================================================================
@@ -387,7 +406,6 @@ Private Sub LoadSystemConfiguration()
     ' Set default configuration values
     mConfigCache("log_level") = IIf(mCurrentMode = DEBUG_MODE, DEBUG_LEVEL, INFO_LEVEL)
     mConfigCache("auto_flush_logs") = True
-    mConfigCache("enable_heartbeat") = True
     mConfigCache("enable_error_tickets") = True
     mConfigCache("enable_sharepoint") = True
     mConfigCache("api_timeout") = 5000 ' milliseconds
@@ -477,38 +495,10 @@ End Function
 ' SYSTEM STATUS AND HEALTH
 ' ============================================================================
 
-Public Function GetSystemStatus() As Object
-    ' Get comprehensive system status
-    Dim status As Object
-    Set status = CreateObject("Scripting.Dictionary")
-    
-    status("initialized") = mSystemInitialized
-    status("mode") = GetSystemModeString(mCurrentMode)
-    status("session_id") = mSessionID
-    status("uptime_minutes") = DateDiff("n", mStartupTime, Now)
-    status("memory_usage") = "N/A" ' Could be enhanced with Windows API calls
-    status("active_workbook") = GetCurrentWorkbookName()
-    status("excel_responsive") = True ' Could be enhanced with actual check
-    
-    Set GetSystemStatus = status
-End Function
-
-Public Function PerformHealthCheck() As Boolean
-    ' Perform basic system health check
-    On Error GoTo ErrorHandler
-    
-    ' Check core components
-    If Not mSystemInitialized Then GoTo ErrorHandler
-    If mSessionID = "" Then GoTo ErrorHandler
-    If mUsername = "" Then GoTo ErrorHandler
-    
-    ' Check Excel availability
-    Dim testValue As String
-    testValue = Application.Version
-    
-    PerformHealthCheck = True
-    Exit Function
-    
-ErrorHandler:
-    PerformHealthCheck = False
-End Function
+Public Sub InitializeCoreSystemExtras()
+    ' Called by ElyseMain_Orchestrator.InitializeElyseSystem
+    ' Set gEnableRagicLogging based on configuration (e.g., from a settings sheet, environment variable, etc.)
+    ' For now, let's default it to True for demonstration.
+    gEnableRagicLogging = True 
+    Call GetSessionID ' Initialize session ID
+End Sub

@@ -141,12 +141,29 @@ Private Function DisplayRangeSelectorForm(formConfig As Object) As Range
     
     On Error Resume Next
     Dim selectedRange As Range
+    ' --- OLD InputBox call ---
+    ' Set selectedRange = Application.InputBox( _
+    '     prompt:=formConfig("message"), _
+    '     title:=formConfig("title"), _
+    '     Default:=formConfig("default_range"), _
+    '     Type:=8)
+    ' --- END OLD InputBox call ---
+
+    ' --- REPLACEMENT with SYS_MessageBox (Placeholder - Application.InputBox is specific) ---
+    ' TODO: Implement a UserForm (e.g., RangeSelectorForm) that replicates Application.InputBox Type 8 functionality.
+    ' The following is a temporary placeholder. Application.InputBox Type 8 is unique.
+    SYS_MessageBox.ShowInfoMessage "Range Selection (Placeholder)", "The actual range selection requires Application.InputBox or a custom UserForm. This is a placeholder." & vbCrLf & "Prompt: " & formConfig("message")
+    
+    ' Attempt to use Application.InputBox directly as it's a special case, but log it.
+    ' If this direct call is problematic, a UserForm is the robust solution.
+    LogInfo "messagebox_range_selector_fallback", "Using Application.InputBox Type 8 directly as SYS_MessageBox cannot replicate its specific behavior."
     Set selectedRange = Application.InputBox( _
         prompt:=formConfig("message"), _
         title:=formConfig("title"), _
         Default:=formConfig("default_range"), _
         Type:=8)
-    
+    ' --- END REPLACEMENT ---
+
     Set DisplayRangeSelectorForm = selectedRange
     On Error GoTo 0
 End Function
@@ -424,85 +441,92 @@ Private Function CreateAndShowMessageBoxForm(config As MessageBoxConfig) As Long
     msgBoxStyle = ConvertMessageTypeToMsgBoxStyle(config.MessageType)
     
     ' Add buttons based on configuration
-    If config.ButtonCount = 1 Then
+    ' This logic needs to be more robust if we are to truly replace MsgBox
+    ' For a custom UserForm, button handling would be internal to that form.
+    If config.ButtonCount = 0 Then ' Should not happen, but default to OK
+        msgBoxStyle = msgBoxStyle + vbOKOnly
+    ElseIf config.ButtonCount = 1 Then
+        ' If only one button, it's usually an "OK" type scenario
         msgBoxStyle = msgBoxStyle + vbOKOnly
     ElseIf config.ButtonCount = 2 Then
-        msgBoxStyle = msgBoxStyle + vbOKCancel
-    Else
+        ' Typically OK/Cancel or Yes/No. Standard MsgBox maps vbOKCancel to OK=1, Cancel=2
+        ' and vbYesNo to Yes=6, No=7. We need to map our button texts.
+        If (LCase(config.Buttons(1).Text) = "ok" And LCase(config.Buttons(2).Text) = "cancel") Or _
+           (LCase(config.Buttons(1).Text) = "cancel" And LCase(config.Buttons(2).Text) = "ok") Then
+            msgBoxStyle = msgBoxStyle + vbOKCancel
+        ElseIf (LCase(config.Buttons(1).Text) = "yes" And LCase(config.Buttons(2).Text) = "no") Or _
+               (LCase(config.Buttons(1).Text) = "no" And LCase(config.Buttons(2).Text) = "yes") Then
+            msgBoxStyle = msgBoxStyle + vbYesNo
+        Else
+            ' Default for 2 buttons if not standard pairs, could be an issue with MsgBox
+            msgBoxStyle = msgBoxStyle + vbOKCancel ' Fallback
+        End If
+    ElseIf config.ButtonCount = 3 Then
+        ' Typically Yes/No/Cancel. Standard MsgBox maps vbYesNoCancel to Yes=6, No=7, Cancel=2
         msgBoxStyle = msgBoxStyle + vbYesNoCancel
+    Else ' More than 3 buttons not supported by standard MsgBox
+        msgBoxStyle = msgBoxStyle + vbOKOnly ' Fallback
     End If
     
     ' Show message box
-    CreateAndShowMessageBoxForm = MsgBox(config.Message, msgBoxStyle, config.Title)
-End Function
+    ' --- OLD MsgBox call ---
+    ' CreateAndShowMessageBoxForm = MsgBox(config.Message, msgBoxStyle, config.Title)
+    ' --- END OLD MsgBox call ---
 
-Private Function ConvertMessageTypeToMsgBoxStyle(msgType As MessageType) As VbMsgBoxStyle
-    ' Convert our message type to VBA MsgBox style
+    ' --- REPLACEMENT with internal logic or UserForm call ---
+    ' TODO: This entire function should ideally load and show a custom UserForm (e.g., CustomMsgBoxForm)
+    ' The UserForm would be populated based on `config` and return a value (1, 2, 3) corresponding to the button pressed.
+    ' The standard VBA MsgBox is used here as a fallback if a UserForm isn't implemented.
+    LogInfo "messagebox_custom_fallback", "Using standard VBA MsgBox as a fallback for custom message box. UserForm recommended."
     
-    Select Case msgType
-        Case INFO_MESSAGE: ConvertMessageTypeToMsgBoxStyle = vbInformation
-        Case SUCCESS_MESSAGE: ConvertMessageTypeToMsgBoxStyle = vbInformation
-        Case WARNING_MESSAGE: ConvertMessageTypeToMsgBoxStyle = vbExclamation
-        Case ERROR_MESSAGE: ConvertMessageTypeToMsgBoxStyle = vbCritical
-        Case CONFIRMATION_MESSAGE: ConvertMessageTypeToMsgBoxStyle = vbQuestion
-        Case Else: ConvertMessageTypeToMsgBoxStyle = vbInformation
+    Dim result As VbMsgBoxResult
+    result = VBA.Interaction.MsgBox(config.Message, msgBoxStyle, config.Title)
+    
+    ' Map VBA.MsgBox result back to our 1, 2, 3... convention
+    Select Case result
+        Case vbOK: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "OK")
+                  If CreateAndShowMessageBoxForm = 0 And msgBoxStyle = vbOKOnly Then CreateAndShowMessageBoxForm = 1
+        Case vbCancel: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "Cancel")
+                      If CreateAndShowMessageBoxForm = 0 Then CreateAndShowMessageBoxForm = 2 ' Common fallback for Cancel
+        Case vbYes: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "Yes")
+                   If CreateAndShowMessageBoxForm = 0 Then CreateAndShowMessageBoxForm = 1 ' Common fallback for Yes
+        Case vbNo: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "No")
+                  If CreateAndShowMessageBoxForm = 0 Then CreateAndShowMessageBoxForm = 2 ' Common fallback for No
+        Case vbAbort: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "Abort") ' Or map to a general cancel/close
+        Case vbRetry: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "Retry")
+        Case vbIgnore: CreateAndShowMessageBoxForm = GetButtonIndexByText(config, "Ignore")
+        Case Else: CreateAndShowMessageBoxForm = 0 ' Unknown or closed via 'X'
     End Select
-End Function
-
-Private Function DisplayModalForm(formConfig As Object) As Long
-    ' Generic function to display modal forms
     
-    ' This would route to the appropriate form display function
-    ' based on formConfig("type")
-    
-    Select Case formConfig("type")
-        Case "list_selection"
-            DisplayModalForm = ShowListForm(formConfig)
-        Case "range_selector"
-            DisplayModalForm = 1 ' Placeholder
-        Case "markdown_info"
-            DisplayModalForm = ShowMarkdownForm(formConfig)
-        Case Else
-            DisplayModalForm = 0
-    End Select
-End Function
-
-Private Function ShowListForm(config As Object) As Long
-    ' Show list selection form (placeholder implementation)
-    
-    Dim items As Collection
-    Set items = config("items")
-    
-    ' Build list string for InputBox (temporary implementation)
-    Dim listString As String
-    Dim i As Integer
-    
-    For i = 1 To items.Count
-        listString = listString & i & ". " & items(i) & vbCrLf
-    Next i
-    
-    Dim userInput As String
-    userInput = InputBox(config("message") & vbCrLf & vbCrLf & listString & vbCrLf & "Enter number:", config("title"))
-    
-    If IsNumeric(userInput) Then
-        Dim selection As Long
-        selection = CLng(userInput)
-        If selection >= 1 And selection <= items.Count Then
-            ShowListForm = selection
-        Else
-            ShowListForm = 0
+    ' If no specific button text matched, and we have a standard mapping, use it.
+    ' This is crucial for OKOnly, OKCancel, YesNo, YesNoCancel when button texts are generic.
+    If CreateAndShowMessageBoxForm = 0 Then
+        If msgBoxStyle = (ConvertMessageTypeToMsgBoxStyle(config.MessageType) + vbOKOnly) And result = vbOK Then
+            CreateAndShowMessageBoxForm = 1
+        ElseIf msgBoxStyle = (ConvertMessageTypeToMsgBoxStyle(config.MessageType) + vbOKCancel) Then
+            If result = vbOK Then CreateAndShowMessageBoxForm = 1
+            If result = vbCancel Then CreateAndShowMessageBoxForm = 2
+        ElseIf msgBoxStyle = (ConvertMessageTypeToMsgBoxStyle(config.MessageType) + vbYesNo) Then
+            If result = vbYes Then CreateAndShowMessageBoxForm = 1
+            If result = vbNo Then CreateAndShowMessageBoxForm = 2
+        ElseIf msgBoxStyle = (ConvertMessageTypeToMsgBoxStyle(config.MessageType) + vbYesNoCancel) Then
+            If result = vbYes Then CreateAndShowMessageBoxForm = 1
+            If result = vbNo Then CreateAndShowMessageBoxForm = 2
+            If result = vbCancel Then CreateAndShowMessageBoxForm = 3
         End If
-    Else
-        ShowListForm = 0
     End If
+    ' --- END REPLACEMENT ---
 End Function
 
-Private Function ShowMarkdownForm(config As Object) As Long
-    ' Show markdown info form (placeholder implementation)
-    
-    ' For full implementation, would show MarkdownInfoForm UserForm
-    MsgBox config("converted_content"), vbInformation, config("title")
-    ShowMarkdownForm = 1
+Private Function GetButtonIndexByText(config As MessageBoxConfig, buttonText As String) As Long
+    Dim i As Integer
+    GetButtonIndexByText = 0 ' Default to 0 if not found
+    For i = 1 To config.ButtonCount
+        If LCase(config.Buttons(i).Text) = LCase(buttonText) Then
+            GetButtonIndexByText = i
+            Exit Function
+        End If
+    Next i
 End Function
 
 ' ============================================================================
