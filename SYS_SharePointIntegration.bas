@@ -1,7 +1,7 @@
 ' ============================================================================
-' ElyseSharePoint_Integration - SharePoint Metadata Management
+' SYS_SharePointIntegration - SharePoint Integration Utilities
 ' Elyse Energy VBA Ecosystem - SharePoint Component
-' Requires: ElyseCore_System, ElyseLogger_Module
+' Requires: SYS_CoreSystem, SYS_Logger, SYS_ErrorHandler
 ' ============================================================================
 
 Option Explicit
@@ -10,8 +10,9 @@ Option Explicit
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' This module requires:
-' - ElyseCore_System (enums, constants, utilities)
-' - ElyseLogger_Module (logging functions)
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_Logger (logging functions)
+' - SYS_ErrorHandler (error handling functions)
 ' - Microsoft SharePoint Type Library (MSOWC.DLL)
 
 ' ============================================================================

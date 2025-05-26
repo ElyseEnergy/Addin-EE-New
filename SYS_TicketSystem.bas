@@ -1,7 +1,7 @@
 ' ============================================================================
-' ElyseTicket_System - Support Ticket Management
-' Elyse Energy VBA Ecosystem - Ticket Component
-' Requires: ElyseCore_System, ElyseLogger_Module
+' SYS_TicketSystem - Ticketing System Integration
+' Elyse Energy VBA Ecosystem - Ticketing Component
+' Requires: SYS_CoreSystem, SYS_Logger, SYS_ErrorHandler
 ' ============================================================================
 
 Option Explicit
@@ -10,8 +10,9 @@ Option Explicit
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' This module requires:
-' - ElyseCore_System (enums, constants, utilities)
-' - ElyseLogger_Module (logging functions)
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_Logger (logging functions)
+' - SYS_ErrorHandler (error handling functions)
 
 ' ============================================================================
 ' TICKET CONFIGURATION AND TYPES

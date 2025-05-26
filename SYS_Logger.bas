@@ -1,7 +1,7 @@
 ' ============================================================================
-' ElyseLogger_Module - Centralized Logging System
+' SYS_Logger - Centralized Logging System
 ' Elyse Energy VBA Ecosystem - Logging Component
-' Requires: ElyseCore_System
+' Requires: SYS_CoreSystem, SYS_ErrorHandler
 ' ============================================================================
 
 Option Explicit
@@ -15,8 +15,9 @@ Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
 ' ============================================================================
 ' MODULE DEPENDENCIES
 ' ============================================================================
-' This module requires ElyseCore_System to be loaded first
-' Dependencies: ElyseCore_System (enums, constants, utilities)
+' This module requires:
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_ErrorHandler (error handling functions)
 
 ' ============================================================================
 ' LOGGING STATE VARIABLES

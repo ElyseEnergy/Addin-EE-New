@@ -1,7 +1,7 @@
 ' ============================================================================
-' ElyseMessageBox_System - Enhanced MessageBox Components
-' Elyse Energy VBA Ecosystem - MessageBox Component
-' Requires: ElyseCore_System, ElyseLogger_Module
+' SYS_MessageBox - Enhanced Message Box System
+' Elyse Energy VBA Ecosystem - UI Component
+' Requires: SYS_CoreSystem, SYS_Logger
 ' ============================================================================
 
 Option Explicit
@@ -10,8 +10,8 @@ Option Explicit
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' This module requires:
-' - ElyseCore_System (enums, constants, utilities)
-' - ElyseLogger_Module (logging functions)
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_Logger (logging functions)
 
 ' Button size constants
 Private Const STANDARD_BUTTON_WIDTH As Long = 80

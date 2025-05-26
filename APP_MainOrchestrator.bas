@@ -1,32 +1,21 @@
 ' ============================================================================
-' ElyseMain_Orchestrator - System Coordination Module
-' Elyse Energy VBA Ecosystem - Main Orchestrator
-' Coordinates all system modules and provides unified API
+' APP_MainOrchestrator - Main Application Orchestrator
+' Elyse Energy VBA Ecosystem - Main Application Logic
+' Requires: SYS_CoreSystem, SYS_Logger, SYS_ErrorHandler, SYS_RibbonCallbacks, SYS_WorkbookEvents, SYS_SystemEvents
 ' ============================================================================
 
 Option Explicit
 
-' Instance privée pour le pattern Singleton
-Private mInstance As APP_MainOrchestrator
-
-' Fonction publique pour accéder à l'instance unique
-Public Function GetInstance() As APP_MainOrchestrator
-    If mInstance Is Nothing Then
-        Set mInstance = New APP_MainOrchestrator
-    End If
-    Set GetInstance = mInstance
-End Function
-
 ' ============================================================================
 ' MODULE DEPENDENCIES
 ' ============================================================================
-' This module coordinates all other modules:
-' - ElyseCore_System (base configuration)
-' - ElyseLogger_Module (logging system)
-' - ElyseMessageBox_System (enhanced message boxes)
-' - ElyseTicket_System (support tickets)
-' - ElyseSharePoint_Integration (SharePoint metadata)
-' - ElyseErrorHandler_Module (error management)
+' This module requires:
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_Logger (logging functions)
+' - SYS_ErrorHandler (error handling functions)
+' - SYS_RibbonCallbacks (Ribbon UI event handlers)
+' - SYS_WorkbookEvents (Workbook-level event handlers)
+' - SYS_SystemEvents (Application-level event handlers)
 
 ' ============================================================================
 ' ORCHESTRATOR STATE AND CONFIGURATION
@@ -34,7 +23,7 @@ End Function
 
 Private mSystemInitialized As Boolean
 Private mModulesLoaded As Object
-Private mSystemMode As SystemMode
+Private mSystemMode As systemMode
 Private mStartupTime As Date
 Private mShutdownInProgress As Boolean
 
@@ -55,7 +44,7 @@ Private mSystemHealthChecks As Boolean
 ' SYSTEM INITIALIZATION AND STARTUP
 ' ============================================================================
 
-Public Function InitializeElyseSystem(Optional systemMode As SystemMode = PRODUCTION_MODE, Optional autoStart As Boolean = True) As Boolean
+Public Function InitializeElyseSystem(Optional systemMode As systemMode = PRODUCTION_MODE, Optional autoStart As Boolean = True) As Boolean
     ' Main system initialization - call this first
     
     On Error GoTo ErrorHandler
@@ -104,7 +93,7 @@ Public Function InitializeElyseSystem(Optional systemMode As SystemMode = PRODUC
     Exit Function
     
 ErrorHandler:
-    LogError "system_init_failed", Err.Number, "System initialization failed: " & Err.Description
+    LogError "system_init_failed", Err.Number, "System initialization failed: " & Err.description
     InitializeElyseSystem = False
 End Function
 
@@ -134,7 +123,7 @@ Private Function InitializeLoggerModule() As Boolean
         Exit Function
     End If
     
-    Dim logLevel As LogLevel
+    Dim logLevel As logLevel
     logLevel = IIf(mSystemMode = DEBUG_MODE, DEBUG_LEVEL, INFO_LEVEL)
     
     mLoggerStatus = InitializeLogger(logLevel)
@@ -363,34 +352,34 @@ End Sub
 Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
                    Optional ByVal procedureName As String = "", _
                    Optional ByVal moduleName As String = "", _
-                   Optional errorCtx As SYS_ErrorHandler.ErrorContext)
+                   Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext)
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    ElyseLogger_Module.LogError actionCode, errorCode, message, procedureName, moduleName, errorCtx
+    LogEvent actionCode, errorCode & ": " & message, ERROR_LEVEL, procedureName, moduleName, errorCtx
 End Sub
 
 Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    ElyseLogger_Module.LogCritical actionCode, errorCode, message, procedureName, moduleName
+    LogCritical actionCode, errorCode, message, procedureName, moduleName
 End Sub
 
 Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    ElyseLogger_Module.LogFunctionCall procedureName, moduleName, params
+    LogFunctionCall procedureName, moduleName, params
 End Sub
 
 Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    ElyseLogger_Module.LogUserAction actionCode, description, controlName
+    LogUserAction actionCode, description, controlName
 End Sub
 
 Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    ElyseLogger_Module.LogRibbonAction buttonId, additionalInfo
+    LogRibbonAction buttonId, additionalInfo
 End Sub
 
 ' Enhanced MessageBox API
@@ -493,7 +482,7 @@ Public Sub HandleVBAError(procedureName As String, Optional moduleName As String
         HandleError procedureName, moduleName
     Else
         ' Fallback error handling
-        LogError "vba_error", Err.Number, "Procedure: " & procedureName & " | Module: " & moduleName & " | Error: " & Err.Description
+        LogError "vba_error", Err.Number, "Procedure: " & procedureName & " | Module: " & moduleName & " | Error: " & Err.description
     End If
 End Sub
 
@@ -547,11 +536,11 @@ Public Function ProcessDataWithErrorHandling(dataDescription As String, operatio
     Exit Function
     
 ErrorHandler:
-    LogError "data_operation_error", Err.Number, "Operation: " & operationName & " | Error: " & Err.Description
+    LogError "data_operation_error", Err.Number, "Operation: " & operationName & " | Error: " & Err.description
     
     ' Use integrated error handling
     Dim errorResult As String
-    errorResult = HandleErrorWithTicketOption("Data Processing Error", "Error in " & operationName & ": " & Err.Description, operationProc)
+    errorResult = HandleErrorWithTicketOption("Data Processing Error", "Error in " & operationName & ": " & Err.description, operationProc)
     
     ProcessDataWithErrorHandling = False
 End Function
@@ -695,10 +684,10 @@ End Sub
 
 Public Function GetLoadedModulesCount() As Long
     ' Get the count of successfully loaded modules
-    GetLoadedModulesCount = mModulesLoaded.Count
+    GetLoadedModulesCount = mModulesLoaded.count
 End Function
 
-Public Function GetSystemModeString(Optional mode As SystemMode = -1) As String
+Public Function GetSystemModeString(Optional mode As systemMode = -1) As String
     ' Convert system mode to string for logging/display
     If mode = -1 Then mode = mSystemMode
     
@@ -710,7 +699,7 @@ Public Function GetSystemModeString(Optional mode As SystemMode = -1) As String
     End Select
 End Function
 
-Public Function GetCurrentLogLevel() As LogLevel
+Public Function GetCurrentLogLevel() As logLevel
     ' Get the current log level based on system mode
     Select Case mSystemMode
         Case DEBUG_MODE: GetCurrentLogLevel = DEBUG_LEVEL
@@ -751,11 +740,13 @@ Public Function SampleDataProcessingWorkflow(inputData As Variant) As Boolean
     Exit Function
     
 ErrorHandler:
-    LogError "sample_workflow_error", Err.Number, "Error in SampleDataProcessingWorkflow: " & Err.Description
+    LogError "sample_workflow_error", Err.Number, "Error in SampleDataProcessingWorkflow: " & Err.description
     
     ' Integrated error handling with ticket option
     Dim result As String
-    result = HandleErrorWithTicketOption("Sample Data Processing Error", "Error in sample data processing: " & Err.Description, "SampleDataProcessingWorkflow")
+    result = HandleErrorWithTicketOption("Sample Data Processing Error", "Error in sample data processing: " & Err.description, "SampleDataProcessingWorkflow")
     
     SampleDataProcessingWorkflow = False
 End Function
+
+

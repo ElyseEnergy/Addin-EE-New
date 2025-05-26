@@ -1,7 +1,7 @@
 ' ============================================================================
-' ElyseErrorHandler_Module - Centralized Error Management
+' SYS_ErrorHandler - Centralized Error Management
 ' Elyse Energy VBA Ecosystem - Error Handling Component
-' Requires: ElyseCore_System, ElyseLogger_Module, ElyseMessageBox_System, ElyseTicket_System
+' Requires: SYS_CoreSystem, SYS_Logger, SYS_MessageBox, SYS_TicketSystem
 ' ============================================================================
 
 Option Explicit
@@ -10,10 +10,10 @@ Option Explicit
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' This module requires:
-' - ElyseCore_System (enums, constants, utilities)
-' - ElyseLogger_Module (logging functions)
-' - ElyseMessageBox_System (enhanced message boxes)
-' - ElyseTicket_System (ticket creation)
+' - SYS_CoreSystem (enums, constants, utilities)
+' - SYS_Logger (logging functions)
+' - SYS_MessageBox (enhanced message boxes)
+' - SYS_TicketSystem (ticket creation)
 
 ' ============================================================================
 ' ERROR HANDLING CONFIGURATION

@@ -1,9 +1,16 @@
 ' ============================================================================
-' ElyseCore_System - Base Configuration and Utilities Module
-' Elyse Energy VBA Ecosystem - Core Foundation
+' SYS_CoreSystem - Core System Utilities and Definitions
+' Elyse Energy VBA Ecosystem - Core Component
 ' ============================================================================
 
 Option Explicit
+
+' ============================================================================
+' MODULE DEPENDENCIES
+' ============================================================================
+' This module has no direct dependencies on other custom modules.
+' It provides foundational enums, constants, and utility functions.
+' ============================================================================
 
 ' ============================================================================
 ' GLOBAL CONSTANTS AND CONFIGURATION
