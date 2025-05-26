@@ -76,13 +76,13 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     End With
     
     ' Succès !
-    ElyseMessageBox_System.ShowSuccessMessage "Chargement réussi", _
+    ShowSuccessMessage "Chargement réussi", _
         "Les données ont été chargées avec succès à l'emplacement sélectionné."
     ProcessDataLoad = DataLoadResult.Success
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     ProcessDataLoad = DataLoadResult.Error
 End Function
 
@@ -126,7 +126,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         Next i
         
         ' Présenter les valeurs à l'utilisateur avec le sélecteur de liste personnalisé
-        Set GetSelectedValues = ElyseMain_Orchestrator.SelectMultipleFromList( _
+        Set GetSelectedValues = SelectMultipleFromList( _
             "Sélection des fiches", _
             "Choisissez une ou plusieurs fiches à charger:", _
             displayArray)
@@ -184,7 +184,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Next i
             
             ' Utiliser le sélecteur de liste personnalisé pour le filtre secondaire
-            Set GetSelectedValues = ElyseMain_Orchestrator.SelectMultipleFromList( _
+            Set GetSelectedValues = SelectMultipleFromList( _
                 "Sélection " & category.SecondaryFilterLevel, _
                 "Choisissez une ou plusieurs " & category.SecondaryFilterLevel & ":", _
                 arrValues)
@@ -204,7 +204,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     Exit Function
     
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     Set GetSelectedValues = Nothing
 End Function
 
@@ -240,7 +240,7 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     modeItems.Add "Mode Transposé (fiches en colonnes)"
     
     Dim modeChoice As Long
-    modeChoice = ElyseMain_Orchestrator.SelectFromList( _
+    modeChoice = SelectFromList( _
         "Choix du mode de collage", _
         "Comment souhaitez-vous coller les fiches ?", _
         modeItems)
@@ -373,7 +373,7 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Do
         ' Utiliser le sélecteur de plage personnalisé
         Dim selectedRange As Range
-        Set selectedRange = ElyseMain_Orchestrator.SelectRange( _
+        Set selectedRange = SelectRange( _
             "Sélection de la destination", _
             "Sélectionnez la cellule supérieure gauche où coller les données.")
             
@@ -411,7 +411,7 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     Set GetDestination = Nothing
 End Function
 
@@ -665,7 +665,7 @@ Public Function LoadDataFromSource(ByVal sourceName As String) As Boolean
     Const PROC_NAME As String = "LoadDataFromSource"
     On Error GoTo ErrorHandler
 
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Attempting to load data from source: " & sourceName, PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Start", "Attempting to load data from source: " & sourceName, PROC_NAME, MODULE_NAME
 
     ' Dim success As Boolean ' Original variable
     ' success = False ' Original variable
@@ -691,30 +691,30 @@ Public Function LoadDataFromSource(ByVal sourceName As String) As Boolean
     ' LoadDataFromSource = success
 
     If sourceName = "Database" Then
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ConnectDB", "Connecting to database...", PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_ConnectDB", "Connecting to database...", PROC_NAME, MODULE_NAME
         ' ... connection logic ...
         Dim isConnected As Boolean ' Placeholder
         isConnected = True ' Placeholder for actual connection check
         
         If isConnected Then
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_ConnectSuccess", "Connection successful. Fetching data...", PROC_NAME, MODULE_NAME
+            LogInfo PROC_NAME & "_ConnectSuccess", "Connection successful. Fetching data...", PROC_NAME, MODULE_NAME
             ' ... fetch logic ...
             LoadDataFromSource = True ' Assuming success
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_FetchSuccess", "Data fetched successfully from Database.", PROC_NAME, MODULE_NAME
+            LogInfo PROC_NAME & "_FetchSuccess", "Data fetched successfully from Database.", PROC_NAME, MODULE_NAME
         Else
-            ElyseMain_Orchestrator.LogError PROC_NAME & "_ConnectFail", Err.Number, "Failed to connect to database.", PROC_NAME, MODULE_NAME ' Assuming Err object is set by connection attempt
+            LogError PROC_NAME & "_ConnectFail", Err.Number, "Failed to connect to database.", PROC_NAME, MODULE_NAME ' Assuming Err object is set by connection attempt
             ElyseMessageBox_System.ShowErrorMessage "Connection Error", "Could not connect to the database. Please check settings. Details have been logged."
             LoadDataFromSource = False
         End If
     Else
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_UnknownSource", "Unknown data source: " & sourceName, PROC_NAME, MODULE_NAME
+        LogWarning PROC_NAME & "_UnknownSource", "Unknown data source: " & sourceName, PROC_NAME, MODULE_NAME
         ElyseMessageBox_System.ShowWarningMessage "Unknown Source", "The data source '" & sourceName & "' is not recognized."
         LoadDataFromSource = False
     End If
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     LoadDataFromSource = False ' Default error return
 End Function
 

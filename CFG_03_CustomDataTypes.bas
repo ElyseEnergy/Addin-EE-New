@@ -1,7 +1,7 @@
-' Module : CustomDataTypes.bas
+' Module : CFG_03_CustomDataTypes.bas
 ' Centralise tous les types personnalisés du projet
 Option Explicit
-Private Const MODULE_NAME As String = "CustomDataTypes"
+Private Const MODULE_NAME As String = "CFG_03_CustomDataTypes"
 
 ' ============================================================================
 ' CATEGORY TYPES
@@ -79,8 +79,3 @@ Public Type ValidationResult
     FieldName As String
     InvalidValue As Variant
 End Type
-
-' Initialize module on load
-Private Sub Initialize()
-    ElyseMain_Orchestrator.LogDebug "ModuleLoad", "CustomDataTypes module initialized", "Initialize", MODULE_NAME
-End Sub

@@ -1,7 +1,7 @@
-' Module : CategoryManager.bas
+' Module : CFG_01_CategoryDefinitions.bas
 ' Gère toutes les catégories et leurs configurations sous forme de module standard
 Option Explicit
-Private Const MODULE_NAME As String = "CategoryManager"
+Private Const MODULE_NAME As String = "CFG_01_CategoryDefinitions"
 
 Public Categories() As CategoryInfo
 Public CategoriesCount As Long
@@ -108,55 +108,26 @@ Public Function GetAllCategories() As Variant
     GetAllCategories = Categories
 End Function
 
-Public Sub LoadCategories()
-    Const PROC_NAME As String = "LoadCategories"
-    On Error GoTo ErrorHandler
-
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Loading categories...", PROC_NAME, MODULE_NAME
-    
-    ' Example of replacing Debug.Print
-    ' Debug.Print "Fetching categories from source..." 
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Fetch", "Fetching categories from source...", PROC_NAME, MODULE_NAME
-    
-    ' ... category loading logic ...
-
-    ' Example of replacing MsgBox
-    ' If mCategories.Count = 0 Then
-    '   MsgBox "No categories found!", vbExclamation, "Load Categories"
-    ' End If
-    If GetCategoryCount() = 0 Then ' Assuming GetCategoryCount is a relevant check
-        ElyseMessageBox_System.ShowWarningMessage "Load Categories", "No categories found!"
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NoCategories", "No categories were found during load.", PROC_NAME, MODULE_NAME
-    Else
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Success", GetCategoryCount() & " categories loaded successfully.", PROC_NAME, MODULE_NAME
-    End If
-    Exit Sub
-
-ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
-    ' Potentially re-raise or handle specific cleanup if needed
-End Sub
-
 Public Function GetCategoryByID(ByVal id As Long) As String
     Const PROC_NAME As String = "GetCategoryByID"
     On Error GoTo ErrorHandler
     
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Looking for category with ID " & id, PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_Start", "Looking for category with ID " & id, PROC_NAME, MODULE_NAME
     
     ' Validate ID range
     If id <= 0 Or id > CategoriesCount Then
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_InvalidID", "Category ID " & id & " is out of valid range (1-" & CategoriesCount & ")", PROC_NAME, MODULE_NAME
+        LogWarning PROC_NAME & "_InvalidID", "Category ID " & id & " is out of valid range (1-" & CategoriesCount & ")", PROC_NAME, MODULE_NAME
         GetCategoryByID = ""
         Exit Function
     End If
     
     ' Return category name
     GetCategoryByID = Categories(id).categoryName
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Success", "Found category: " & GetCategoryByID, PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_Success", "Found category: " & GetCategoryByID, PROC_NAME, MODULE_NAME
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     GetCategoryByID = "" ' Default error return
 End Function
 

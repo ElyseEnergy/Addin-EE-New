@@ -4,6 +4,7 @@
 ' ============================================================================
 
 Option Explicit
+Private Const MODULE_NAME As String = "SYS_CoreSystem"
 
 ' ============================================================================
 ' MODULE DEPENDENCIES
@@ -80,6 +81,7 @@ Public Enum SystemMode
     DEBUG_MODE = 1
     PRODUCTION_MODE = 2
     MAINTENANCE_MODE = 3
+    DEVELOPMENT_MODE = 4
 End Enum
 
 ' ============================================================================
@@ -102,8 +104,9 @@ Private mColorScheme As Object
 ' ============================================================================
 ' RAGIC API CONFIGURATION FOR LOGGING
 ' ============================================================================
-Public Const RAGIC_LOG_API_URL As String = "https://ragic.elyse.energy/default/matching-matrix/8" ' Add ?api=true or other params as needed
-Public Const RAGIC_LOG_API_KEY As String = "YOUR_ACTUAL_RAGIC_API_KEY" ' IMPORTANT: Store securely or manage appropriately
+Public Const RAGIC_LOG_API_URL As String = "https://ragic.elyse.energy/default/matching-matrix/8"
+Public Const RAGIC_LOG_API_KEY As String = RAGIC_API_KEY ' IMPORTANT: Store securely or manage appropriately
+Public Const RAGIC_LOG_API_PARAMS As String = RAGIC_API_PARAMS
 
 ' Ragic Form Field IDs for Logging (as strings for dictionary keys)
 Public Const RAGIC_FIELD_TIMESTAMP As String = "1005231"
@@ -121,9 +124,7 @@ Public Const RAGIC_FIELD_ACTIVE_SHEET As String = "1005242"
 Public Const RAGIC_FIELD_SELECTED_RANGE As String = "1005243"
 Public Const RAGIC_FIELD_USER_DOMAIN As String = "1005244"
 Public Const RAGIC_FIELD_COMPUTER_NAME As String = "1005245"
-' Key field for Ragic sheet, usually not sent for new record creation unless specified by Ragic API for updates.
-' Public Const RAGIC_FIELD_KEY_ID As String = "1005246"
-
+Public Const RAGIC_FIELD_KEY_ID As String = "1005246" ' Key field for Ragic sheet updates
 
 ' Global flag to enable/disable Ragic logging
 Public gEnableRagicLogging As Boolean
@@ -223,11 +224,24 @@ Public Function GetUserIdentity() As String
     GetUserIdentity = username
 End Function
 
+' =============================================
+' Fonction de récupération de l'identifiant utilisateur
+' =============================================
 Public Function GetCurrentUserIdentifier() As String
-    On Error Resume Next
-    GetCurrentUserIdentifier = Application.UserName
-    If Err.Number <> 0 Then GetCurrentUserIdentifier = "UnknownUser"
-    On Error GoTo 0
+    On Error GoTo ErrorHandler
+    
+    ' Vérifier que le système est initialisé
+    If Not mSystemInitialized Then
+        GetCurrentUserIdentifier = "SYSTEM_NOT_INITIALIZED"
+        Exit Function
+    End If
+    
+    ' Récupérer l'identifiant utilisateur
+    GetCurrentUserIdentifier = GetUserIdentity()
+    Exit Function
+    
+ErrorHandler:
+    GetCurrentUserIdentifier = "ERROR_" & Err.Number
 End Function
 
 ' ============================================================================
@@ -344,6 +358,7 @@ Public Function GetSystemModeString(mode As SystemMode) As String
         Case DEBUG_MODE: GetSystemModeString = "DEBUG"
         Case PRODUCTION_MODE: GetSystemModeString = "PRODUCTION"
         Case MAINTENANCE_MODE: GetSystemModeString = "MAINTENANCE"
+        Case DEVELOPMENT_MODE: GetSystemModeString = "DEVELOPMENT"
         Case Else: GetSystemModeString = "PRODUCTION"
     End Select
 End Function
@@ -445,16 +460,6 @@ Public Function IsSystemInitialized() As Boolean
     IsSystemInitialized = mSystemInitialized
 End Function
 
-Public Function ValidateEmailAddress(email As String) As Boolean
-    ' Basic email validation
-    ValidateEmailAddress = (InStr(email, "@") > 0 And InStr(email, ".") > 0)
-End Function
-
-Public Function ValidateURL(url As String) As Boolean
-    ' Basic URL validation
-    ValidateURL = (Left(LCase(url), 4) = "http")
-End Function
-
 Public Function IsDebugMode() As Boolean
     ' Check if system is in debug mode
     IsDebugMode = (mCurrentMode = DEBUG_MODE)
@@ -478,17 +483,6 @@ Public Function FormatTimestamp(Optional includeMilliseconds As Boolean = False)
     End If
 End Function
 
-Public Function FormatFileSize(sizeInBytes As Long) As String
-    ' Format file size in human readable format
-    If sizeInBytes < 1024 Then
-        FormatFileSize = sizeInBytes & " B"
-    ElseIf sizeInBytes < 1048576 Then
-        FormatFileSize = Format(sizeInBytes / 1024, "0.0") & " KB"
-    Else
-        FormatFileSize = Format(sizeInBytes / 1048576, "0.0") & " MB"
-    End If
-End Function
-
 Public Function TruncateString(text As String, maxLength As Integer, Optional suffix As String = "...") As String
     ' Truncate string with optional suffix
     If Len(text) <= maxLength Then
@@ -503,13 +497,10 @@ End Function
 ' ============================================================================
 
 Public Sub InitializeCoreSystemExtras()
-    ' Initialize extra system variables
+    ' Initialize additional core system features
+    ' This is called after the main initialization
+    ' to set up extra features that depend on the core system
     
-    ' Enable Ragic logging by default
-    gEnableRagicLogging = True
-    
-    ' Generate a unique session ID if not already set
-    If gSessionID = "" Then
-        gSessionID = GenerateSessionID()
-    End If
+    ' Initialize session ID for Ragic logging
+    gSessionID = GenerateSessionID()
 End Sub

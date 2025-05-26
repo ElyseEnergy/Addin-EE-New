@@ -129,7 +129,7 @@ Public Sub RefreshAllPowerQueries(Optional ByVal showErrors As Boolean = True)
     Const PROC_NAME As String = "RefreshAllPowerQueries"
     On Error GoTo ErrorHandler
 
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Starting refresh of all Power Queries.", PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Start", "Starting refresh of all Power Queries.", PROC_NAME, MODULE_NAME
     
     ' Dim query As WorkbookQuery ' Original
     ' Dim connection As WorkbookConnection ' Original
@@ -138,18 +138,18 @@ Public Sub RefreshAllPowerQueries(Optional ByVal showErrors As Boolean = True)
 
     ' On Error Resume Next ' Original blanket error handling
     
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_RefreshConnections", "Refreshing all workbook connections.", PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_RefreshConnections", "Refreshing all workbook connections.", PROC_NAME, MODULE_NAME
     On Error Resume Next ' Handle errors per connection/query
     ThisWorkbook.RefreshAll
     If Err.Number <> 0 Then
-        ElyseMain_Orchestrator.LogError PROC_NAME & "_RefreshAllError", Err.Number, "Error during ThisWorkbook.RefreshAll: " & Err.Description, PROC_NAME, MODULE_NAME
+        LogError PROC_NAME & "_RefreshAllError", Err.Number, "Error during ThisWorkbook.RefreshAll: " & Err.Description, PROC_NAME, MODULE_NAME
         If showErrors Then
             ElyseMessageBox_System.ShowErrorMessage "Refresh Error", "An error occurred during the global RefreshAll operation. Some queries or connections might not have refreshed. Details: " & Err.Description
         End If
         errorCount = errorCount + 1 ' Count this as one major error for RefreshAll
         Err.Clear
     Else
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_RefreshAllSuccess", "ThisWorkbook.RefreshAll completed.", PROC_NAME, MODULE_NAME
+        LogInfo PROC_NAME & "_RefreshAllSuccess", "ThisWorkbook.RefreshAll completed.", PROC_NAME, MODULE_NAME
     End If
     On Error GoTo ErrorHandler ' Restore main error handler
 
@@ -184,17 +184,17 @@ Public Sub RefreshAllPowerQueries(Optional ByVal showErrors As Boolean = True)
     ' Next connection
 
     If errorCount = 0 Then
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_EndSuccess", "All Power Queries and connections refreshed successfully.", PROC_NAME, MODULE_NAME
+        LogInfo PROC_NAME & "_EndSuccess", "All Power Queries and connections refreshed successfully.", PROC_NAME, MODULE_NAME
         If showErrors Then ElyseMessageBox_System.ShowInfoMessage "Refresh Complete", "All Power Queries and connections have been refreshed."
     Else
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_EndWithErrors", errorCount & " error(s) occurred during refresh. Check logs for details.", PROC_NAME, MODULE_NAME
+        LogWarning PROC_NAME & "_EndWithErrors", errorCount & " error(s) occurred during refresh. Check logs for details.", PROC_NAME, MODULE_NAME
         If showErrors Then ElyseMessageBox_System.ShowWarningMessage "Refresh Complete with Errors", errorCount & " error(s) occurred during the refresh process. Please check the logs for more details."
     End If
     
     Exit Sub
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     If showErrors Then ElyseMessageBox_System.ShowErrorMessage "Critical Refresh Error", "A critical error occurred in RefreshAllPowerQueries. Process aborted. Details: " & Err.Description
 End Sub
 
@@ -202,7 +202,7 @@ Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
     Const PROC_NAME As String = "GetQueryLastRefreshDate"
     On Error GoTo ErrorHandler
     
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Getting last refresh date for query: " & queryName, PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_Start", "Getting last refresh date for query: " & queryName, PROC_NAME, MODULE_NAME
     
     Dim q As WorkbookQuery
     Dim c As WorkbookConnection
@@ -213,7 +213,7 @@ Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
     Set q = ThisWorkbook.Queries(queryName)
     If Not q Is Nothing Then
         lastRefresh = q.RefreshDate
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_QueryFound", "Query '" & queryName & "' found. Refresh Date: " & lastRefresh, PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_QueryFound", "Query '" & queryName & "' found. Refresh Date: " & lastRefresh, PROC_NAME, MODULE_NAME
     Else
         Err.Clear
         Set c = ThisWorkbook.Connections(queryName)
@@ -222,16 +222,16 @@ Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
             ' It might be available through OLEDBConnection.RefreshDate for some types, but not universally.
             ' For Power Query connections, the RefreshDate is typically on the WorkbookQuery object.
             ' We will log that it's not directly available for connections here.
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_ConnectionFoundNoDate", "Connection '" & queryName & "' found, but direct RefreshDate is not available on WorkbookConnection object. Check associated WorkbookQuery if it exists.", PROC_NAME, MODULE_NAME
+            LogInfo PROC_NAME & "_ConnectionFoundNoDate", "Connection '" & queryName & "' found, but direct RefreshDate is not available on WorkbookConnection object. Check associated WorkbookQuery if it exists.", PROC_NAME, MODULE_NAME
             ' Attempt to find an associated query if the name matches
             Set q = Nothing ' Reset q
             Set q = ThisWorkbook.Queries(queryName)
             If Not q Is Nothing Then
                  lastRefresh = q.RefreshDate
-                 ElyseMain_Orchestrator.LogDebug PROC_NAME & "_AssociatedQueryFound", "Associated Query '" & queryName & "' found. Refresh Date: " & lastRefresh, PROC_NAME, MODULE_NAME
+                 LogDebug PROC_NAME & "_AssociatedQueryFound", "Associated Query '" & queryName & "' found. Refresh Date: " & lastRefresh, PROC_NAME, MODULE_NAME
             End If
         Else
-            ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Query or Connection '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
+            LogWarning PROC_NAME & "_NotFound", "Query or Connection '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
             ' MsgBox "Query or Connection '" & queryName & "' not found.", vbInformation
             ElyseMessageBox_System.ShowInfoMessage "Query Info", "Query or Connection '" & queryName & "' not found."
         End If
@@ -242,7 +242,7 @@ Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     GetQueryLastRefreshDate = CDate(0) ' Return default on error
 End Function
 

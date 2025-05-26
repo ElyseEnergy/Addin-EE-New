@@ -5,6 +5,7 @@
 ' ============================================================================
 
 Option Explicit
+Private Const MODULE_NAME As String = "SYS_MessageBox"
 
 ' ============================================================================
 ' MODULE DEPENDENCIES

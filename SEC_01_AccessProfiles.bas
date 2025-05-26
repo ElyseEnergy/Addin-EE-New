@@ -1,9 +1,14 @@
 ' Module: AccessProfiles
 ' Gère les profils de démonstration pour les droits d'accès
 Option Explicit
-Private Const MODULE_NAME As String = "AccessProfiles"
+Private Const MODULE_NAME As String = "SEC_01_AccessProfiles"
 
 ' Note: Utilise le type AccessProfile défini dans Types.bas
+
+' Dépendances
+' - SYS_Logger pour le logging
+' - SYS_MessageBox pour les messages utilisateur
+' - SYS_ErrorHandler pour la gestion des erreurs
 
 Public Enum DemoProfile
     Engineer_Basic = 0
@@ -126,30 +131,30 @@ End Function
 
 Public Function CheckUserAccess(ByVal userName As String) As Boolean
     Const PROC_NAME As String = "CheckUserAccess"
-    On Error GoTo ErrorHandler ' Assuming ErrorHandler label exists or will be added if not
-
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Checking access for user: " & userName, PROC_NAME, MODULE_NAME
+    On Error GoTo ErrorHandler
     
-    If userName = "admin" Then
+    LogDebug PROC_NAME & "_Start", "Checking access for user: " & userName, PROC_NAME, MODULE_NAME
+    
+    ' Vérifier si l'utilisateur est admin
+    If IsAdmin(userName) Then
+        LogInfo PROC_NAME & "_AdminGranted", "Admin access granted for " & userName, PROC_NAME, MODULE_NAME
         CheckUserAccess = True
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_AdminGranted", "Admin access granted for " & userName, PROC_NAME, MODULE_NAME
-    Else
-        CheckUserAccess = False
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_StandardAccess", "Standard access for " & userName, PROC_NAME, MODULE_NAME
-        ' Assuming original was: MsgBox "User " & userName & " does not have admin rights.", vbInformation, "Access Denied"
-        ElyseMessageBox_System.ShowInfoMessage "Access Denied", "User " & userName & " does not have admin rights."
+        Exit Function
     End If
+    
+    ' Vérifier l'accès standard
+    LogInfo PROC_NAME & "_StandardAccess", "Standard access for " & userName, PROC_NAME, MODULE_NAME
+    CheckUserAccess = HasStandardAccess(userName)
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
-    CheckUserAccess = False ' Ensure function returns a default value on error
+    HandleError MODULE_NAME, PROC_NAME
+    CheckUserAccess = False
 End Function
 
 Public Sub CleanupProfiles()
-    ProfilesCount = 0
-    Erase Profiles
-    ElyseMain_Orchestrator.LogDebug "CleanupProfiles", "Access profiles cleaned up", "CleanupProfiles", MODULE_NAME
+    ' Nettoyer les profils d'accès
+    LogDebug "CleanupProfiles", "Access profiles cleaned up", "CleanupProfiles", MODULE_NAME
 End Sub
 
 

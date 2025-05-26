@@ -114,7 +114,7 @@ Public Sub PrintQueryMCode(ByVal queryName As String)
     Const PROC_NAME As String = "PrintQueryMCode"
     On Error GoTo ErrorHandler
 
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Attempting to print M code for query: " & queryName, PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Start", "Attempting to print M code for query: " & queryName, PROC_NAME, MODULE_NAME
 
     Dim pq As Object ' WorkbookQuery
     On Error Resume Next ' To check if query exists
@@ -123,23 +123,23 @@ Public Sub PrintQueryMCode(ByVal queryName As String)
 
     If pq Is Nothing Then
         ' Debug.Print "Query '" & queryName & "' not found."
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Query '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
+        LogWarning PROC_NAME & "_NotFound", "Query '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
         ElyseMessageBox_System.ShowWarningMessage "M Code Error", "Query '" & queryName & "' not found."
         Exit Sub
     End If
 
     ' Debug.Print "M Code for query: " & queryName
     ' Debug.Print pq.Formula
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_MCodeHeader", "M Code for query: " & queryName, PROC_NAME, MODULE_NAME
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_MCodeBody", pq.Formula, PROC_NAME, MODULE_NAME ' Log M code as detail
+    LogDebug PROC_NAME & "_MCodeHeader", "M Code for query: " & queryName, PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_MCodeBody", pq.Formula, PROC_NAME, MODULE_NAME ' Log M code as detail
     
     ' Optionally, display it if it was the original intent beyond Debug.Print
     ' ElyseMessageBox_System.ShowInfoMessage "M Code: " & queryName, pq.Formula ' This might be too long for a message box
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "M Code for query '" & queryName & "' logged.", PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_End", "M Code for query '" & queryName & "' logged.", PROC_NAME, MODULE_NAME
     Exit Sub
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 

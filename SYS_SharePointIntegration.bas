@@ -1,10 +1,11 @@
 ' ============================================================================
-' SYS_SharePointIntegration - SharePoint Integration Utilities
-' Elyse Energy VBA Ecosystem - SharePoint Component
+' SYS_SharePointIntegration - SharePoint Integration System
+' Elyse Energy VBA Ecosystem - SharePoint Integration Component
 ' Requires: SYS_CoreSystem, SYS_Logger, SYS_ErrorHandler
 ' ============================================================================
 
 Option Explicit
+Private Const MODULE_NAME As String = "SYS_SharePointIntegration"
 
 ' ============================================================================
 ' MODULE DEPENDENCIES
@@ -64,7 +65,7 @@ Private mSharePointObject As Object ' Pour l'objet SharePoint
 Public Function InitializeSharePointIntegration() As Boolean
     ' Initialize SharePoint integration and detect if file is on SharePoint
     
-    LogInfo "sharepoint_init", "Initializing SharePoint integration"
+    LogInfo MODULE_NAME & "_init", "Initializing SharePoint integration"
     
     ' Initialize cache
     Set mCachedMetadata = CreateObject("Scripting.Dictionary")
@@ -73,7 +74,7 @@ Public Function InitializeSharePointIntegration() As Boolean
     On Error Resume Next
     Set mSharePointObject = CreateObject("MSOWC.SharePoint")
     If Err.Number <> 0 Then
-        LogError "sharepoint_init_error", Err.Number, "Failed to initialize SharePoint object: " & Err.Description
+        LogError MODULE_NAME & "_init_error", Err.Number, "Failed to initialize SharePoint object: " & Err.Description
         InitializeSharePointIntegration = False
         Exit Function
     End If
@@ -86,9 +87,9 @@ Public Function InitializeSharePointIntegration() As Boolean
         ' Get document information
         RefreshDocumentMetadata
         
-        LogInfo "sharepoint_detected", "SharePoint environment detected: " & mCurrentSiteInfo.SiteURL
+        LogInfo MODULE_NAME & "_detected", "SharePoint environment detected: " & mCurrentSiteInfo.SiteURL
     Else
-        LogInfo "sharepoint_not_detected", "File is not on SharePoint or SharePoint not available"
+        LogInfo MODULE_NAME & "_not_detected", "File is not on SharePoint or SharePoint not available"
     End If
     
     InitializeSharePointIntegration = mSharePointAvailable
@@ -116,7 +117,7 @@ Private Function DetectSharePointEnvironment() As Boolean
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_detection_error", Err.Number, Err.Description
+    LogError MODULE_NAME & "_detection_error", Err.Number, Err.Description
     DetectSharePointEnvironment = False
 End Function
 
@@ -155,7 +156,7 @@ Public Function RefreshDocumentMetadata() As Boolean
         Exit Function
     End If
     
-    LogDebug "sharepoint_metadata_refresh", "Refreshing document metadata"
+    LogDebug MODULE_NAME & "_metadata_refresh", "Refreshing document metadata"
     
     ' Get document properties
     GetDocumentIDProperties
@@ -169,11 +170,11 @@ Public Function RefreshDocumentMetadata() As Boolean
     mLastMetadataCheck = Now
     RefreshDocumentMetadata = True
     
-    LogInfo "sharepoint_metadata_refreshed", "Document metadata updated successfully"
+    LogInfo MODULE_NAME & "_metadata_refreshed", "Document metadata updated successfully"
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_metadata_error", Err.Number, Err.Description
+    LogError MODULE_NAME & "_metadata_error", Err.Number, Err.Description
     RefreshDocumentMetadata = False
 End Function
 
@@ -478,12 +479,12 @@ Public Function CheckOutDocument() As Boolean
     On Error GoTo ErrorHandler
     
     If Not mSharePointAvailable Then
-        LogWarning "sharepoint_checkout_failed", "Document is not on SharePoint"
+        LogWarning MODULE_NAME & "_checkout_failed", "Document is not on SharePoint"
         CheckOutDocument = False
         Exit Function
     End If
     
-    LogInfo "sharepoint_checkout_attempt", "Attempting to check out document"
+    LogInfo MODULE_NAME & "_checkout_attempt", "Attempting to check out document"
     
     ' Try to check out using SharePoint Type Library
     If Not mSharePointObject Is Nothing Then
@@ -497,12 +498,12 @@ Public Function CheckOutDocument() As Boolean
     mCurrentDocumentInfo.IsCheckedOut = True
     mCurrentDocumentInfo.CheckoutUser = GetUserIdentity()
     
-    LogInfo "sharepoint_checkout_success", "Document checked out successfully"
+    LogInfo MODULE_NAME & "_checkout_success", "Document checked out successfully"
     CheckOutDocument = True
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_checkout_error", Err.Number, Err.Description
+    LogError MODULE_NAME & "_checkout_error", Err.Number, Err.Description
     CheckOutDocument = False
 End Function
 
@@ -511,12 +512,12 @@ Public Function CheckInDocument(Optional comment As String = "") As Boolean
     On Error GoTo ErrorHandler
     
     If Not mSharePointAvailable Then
-        LogWarning "sharepoint_checkin_failed", "Document is not on SharePoint"
+        LogWarning MODULE_NAME & "_checkin_failed", "Document is not on SharePoint"
         CheckInDocument = False
         Exit Function
     End If
     
-    LogInfo "sharepoint_checkin_attempt", "Attempting to check in document"
+    LogInfo MODULE_NAME & "_checkin_attempt", "Attempting to check in document"
     
     ' Try to check in using SharePoint Type Library
     If Not mSharePointObject Is Nothing Then
@@ -533,12 +534,12 @@ Public Function CheckInDocument(Optional comment As String = "") As Boolean
     mCurrentDocumentInfo.IsCheckedOut = False
     mCurrentDocumentInfo.CheckoutUser = ""
     
-    LogInfo "sharepoint_checkin_success", "Document checked in successfully"
+    LogInfo MODULE_NAME & "_checkin_success", "Document checked in successfully"
     CheckInDocument = True
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_checkin_error", Err.Number, Err.Description
+    LogError MODULE_NAME & "_checkin_error", Err.Number, Err.Description
     CheckInDocument = False
 End Function
 
@@ -547,12 +548,12 @@ Public Function DiscardCheckOut() As Boolean
     On Error GoTo ErrorHandler
     
     If Not mSharePointAvailable Then
-        LogWarning "sharepoint_discard_failed", "Document is not on SharePoint"
+        LogWarning MODULE_NAME & "_discard_failed", "Document is not on SharePoint"
         DiscardCheckOut = False
         Exit Function
     End If
     
-    LogInfo "sharepoint_discard_attempt", "Attempting to discard check out"
+    LogInfo MODULE_NAME & "_discard_attempt", "Attempting to discard check out"
     
     ' Try to discard checkout using SharePoint Type Library
     If Not mSharePointObject Is Nothing Then
@@ -566,12 +567,12 @@ Public Function DiscardCheckOut() As Boolean
     mCurrentDocumentInfo.IsCheckedOut = False
     mCurrentDocumentInfo.CheckoutUser = ""
     
-    LogInfo "sharepoint_discard_success", "Check out discarded successfully"
+    LogInfo MODULE_NAME & "_discard_success", "Check out discarded successfully"
     DiscardCheckOut = True
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_discard_error", Err.Number, Err.Description
+    LogError MODULE_NAME & "_discard_error", Err.Number, Err.Description
     DiscardCheckOut = False
 End Function
 
@@ -652,7 +653,7 @@ Public Sub UpdateLoggerWithSharePointContext()
     ' This function would be called by the logger to enrich log entries
     ' with SharePoint metadata
     
-    LogDebug "sharepoint_context_update", "Updating logger with SharePoint context"
+    LogDebug MODULE_NAME & "_context_update", "Updating logger with SharePoint context"
     
     ' The logger module would call this function to get enriched context
     ' This creates a two-way integration between modules
@@ -694,19 +695,19 @@ Public Function TestSharePointConnectivity() As Boolean
         Exit Function
     End If
     
-    LogInfo "sharepoint_connectivity_test", "Testing SharePoint connectivity"
+    LogInfo MODULE_NAME & "_connectivity_test", "Testing SharePoint connectivity"
     
     ' Try to access document properties (this tests connectivity)
     Dim testProperty As String
     testProperty = ActiveWorkbook.BuiltinDocumentProperties("Title").Value
     
     ' If we get here without error, connectivity is OK
-    LogInfo "sharepoint_connectivity_success", "SharePoint connectivity test passed"
+    LogInfo MODULE_NAME & "_connectivity_success", "SharePoint connectivity test passed"
     TestSharePointConnectivity = True
     Exit Function
     
 ErrorHandler:
-    LogError "sharepoint_connectivity_failed", Err.Number, Err.Description
+    LogError MODULE_NAME & "_connectivity_failed", Err.Number, Err.Description
     TestSharePointConnectivity = False
 End Function
 
@@ -791,7 +792,7 @@ End Function
 Public Sub CleanupSharePointIntegration()
     ' Clean up SharePoint integration resources
     
-    LogInfo "sharepoint_cleanup", "Cleaning up SharePoint integration"
+    LogInfo MODULE_NAME & "_cleanup", "Cleaning up SharePoint integration"
     
     ' Clear cached data
     Set mCachedMetadata = Nothing

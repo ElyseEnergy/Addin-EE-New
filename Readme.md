@@ -242,8 +242,8 @@ Configuration des logs :
 
 ```vb
 ' Définir le niveau de log
-ElyseMain_Orchestrator.SetLogLevel DEBUG_LEVEL  ' Pour le développement
-ElyseMain_Orchestrator.SetLogLevel INFO_LEVEL   ' Pour la production
+SetLogLevel DEBUG_LEVEL  ' Pour le développement
+SetLogLevel INFO_LEVEL   ' Pour la production
 ```
 
 ### Gestion des Erreurs

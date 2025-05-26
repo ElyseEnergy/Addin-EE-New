@@ -1,4 +1,4 @@
-﻿Option Explicit
+Option Explicit
 Private Const MODULE_NAME As String = "LoadQueries"
 Private Const ERROR_HANDLER_LABEL As String = "ErrorHandler"
 
@@ -51,41 +51,8 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Exit Sub
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
-
-Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
-    Dim i As Long
-    Dim userChoice As String
-    Dim selectedIndexes As Variant
-    Dim selectedValues As New Collection
-    Dim listPrompt As String
-
-    listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
-    For i = 1 To displayList.Count
-        listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
-    Next i
-    
-    userChoice = InputBox(listPrompt, "Sélection", "1")
-    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
-        Exit Function
-    End If
-    If Trim(userChoice) = "*" Then
-        For i = 1 To idList.Count
-            selectedValues.Add idList(i)
-        Next i
-    Else
-        selectedIndexes = Split(userChoice, ",")
-        For i = LBound(selectedIndexes) To UBound(selectedIndexes)
-            Dim idx As Long
-            idx = Val(Trim(selectedIndexes(i)))
-            If idx >= 1 And idx <= idList.Count Then
-                selectedValues.Add idList(idx)
-            End If
-        Next i
-    End If
-    Set ChooseMultipleValuesFromListWithAll = selectedValues
-End Function
 
 Function ChooseMultipleValuesFromArrayWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
     Const PROC_NAME As String = "ChooseMultipleValuesFromArrayWithAll"
@@ -107,7 +74,7 @@ Function ChooseMultipleValuesFromArrayWithAll(idList As Collection, displayList 
     Next i
     
     Dim result As Long
-    result = ElyseMain_Orchestrator.SelectFromList( _
+    result = SelectFromList( _
         "Sélection des valeurs", _
         prompt, _
         modeItems)
@@ -125,7 +92,7 @@ Function ChooseMultipleValuesFromArrayWithAll(idList As Collection, displayList 
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     Set ChooseMultipleValuesFromArrayWithAll = New Collection ' Return empty collection on error
 End Function
 
@@ -133,7 +100,7 @@ Public Sub ExecuteQuery(ByVal queryName As String)
     Const PROC_NAME As String = "ExecuteQuery"
     On Error GoTo ErrorHandler
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Executing query: " & queryName, PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Start", "Executing query: " & queryName, PROC_NAME, MODULE_NAME
 
     ' Verify if query exists and refresh
     Dim queryFound As Boolean
@@ -145,37 +112,37 @@ Public Sub ExecuteQuery(ByVal queryName As String)
     On Error Resume Next ' Check for connection first
     Set conn = ThisWorkbook.Connections(queryName)
     If Not conn Is Nothing Then
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ConnectionFound", "Connection '" & queryName & "' found. Attempting refresh.", PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_ConnectionFound", "Connection '" & queryName & "' found. Attempting refresh.", PROC_NAME, MODULE_NAME
         conn.Refresh
         queryFound = True
-        ElyseMain_Orchestrator.LogInfo PROC_NAME & "_ConnectionRefresh", "Connection '" & queryName & "' refreshed.", PROC_NAME, MODULE_NAME
+        LogInfo PROC_NAME & "_ConnectionRefresh", "Connection '" & queryName & "' refreshed.", PROC_NAME, MODULE_NAME
     Else
         Set pqQuery = ThisWorkbook.Queries(queryName) ' Check for query if not a connection
         If Not pqQuery Is Nothing Then
-            ElyseMain_Orchestrator.LogDebug PROC_NAME & "_PQFound", "Power Query '" & queryName & "' found. Attempting refresh.", PROC_NAME, MODULE_NAME
+            LogDebug PROC_NAME & "_PQFound", "Power Query '" & queryName & "' found. Attempting refresh.", PROC_NAME, MODULE_NAME
             pqQuery.Refresh
             queryFound = True
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_PQRefresh", "Power Query '" & queryName & "' refreshed.", PROC_NAME, MODULE_NAME
+            LogInfo PROC_NAME & "_PQRefresh", "Power Query '" & queryName & "' refreshed.", PROC_NAME, MODULE_NAME
         End If
     End If
     On Error GoTo ErrorHandler ' Reinstate proper error handling
 
     If Not queryFound Then
-        ElyseMain_Orchestrator.LogWarning PROC_NAME & "_NotFound", "Query or Connection '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
+        LogWarning PROC_NAME & "_NotFound", "Query or Connection '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
         ElyseMessageBox_System.ShowWarningMessage "Query Error", "Query or Connection '" & queryName & "' could not be found."
     End If
     
     Exit Sub
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Function ListAllQueries() As Collection
     Const PROC_NAME As String = "ListAllQueries"
     On Error GoTo ErrorHandler
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Start", "Listing all Power Queries and Connections.", PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Start", "Listing all Power Queries and Connections.", PROC_NAME, MODULE_NAME
     
     Dim queriesList As Collection
     Set queriesList = New Collection
@@ -184,27 +151,27 @@ Public Function ListAllQueries() As Collection
     Dim pq As Object ' WorkbookQuery
     
     ' Debug.Print "Available Connections:"
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ListConnections", "Listing Workbook Connections...", PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_ListConnections", "Listing Workbook Connections...", PROC_NAME, MODULE_NAME
     For Each conn In ThisWorkbook.Connections
         ' Debug.Print " - " & conn.Name
         queriesList.Add conn.Name
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ConnItem", "Connection found: " & conn.Name, PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_ConnItem", "Connection found: " & conn.Name, PROC_NAME, MODULE_NAME
     Next conn
     
     ' Debug.Print "Available Power Queries:"
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_ListQueries", "Listing Workbook Queries...", PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_ListQueries", "Listing Workbook Queries...", PROC_NAME, MODULE_NAME
     For Each pq In ThisWorkbook.Queries
         ' Debug.Print " - " & pq.Name
         queriesList.Add pq.Name
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_PQItem", "Power Query found: " & pq.Name, PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_PQItem", "Power Query found: " & pq.Name, PROC_NAME, MODULE_NAME
     Next pq
     
     Set ListAllQueries = queriesList
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_End", "Found " & queriesList.Count & " queries/connections.", PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_End", "Found " & queriesList.Count & " queries/connections.", PROC_NAME, MODULE_NAME
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     Set ListAllQueries = New Collection ' Return empty collection on error
 End Function
 

@@ -5,6 +5,7 @@
 ' ============================================================================
 
 Option Explicit
+Private Const MODULE_NAME As String = "SYS_ErrorHandler"
 
 ' ============================================================================
 ' MODULE DEPENDENCIES
@@ -36,6 +37,7 @@ Public Type ErrorContext
     Severity As String
     ActionTaken As String
     AdditionalDetails As String
+    Context As Dictionary
 End Type
 
 Public Enum ErrorSeverity
@@ -126,100 +128,88 @@ End Sub
 ' MAIN ERROR HANDLING FUNCTIONS
 ' ============================================================================
 
-Public Function HandleError(ByVal moduleName As String, ByVal procedureName As String, Optional ByVal additionalInfo As String = "", Optional ByVal errorObject As ErrObject = Nothing) As ErrorContext
-    Dim ctx As ErrorContext
-    ctx.Timestamp = Now
-    ctx.ModuleName = moduleName
-    ctx.ProcedureName = procedureName
+Public Function HandleError(ByVal moduleName As String, ByVal procedureName As String, Optional ByVal additionalInfo As String = "")
+    Const PROC_NAME As String = "HandleError"
+    On Error GoTo ErrorHandler
     
-    If Not errorObject Is Nothing Then
-        ctx.ErrorNumber = errorObject.Number
-        ctx.ErrorDescription = errorObject.Description
-        ctx.ErrorSource = errorObject.Source
-        ctx.HelpFile = errorObject.HelpFile
-        ctx.HelpContext = errorObject.HelpContext
-        ctx.LineNumber = Erl ' Capture line number if available
+    ' Créer le contexte d'erreur
+    Dim errorCtx As ErrorContext
+    With errorCtx
+        .ModuleName = moduleName
+        .ProcedureName = procedureName
+        .ErrorNumber = Err.Number
+        .ErrorDescription = Err.Description
+        .AdditionalInfo = additionalInfo
+        .ErrorSource = Err.Source
+        .ErrorLine = Erl
+    End With
+    
+    ' Loguer l'erreur
+    LogError "HandleError:" & actionCode, errorCtx.ErrorNumber, combinedDetails, procedureName, moduleName, errorCtx
+    
+    ' Afficher le message approprié selon le type d'erreur
+    If IsCriticalError(errorCtx.ErrorNumber) Then
+        ShowCriticalMessage "Critical Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            "A critical error has occurred. The application may need to be restarted." & vbCrLf & _
+            "Error: " & ctx.ErrorDescription & vbCrLf & _
+            "Additional Info: " & ctx.AdditionalInfo
+    ElseIf IsWarningError(errorCtx.ErrorNumber) Then
+        ShowWarningMessage "Warning in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            "A warning has been generated." & vbCrLf & _
+            "Warning: " & ctx.ErrorDescription & vbCrLf & _
+            "Additional Info: " & ctx.AdditionalInfo
     Else
-        ' Fallback if no ErrObject passed (e.g. custom error)
-        ctx.ErrorNumber = -1 ' Custom error indicator
-        ctx.ErrorDescription = "Custom error or context not fully captured."
-        If additionalInfo <> "" Then ctx.ErrorDescription = additionalInfo
-    End If
-
-    ctx.UserAction = "An error occurred." ' Generic, can be customized
-    ctx.AdditionalDetails = additionalInfo
-    
-    ' Log the error using the Logger's LogToRagic via the orchestrator or directly if appropriate
-    ' The LogError in ElyseLogger_Module is now designed to take an ErrorContext object
-    ' We need to ensure ElyseMain_Orchestrator.LogError can pass this context.
-    ' For now, let's assume the orchestrator's LogError can handle it or we call a specific method.
-    
-    ' This call assumes ElyseMain_Orchestrator.LogError has been updated or a new method
-    ' like LogErrorWithContext(ctx As ErrorContext, actionCode As String, message As String) exists.
-    ' Let's refine the call to LogToRagic directly from here for clarity on context passing,
-    ' or ensure the orchestrator's LogError is adapted.
-    
-    ' Simplification: The logger's public LogError should be the primary way to log errors.
-    ' HandleError's job is to *prepare* the context and decide *what to do* (log, show message, etc.)
-    
-    ' Log the error with full context
-    ' The existing LogError in the logger takes individual params. We need to adapt.
-    ' Let's assume a new sub in the logger or modify existing one.
-    ' For now, we'll use the existing LogError and pass primary details.
-    ' The LogToRagic sub itself will unpack the ErrorContext object if passed.
-    
-    Dim logAction As String
-    logAction = "ErrorHandled:" & moduleName & "." & procedureName
-    
-    Dim logDetails As String
-    logDetails = "Err#" & ctx.ErrorNumber & ": " & ctx.ErrorDescription
-    If additionalInfo <> "" Then logDetails = logDetails & " | AddInfo: " & additionalInfo
-        
-    ' Call the logger's LogError, which in turn calls LogToRagic.
-    ' LogToRagic has been updated to accept and unpack an ErrorContext object.
-    ElyseLogger_Module.LogErrorWithContext logAction, logDetails, ctx ' Assumes LogErrorWithContext exists or LogError is adapted    ' Determine severity and action    ctx.Severity = DetermineErrorSeverityAsString(ctx.ErrorNumber, ctx.ErrorDescription)
-    ctx.ActionTaken = ExecuteErrorActionAndGetResult(ctx, additionalInfo)
-
-    Set HandleError = ctx
-    
-    ' Clear the error to prevent it from propagating unexpectedly if not re-raised
-    ' Only clear if Err object was the source and it's been fully handled.
-    If Not errorObject Is Nothing And errorObject.Number <> 0 Then
-        If ctx.ActionTaken <> "RETHROW" Then ' Example condition
-            'Debug.Print "Clearing Err object in HandleError: " & errorObject.Number
-            'Err.Clear ' Be cautious with clearing global Err object.
-                      ' It's often better to let the calling procedure decide or to use a local ErrObject.
-        End If
+        ShowErrorMessage "Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            "An error has occurred." & vbCrLf & _
+            "Error: " & ctx.ErrorDescription & vbCrLf & _
+            "Additional Info: " & ctx.AdditionalInfo
     End If
     
+    ' Afficher les informations de débogage si nécessaire
+    If IsDebugMode() Then
+        ShowInfoMessage "Information", ctx.ErrorDescription, Buttons:=vbOKOnly
+    End If
+    
+    Exit Sub
+
+ErrorHandler:
+    ' En cas d'erreur dans le gestionnaire d'erreurs, on affiche un message simple
+    MsgBox "Une erreur est survenue dans le gestionnaire d'erreurs. Détails: " & Err.Description, vbCritical, "Erreur Critique"
 End Function
 
-Public Sub LogErrorWithContext(actionCode As String, message As String, errorCtx As ErrorContext)
-    ' This is a new public sub in ElyseErrorHandler_Module, which then calls the logger.
-    ' Or, this logic could be directly in the logger's existing LogError if we modify its signature.
-    ' For now, let's assume this is a helper here that calls the logger.
+' =============================================
+' Fonction de logging d'erreur avec contexte
+' =============================================
+Public Function LogErrorWithContext(ByVal errorNumber As Long, _
+                                  ByVal errorDescription As String, _
+                                  ByVal errorSource As String, _
+                                  ByVal context As Dictionary) As Boolean
+    On Error GoTo ErrorHandler
     
-    ' The primary LogError in ElyseLogger_Module should be the one calling LogToRagic.
-    ' Let's adjust the call to LogToRagic in ElyseLogger_Module's LogError to accept the context.
+    ' Vérifier que le système est initialisé
+    If Not mIsInitialized Then
+        LogErrorWithContext = False
+        Exit Function
+    End If
     
-    ' Revised approach: The public LogError in ElyseLogger_Module should be enhanced.
-    ' This HandleError function will construct the ErrorContext and then call
-    ' ElyseLogger_Module.LogError, passing the context.
+    ' Créer un objet d'erreur
+    Dim errObj As New ErrorContext
+    With errObj
+        .ErrorNumber = errorNumber
+        .ErrorDescription = errorDescription
+        .ErrorSource = errorSource
+        .Context = context
+        .Timestamp = Now
+        .Severity = ErrorSeverity.Error
+    End With
     
-    ' So, the call from HandleError becomes:
-    ' ElyseLogger_Module.LogError "ErrorIn:" & moduleName & "." & procedureName, ctx.ErrorNumber, ctx.ErrorDescription, procedureName, moduleName, ctx
-    ' And ElyseLogger_Module.LogError needs to be updated to accept 'Optional errorCtx As ErrorContext'
-    ' And then pass it to LogToRagic. This is already done in the previous step for elyse_logger_module.bas.
+    ' Logger l'erreur
+    LogErrorWithContext = HandleError(errObj)
+    Exit Function
     
-    ' The call from HandleError to the logger:
-    Dim combinedDetails As String
-    combinedDetails = message
-    If errorCtx.AdditionalDetails <> "" Then combinedDetails = combinedDetails & " | AddInfo: " & errorCtx.AdditionalDetails
-
-    ' Call the logger's main LogError. It will internally call LogToRagic and pass the context.
-    ElyseMain_Orchestrator.LogError "HandleError:" & actionCode, errorCtx.ErrorNumber, combinedDetails, procedureName, moduleName, errorCtx
-End Sub
-
+ErrorHandler:
+    LogErrorWithContext = False
+End Function
 
 Private Function DetermineErrorSeverityAsString(errorNum As Long, errorDesc As String) As String
     ' TODO: Implement logic to determine severity based on error number or description
@@ -283,7 +273,7 @@ End Function
 ' ERROR ANALYSIS AND CLASSIFICATION
 ' ============================================================================
 
-Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeverity
+Private Function DetermineErrorSeverity(errorCtx as Object) As ErrorSeverity
     ' Determine error severity based on error context
     
     Select Case errorCtx.ErrorNumber
@@ -314,7 +304,7 @@ Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeveri
     End Select
 End Function
 
-Private Function DetermineErrorAction(errorCtx As ErrorContext, severity As ErrorSeverity) As ErrorAction
+Private Function DetermineErrorAction(errorCtx as Object, severity As ErrorSeverity) As ErrorAction
     ' Determine what action to take based on error context and severity
     
     ' Check if user messages are suppressed
@@ -347,7 +337,7 @@ Private Function DetermineErrorAction(errorCtx As ErrorContext, severity As Erro
     End If
 End Function
 
-Private Function CanAttemptAutoRecovery(errorCtx As ErrorContext) As Boolean
+Private Function CanAttemptAutoRecovery(errorCtx as Object) As Boolean
     ' Determine if auto-recovery can be attempted for this error
     
     Select Case errorCtx.ErrorNumber
@@ -369,7 +359,7 @@ End Function
 ' ERROR ACTION EXECUTION
 ' ============================================================================
 
-Private Sub ExecuteErrorAction(errorCtx As ErrorContext, severity As ErrorSeverity, action As ErrorAction, allowRecovery As Boolean)
+Private Sub ExecuteErrorAction(errorCtx as Object, severity As ErrorSeverity, action As ErrorAction, allowRecovery As Boolean)
     ' Execute the determined error action
     
     Select Case action
@@ -395,7 +385,7 @@ Private Sub ExecuteErrorAction(errorCtx As ErrorContext, severity As ErrorSeveri
     End Select
 End Sub
 
-Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity, allowTicketCreation As Boolean)
+Private Sub ShowErrorMessage(errorCtx as Object, severity As ErrorSeverity, allowTicketCreation As Boolean)
     ' Show error message to user with appropriate options
     
     Dim title As String
@@ -415,7 +405,7 @@ Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity
     End If
 End Sub
 
-Private Sub AttemptAutoRecovery(errorCtx As ErrorContext)
+Private Sub AttemptAutoRecovery(errorCtx as Object)
     ' Attempt automatic recovery for supported error types
     
     LogInfo "error_auto_recovery", "Attempting auto-recovery for error " & errorCtx.ErrorNumber
@@ -452,7 +442,7 @@ End Sub
 ' AUTO-RECOVERY IMPLEMENTATIONS
 ' ============================================================================
 
-Private Function RecoverRangeNotFound(errorCtx As ErrorContext) As Boolean
+Private Function RecoverRangeNotFound(errorCtx as Object) As Boolean
     ' Attempt to recover from range not found errors
     On Error Resume Next
     
@@ -466,7 +456,7 @@ Private Function RecoverRangeNotFound(errorCtx As ErrorContext) As Boolean
     On Error GoTo 0
 End Function
 
-Private Function RecoverObjectNotSet(errorCtx As ErrorContext) As Boolean
+Private Function RecoverObjectNotSet(errorCtx as Object) As Boolean
     ' Attempt to recover from object not set errors
     On Error Resume Next
     
@@ -484,7 +474,7 @@ End Function
 ' ERROR MESSAGE FORMATTING
 ' ============================================================================
 
-Private Function BuildErrorTitle(errorCtx As ErrorContext, severity As ErrorSeverity) As String
+Private Function BuildErrorTitle(errorCtx as Object, severity As ErrorSeverity) As String
     ' Build user-friendly error title
     
     Dim title As String
@@ -507,7 +497,7 @@ Private Function BuildErrorTitle(errorCtx As ErrorContext, severity As ErrorSeve
     BuildErrorTitle = title
 End Function
 
-Private Function BuildUserFriendlyErrorMessage(errorCtx As ErrorContext) As String
+Private Function BuildUserFriendlyErrorMessage(errorCtx as Object) As String
     ' Build user-friendly error message
     
     Dim message As String
@@ -567,7 +557,7 @@ Private Function GetUserFriendlyErrorExplanation(errorNumber As Long) As String
     End Select
 End Function
 
-Private Function BuildErrorLogMessage(errorCtx As ErrorContext) As String
+Private Function BuildErrorLogMessage(errorCtx as Object) As String
     ' Build detailed error message for logging
     
     Dim logMessage As String
@@ -593,7 +583,7 @@ End Function
 ' TICKET CREATION INTEGRATION
 ' ============================================================================
 
-Private Sub CreateErrorTicket(errorCtx As ErrorContext)
+Private Sub CreateErrorTicket(errorCtx as Object)
     ' Create support ticket for error
     
     LogInfo "error_ticket_creation", "Creating support ticket for error " & errorCtx.ErrorNumber
@@ -613,7 +603,7 @@ End Sub
 ' ERROR HISTORY AND STATISTICS
 ' ============================================================================
 
-Private Sub AddToErrorHistory(errorCtx As ErrorContext)
+Private Sub AddToErrorHistory(errorCtx as Object)
     ' Add error to history with size limit
     
     mErrorHistory.Add errorCtx
@@ -624,7 +614,7 @@ Private Sub AddToErrorHistory(errorCtx As ErrorContext)
     Loop
 End Sub
 
-Private Sub UpdateErrorStatistics(errorCtx As ErrorContext)
+Private Sub UpdateErrorStatistics(errorCtx as Object)
     ' Update error statistics
     
     mTotalErrors = mTotalErrors + 1
@@ -775,19 +765,18 @@ Public Function GetErrorHandlerStatus() As Object
 End Function
 
 Public Function GetRecentErrors(Optional count As Integer = 10) As Collection
-    ' Get recent errors from history
-    
     Dim recentErrors As New Collection
-    Dim startIndex As Integer
+    Dim i As Long
     
-    If mErrorHistory.Count <= count Then
-        startIndex = 1
-    Else
-        startIndex = mErrorHistory.Count - count + 1
+    ' Return empty collection if no errors
+    If mErrorHistory.Count = 0 Then
+        Set GetRecentErrors = recentErrors
+        Exit Function
     End If
     
-    Dim i As Integer
-    For i = startIndex To mErrorHistory.Count
+    ' Get the most recent errors
+    For i = mErrorHistory.Count To 1 Step -1
+        If recentErrors.Count >= count Then Exit For
         recentErrors.Add mErrorHistory(i)
     Next i
     

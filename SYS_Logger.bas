@@ -29,7 +29,7 @@ Private mLoggerInitialized As Boolean
 Private mCurrentLogLevel As LogLevel
 Private mLoggerActive As Boolean
 Private mLogToFile As Boolean
-Private Const LOG_FILE_PATH As String = "elyse_log.txt"
+Private Const LOG_FILE_PATH As String = "c:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\log\elyse_log.txt"
 
 ' ============================================================================
 ' LOGGER INITIALIZATION
@@ -240,46 +240,56 @@ Public Sub LogCritical(actionCode As String, errorCode As Long, message As Strin
     Call LogToRagic("CRITICAL", actionCode, message, errorCode, procedureName, moduleName)
 End Sub
 
-Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
-    Dim logMessage As String
-    logMessage = "CALL  ["
-    If moduleName <> "" Then logMessage = logMessage & moduleName & "."
-    logMessage = logMessage & procedureName & "] Called"
-    If params <> "" Then logMessage = logMessage & " with params: " & params
+' =============================================
+' Fonction de logging des appels de fonction
+' =============================================
+Public Function LogFunctionCall(ByVal procedureName As String, _
+                              ByVal moduleName As String, _
+                              Optional ByVal params As String = "") As Boolean
+    On Error GoTo ErrorHandler
     
-    If mLoggerActive Then
-        If mCurrentLogLevel <= DEBUG_LEVEL Then
-            PrintToImmediate logMessage
-            If mLogToFile Then WriteToLogFile "CALL", logMessage
-        End If
+    ' Vérifier que le système est initialisé
+    If Not mLoggerInitialized Then
+        LogFunctionCall = False
+        Exit Function
     End If
     
-    Dim action As String
-    action = "FunctionCall"
-    If moduleName <> "" Then action = action & ":" & moduleName
-    action = action & ":" & procedureName
+    ' Vérifier que le logger est actif
+    If Not mLoggerActive Then
+        LogFunctionCall = False
+        Exit Function
+    End If
     
-    Call LogToRagic("DEBUG", action, "Params: " & params, , procedureName, moduleName)
-End Sub
+    ' Construire le message
+    Dim message As String
+    message = "FUNCTION CALL: " & procedureName & " in " & moduleName
+    If params <> "" Then
+        message = message & " with params: " & params
+    End If
+    
+    ' Logger l'appel
+    LogFunctionCall = LogMessage(message, LogLevel.Debug)
+    Exit Function
+    
+ErrorHandler:
+    LogFunctionCall = False
+End Function
 
-Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
-    Dim logMessage As String
-    logMessage = "USER  [" & actionCode & "] " & description
-    If controlName <> "" Then logMessage = logMessage & " (Control: " & controlName & ")"
+' ============================================================================
+' IMMEDIATE WINDOW LOGGING
+' ============================================================================
+
+Private Sub PrintToImmediate(message As String)
+    ' Print log message to VBA Immediate Window with timestamp
+    On Error GoTo ErrorHandler
     
-    If mLoggerActive Then
-        PrintToImmediate logMessage 
-        If mLogToFile Then WriteToLogFile "USER", logMessage
-    End If
+    ' Format: [HH:MM:SS] Message
+    Debug.Print "[" & Format(Now, "hh:nn:ss") & "] " & message
+    Exit Sub
     
-    Dim action As String
-    action = "UserAction:" & actionCode
-    
-    Dim details As String
-    details = description
-    If controlName <> "" Then details = details & " (Control: " & controlName & ")"
-    
-    Call LogToRagic("INFO", action, details, , procedureName, moduleName)
+ErrorHandler:
+    ' Silent fail - don't let Debug.Print issues disrupt main flow
+    Resume Next
 End Sub
 
 ' ============================================================================
@@ -568,24 +578,13 @@ Private Sub LogToRagic(logLevel As String, action As String, details As String, 
             fieldData(RAGIC_FIELD_SELECTED_RANGE) = Selection.Address
         End If
     End If
-    On Error GoTo RagicLogErrorHandler
-
-    ' If error context is provided, add rich error details
+    On Error GoTo RagicLogErrorHandler    ' If error context is provided, add it to the details
     If errorCode <> 0 Then
-        ' Add basic error info
-        If RAGIC_FIELD_ERROR_NUMBER <> "" Then fieldData(RAGIC_FIELD_ERROR_NUMBER) = errorCode
-        If RAGIC_FIELD_ERROR_SOURCE <> "" Then fieldData(RAGIC_FIELD_ERROR_SOURCE) = Left(Err.Source, 255)
-        If RAGIC_FIELD_ERROR_DESCRIPTION <> "" Then fieldData(RAGIC_FIELD_ERROR_DESCRIPTION) = Left(Err.Description, 1000)
-        
-        ' Add location info
-        If RAGIC_FIELD_MODULE_NAME <> "" Then fieldData(RAGIC_FIELD_MODULE_NAME) = Left(moduleName, 255)
-        If RAGIC_FIELD_PROCEDURE_NAME <> "" Then fieldData(RAGIC_FIELD_PROCEDURE_NAME) = Left(procedureName, 255)
-        If RAGIC_FIELD_LINE_NUMBER <> "" And Err.Erl > 0 Then fieldData(RAGIC_FIELD_LINE_NUMBER) = Err.Erl
-
-        ' Add severity and recovery info if available
-        If RAGIC_FIELD_ERROR_SEVERITY <> "" Then fieldData(RAGIC_FIELD_ERROR_SEVERITY) = "CRITICAL"
-        If RAGIC_FIELD_RECOVERY_ATTEMPTED <> "" Then fieldData(RAGIC_FIELD_RECOVERY_ATTEMPTED) = "Yes"
-        If RAGIC_FIELD_TICKET_CREATED <> "" Then fieldData(RAGIC_FIELD_TICKET_CREATED) = "No"
+        details = details & " [Error #" & errorCode & "]"
+        If Err.Source <> "" Then details = details & " Source: " & Err.Source
+        If procedureName <> "" Then details = details & " in " & procedureName
+        If moduleName <> "" Then details = details & " (" & moduleName & ")"
+        fieldData(RAGIC_FIELD_DETAILS) = details
     End If
 
     ' Build payload string
@@ -650,4 +649,31 @@ Private Function EncodeURL(str As String) As String
     EncodeURL = ScriptControl.CodeObject.encodeURIComponent(str)
     Set ScriptControl = Nothing
 End Function
+
+' ============================================================================
+' FILE LOGGING IMPLEMENTATION
+' ============================================================================
+
+Private Sub WriteToLogFile(logType As String, message As String)
+    On Error GoTo ErrorHandler
+    
+    ' Create the log entry with timestamp
+    Dim logEntry As String
+    logEntry = Format(Now, "yyyy-mm-dd hh:nn:ss") & " | " & logType & " | " & message & vbCrLf
+    
+    ' Open file in append mode (creates if doesn't exist)
+    Dim fileNum As Integer
+    fileNum = FreeFile
+    
+    Open LOG_FILE_PATH For Append As #fileNum
+    Print #fileNum, logEntry
+    Close #fileNum
+    
+    Exit Sub
+    
+ErrorHandler:
+    Debug.Print "Error in WriteToLogFile: " & Err.Number & " - " & Err.Description
+    ' Don't re-throw - logging errors should not disrupt main flow
+    Resume Next
+End Sub
 

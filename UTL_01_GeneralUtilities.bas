@@ -1,4 +1,4 @@
-﻿Option Explicit
+Option Explicit
 Private Const MODULE_NAME As String = "Utilities"
 
 ' Variables globales
@@ -90,18 +90,18 @@ Public Function GetCurrentFormattedTimestamp() As String
     ' However, for consistency with the new error handling pattern, it can be added.
     On Error GoTo ErrorHandler
     
-    ' ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Called", "Generating formatted timestamp.", PROC_NAME, MODULE_NAME
+    ' LogDebug PROC_NAME & "_Called", "Generating formatted timestamp.", PROC_NAME, MODULE_NAME
     ' This function might be called very frequently; logging every call could be noisy.
     ' Consider logging only if in debug mode or if it's a critical utility.
     If ElyseCore_System.IsDebugMode() Then
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_DebugCall", "GetCurrentFormattedTimestamp called.", PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_DebugCall", "GetCurrentFormattedTimestamp called.", PROC_NAME, MODULE_NAME
     End If
 
     GetCurrentFormattedTimestamp = Format(Now, "yyyy-mm-dd hh:nn:ss")
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     GetCurrentFormattedTimestamp = "ErrorInTimestamp" ' Default error return
 End Function
 
@@ -109,24 +109,24 @@ Public Function FileExists(ByVal filePath As String) As Boolean
     Const PROC_NAME As String = "FileExists"
     On Error GoTo ErrorHandler
 
-    ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Checking if file exists: " & filePath, PROC_NAME, MODULE_NAME
+    LogDebug PROC_NAME & "_Start", "Checking if file exists: " & filePath, PROC_NAME, MODULE_NAME
     
     Dim fso As Object ' FileSystemObject
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     If fso.FileExists(filePath) Then
         FileExists = True
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Found", "File found: " & filePath, PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_Found", "File found: " & filePath, PROC_NAME, MODULE_NAME
     Else
         FileExists = False
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_NotFound", "File not found: " & filePath, PROC_NAME, MODULE_NAME
+        LogDebug PROC_NAME & "_NotFound", "File not found: " & filePath, PROC_NAME, MODULE_NAME
     End If
     
     Set fso = Nothing
     Exit Function
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     FileExists = False ' Default to false on error (e.g., invalid path characters)
 End Function
 
@@ -134,13 +134,13 @@ Public Sub ShowUtilityMessage(ByVal message As String, Optional ByVal title As S
     Const PROC_NAME As String = "ShowUtilityMessage"
     On Error GoTo ErrorHandler
     
-    ElyseMain_Orchestrator.LogInfo PROC_NAME & "_Display", "Displaying utility message. Title: " & title & ", Message: " & Left(message, 100) & "...", PROC_NAME, MODULE_NAME
+    LogInfo PROC_NAME & "_Display", "Displaying utility message. Title: " & title & ", Message: " & Left(message, 100) & "...", PROC_NAME, MODULE_NAME
     
     ' Original: MsgBox message, vbInformation, title
     ElyseMessageBox_System.ShowInfoMessage title, message
     Exit Sub
 
 ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME
+    HandleError MODULE_NAME, PROC_NAME
     ' Fallback or log that message box couldn't be shown, though ElyseMessageBox_System should handle its own errors.
 End Sub

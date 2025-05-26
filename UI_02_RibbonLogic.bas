@@ -130,87 +130,84 @@ Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Varian
 End Sub
 
 ' Example of a getVisible callback for a ribbon control
-Public Sub GetControlVisible(control As IRibbonControl, ByRef returnedVal As Variant)
+Public Function GetControlVisible(ByVal control As IRibbonControl) As Boolean
     Const PROC_NAME As String = "GetControlVisible"
-    On Error GoTo ErrorHandler ' Keep error handling light in UI callbacks
-
-    ' ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Start", "Checking visibility for control: " & control.id, PROC_NAME, MODULE_NAME
-    ' Using a lighter log for UI callbacks to avoid flooding, or make it conditional
-    If ElyseCore_System.IsDebugMode() Then
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Callback", "GetControlVisible called for: " & control.id, PROC_NAME, MODULE_NAME
-    End If
-
+    On Error GoTo ErrorHandler
+    
+    LogDebug PROC_NAME & "_Callback", "GetControlVisible called for: " & control.id, PROC_NAME, MODULE_NAME
+    
+    ' Logique de visibilité selon l'ID du contrôle
     Select Case control.id
         Case "customButton1"
-            ' returnedVal = CheckUserAccess("someUser") ' Example: original logic
-            returnedVal = True ' Placeholder, replace with actual logic
-            ' ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Button1Visible", "Visibility for customButton1 set to " & returnedVal, PROC_NAME, MODULE_NAME
+            GetControlVisible = True ' Exemple simple
+            LogDebug PROC_NAME & "_Button1Visible", "Visibility for customButton1 set to " & GetControlVisible, PROC_NAME, MODULE_NAME
+            
         Case "adminToolsGroup"
-            ' returnedVal = IsCurrentUserAdmin() ' Example: original logic
-            returnedVal = False ' Placeholder
-            ' ElyseMain_Orchestrator.LogDebug PROC_NAME & "_AdminGroupVisible", "Visibility for adminToolsGroup set to " & returnedVal, PROC_NAME, MODULE_NAME
+            GetControlVisible = IsUserAdmin() ' Vérifier les droits admin
+            LogDebug PROC_NAME & "_AdminGroupVisible", "Visibility for adminToolsGroup set to " & GetControlVisible, PROC_NAME, MODULE_NAME
+            
         Case Else
-            returnedVal = True ' Default to visible
+            GetControlVisible = True ' Par défaut visible
+    End Select
+    
+    Exit Function
+
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Error in GetControlVisible for " & control.id & ": " & Err.Description, PROC_NAME, MODULE_NAME
+    GetControlVisible = False ' En cas d'erreur, on cache le contrôle
+End Function
+
+' Example of a getEnabled callback
+Public Function GetControlEnabled(ByVal control As IRibbonControl) As Boolean
+    Const PROC_NAME As String = "GetControlEnabled"
+    On Error GoTo ErrorHandler
+    
+    LogDebug PROC_NAME & "_Callback", "GetControlEnabled called for: " & control.id, PROC_NAME, MODULE_NAME
+    
+    ' Logique d'activation selon l'ID du contrôle
+    Select Case control.id
+        Case "customButton1"
+            GetControlEnabled = True ' Exemple simple
+            
+        Case "adminToolsGroup"
+            GetControlEnabled = IsUserAdmin() ' Vérifier les droits admin
+            
+        Case Else
+            GetControlEnabled = True ' Par défaut activé
+    End Select
+    
+    Exit Function
+
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Error in GetControlEnabled for " & control.id & ": " & Err.Description, PROC_NAME, MODULE_NAME
+    GetControlEnabled = False ' En cas d'erreur, on désactive le contrôle
+End Function
+
+' Example of an onAction callback
+Public Sub OnRibbonAction(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "OnRibbonAction"
+    On Error GoTo ErrorHandler
+    
+    LogRibbonAction control.id, "User clicked ribbon button."
+    
+    ' Gérer les actions selon l'ID du contrôle
+    Select Case control.id
+        Case "runReportButton"
+            LogInfo PROC_NAME & "_RunReport", "User initiated RunReport.", PROC_NAME, MODULE_NAME
+            ' Appeler la fonction de génération de rapport
+            
+        Case "settingsButton"
+            LogInfo PROC_NAME & "_OpenSettings", "User initiated OpenSettings.", PROC_NAME, MODULE_NAME
+            ' Ouvrir les paramètres
+            
+        Case Else
+            LogWarning PROC_NAME & "_UnknownAction", "Unknown ribbon action for control ID: " & control.id, PROC_NAME, MODULE_NAME
     End Select
     
     Exit Sub
 
 ErrorHandler:
-    ' In Ribbon callbacks, avoid complex error handling that might show UI (MsgBox)
-    ' Log the error and ensure a default value is returned.
-    ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", Err.Number, "Error in GetControlVisible for " & control.id & ": " & Err.Description, PROC_NAME, MODULE_NAME
-    returnedVal = False ' Default to not visible/disabled on error to be safe
-End Sub
-
-' Example of a getEnabled callback
-Public Sub GetControlEnabled(control As IRibbonControl, ByRef returnedVal As Variant)
-    Const PROC_NAME As String = "GetControlEnabled"
-    On Error GoTo ErrorHandler
-
-    If ElyseCore_System.IsDebugMode() Then
-        ElyseMain_Orchestrator.LogDebug PROC_NAME & "_Callback", "GetControlEnabled called for: " & control.id, PROC_NAME, MODULE_NAME
-    End If
-
-    Select Case control.id
-        Case "customButtonSave"
-            ' returnedVal = ActiveWorkbook.Saved ' Example: original logic
-            returnedVal = Not ActiveWorkbook.Saved ' Enable if not saved
-        Case Else
-            returnedVal = True ' Default to enabled
-    End Select
-    Exit Sub
-
-ErrorHandler:
-    ElyseMain_Orchestrator.LogError PROC_NAME & "_Error", Err.Number, "Error in GetControlEnabled for " & control.id & ": " & Err.Description, PROC_NAME, MODULE_NAME
-    returnedVal = False ' Default to disabled on error
-End Sub
-
-' Example of an onAction callback
-Public Sub RibbonButton_OnAction(control As IRibbonControl)
-    Const PROC_NAME As String = "RibbonButton_OnAction"
-    On Error GoTo ErrorHandler
-
-    ElyseMain_Orchestrator.LogRibbonAction control.id, "User clicked ribbon button."
-
-    Select Case control.id
-        Case "btnRunReport"
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_RunReport", "User initiated RunReport.", PROC_NAME, MODULE_NAME
-            ' Call RunReport_Sub ' Example call
-            SYS_MessageBox.ShowInfoMessage "Action", "Running Report... (placeholder)"
-        Case "btnOpenSettings"
-            ElyseMain_Orchestrator.LogInfo PROC_NAME & "_OpenSettings", "User initiated OpenSettings.", PROC_NAME, MODULE_NAME
-            ' Call OpenSettings_Form.Show ' Example call
-            SYS_MessageBox.ShowInfoMessage "Action", "Opening Settings... (placeholder)"
-        Case Else
-            ElyseMain_Orchestrator.LogWarning PROC_NAME & "_UnknownAction", "Unknown ribbon action for control ID: " & control.id, PROC_NAME, MODULE_NAME
-            SYS_MessageBox.ShowWarningMessage "Unknown Action", "The action for '" & control.id & "' is not defined."
-    End Select
-    Exit Sub
-
-ErrorHandler:
-    ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME, "Error in Ribbon Action: " & control.id
-    ' Optionally, show a generic error message to the user via the new system
-    SYS_MessageBox.ShowErrorMessage "Ribbon Error", "An unexpected error occurred while processing the action for '" & control.id & "'. The error has been logged."
+    HandleError MODULE_NAME, PROC_NAME, "Error in Ribbon Action: " & control.id
 End Sub
 
 

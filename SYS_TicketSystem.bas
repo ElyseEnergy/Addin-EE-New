@@ -5,6 +5,7 @@
 ' ============================================================================
 
 Option Explicit
+Private Const MODULE_NAME As String = "SYS_TicketSystem"
 
 ' ============================================================================
 ' MODULE DEPENDENCIES
@@ -170,57 +171,6 @@ Private Function ShowTicketCreationForm(ticketData As TicketData) As String
     Set frm = Nothing
     mTicketFormOpen = False
 End Function
-
-' Remove or comment out ShowTicketFormPlaceholder as it's replaced by frmTicketInput
-' Private Function ShowTicketFormPlaceholder(ticketData As TicketData) As String
-'     ' Placeholder implementation for ticket form
-'     ' In actual implementation, this would be a rich HTML editor form or a UserForm
-
-'     Dim formHtml As String
-'     formHtml = BuildTicketFormHTML(ticketData)
-
-'     ' For now, show simplified input
-'     Dim userSubject As String
-'     Dim userDescription As String
-
-'     ' --- OLD InputBox calls ---
-'     ' userSubject = InputBox("Ticket Subject:", "Create Support Ticket", ticketData.Subject)
-'     ' If userSubject = "" Then
-'     '     ShowTicketFormPlaceholder = "CANCELLED"
-'     '     Exit Function
-'     ' End If
-'     '
-'     ' userDescription = InputBox("Ticket Description:" & vbCrLf & vbCrLf & "Current description:" & vbCrLf & ticketData.Description, "Create Support Ticket", "Please describe your issue in detail...")
-'     ' If userDescription = "" Or userDescription = "Please describe your issue in detail..." Then
-'     '     ShowTicketFormPlaceholder = "CANCELLED"
-'     '     Exit Function
-'     ' End If
-'     ' --- END OLD InputBox calls ---
-
-'     ' --- REPLACEMENT with SYS_MessageBox (Placeholder - UserForm needed for text input) ---
-'     ' TODO: Implement a UserForm (e.g., TicketCreationForm) for proper subject and description input.
-'     ' The following is a temporary placeholder.
-'     SYS_MessageBox.ShowInfoMessage "Ticket Subject Input (Placeholder)", "Please enter the ticket subject in the actual UserForm. For now, using: " & ticketData.Subject
-'     userSubject = ticketData.Subject ' Using pre-filled subject as placeholder cannot get input.
-'     If userSubject = "" Then userSubject = "[Subject Placeholder - UserForm Needed]
-
-
-'     SYS_MessageBox.ShowInfoMessage "Ticket Description Input (Placeholder)", "Please enter the ticket description in the actual UserForm. For now, using a generic description."
-'     userDescription = ticketData.Description ' Using pre-filled description as placeholder.
-'     If userDescription = "" Then userDescription = "[Description Placeholder - UserForm Needed]"
-'     ' --- END REPLACEMENT ---
-    
-'     ' Update ticket data
-'     mCurrentTicketData.Subject = userSubject ' Ensure mCurrentTicketData is updated
-'     mCurrentTicketData.Description = userDescription
-
-'     ' Send the ticket
-'     If SendTicketViaOutlook(mCurrentTicketData) Then ' Use mCurrentTicketData
-'         ShowTicketFormPlaceholder = mLastTicketID
-'     Else
-'         ShowTicketFormPlaceholder = "SEND_FAILED"
-'     End If
-' End Function
 
 ' Helper function to manage ticket counter (example, could be stored in a hidden sheet or setting)
 Private Function GetNextTicketCounter() As Long
@@ -507,19 +457,6 @@ Public Function CreateQuickErrorTicket(errorMsg As String, Optional errorCode As
     CreateQuickErrorTicket = CreateTicketFromError("Quick Error", errorCode, errorMsg, True)
 End Function
 
-Public Function CreateQuickFeedbackTicket(subject As String, feedback As String) As String
-    ' Quick function to create feedback ticket
-    
-    Dim ticketData As TicketData
-    ticketData.Subject = "[FEEDBACK] " & subject
-    ticketData.Description = feedback
-    ticketData.Priority = GetPriorityString(LOW_PRIORITY)
-    ticketData.Category = GetCategoryString(FEATURE_REQUEST)
-    ticketData.Source = "feedback"
-    
-    CreateQuickFeedbackTicket = ShowTicketCreationForm(ticketData)
-End Function
-
 ' ============================================================================
 ' RIBBON INTEGRATION
 ' ============================================================================
@@ -534,21 +471,6 @@ End Sub
 ' ============================================================================
 ' MODULE STATUS AND DIAGNOSTICS
 ' ============================================================================
-
-Public Function GetTicketSystemStatus() As Object
-    ' Get status of ticket system
-    
-    Dim status As Object
-    Set status = CreateObject("Scripting.Dictionary")
-    
-    status("module_loaded") = True
-    status("ticket_form_open") = mTicketFormOpen
-    status("tickets_created_this_session") = mTicketCounter
-    status("last_ticket_id") = mLastTicketID
-    status("support_email") = SUPPORT_EMAIL
-    
-    Set GetTicketSystemStatus = status
-End Function
 
 Public Function GetPriorityString(priorityValue As Variant) As String
     If IsNumeric(priorityValue) Then
