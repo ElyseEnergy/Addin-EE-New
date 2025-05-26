@@ -22,3 +22,9 @@
 
 2025-05-26 22:01:40 | INFO | INFO  [modules_init_start] : Initializing all system modules
 
+2025-05-26 22:10:07 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:10:07 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:10:07 | INFO | INFO  [modules_init_start] : Initializing all system modules
+

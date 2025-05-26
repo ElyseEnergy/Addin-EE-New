@@ -13,9 +13,7 @@ Option Explicit
 ' - SYS_CoreSystem (enums, constants, utilities)
 ' - SYS_Logger (logging functions)
 ' - SYS_ErrorHandler (error handling functions)
-' - SYS_RibbonCallbacks (Ribbon UI event handlers)
-' - SYS_WorkbookEvents (Workbook-level event handlers)
-' - SYS_SystemEvents (Application-level event handlers)
+
 
 ' ============================================================================
 ' ORCHESTRATOR STATE AND CONFIGURATION
@@ -331,41 +329,13 @@ End Sub
 ' ============================================================================
 
 ' Logging API - Delegated to SYS_Logger
-Public Sub LogInfo(action As String, details As String)
-    If mLoggerStatus Then
-        SYS_Logger.LogInfo action, details
-    End If
-End Sub
 
-Public Sub LogDebug(action As String, details As String)
-    If mLoggerStatus Then
-        SYS_Logger.LogDebug action, details
-    End If
-End Sub
 
-Public Sub LogWarning(action As String, details As String)
-    If mLoggerStatus Then
-        SYS_Logger.LogWarning action, details
-    End If
-End Sub
 
-Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
-                   Optional ByVal procedureName As String = "", _
-                   Optional ByVal moduleName As String = "", _
-                   Optional ByRef errorCtx As Object = Nothing)
-    If mLoggerStatus Then
-        SYS_Logger.LogError actionCode, errorCode, message, procedureName, moduleName, errorCtx
-    End If
-End Sub
 
-Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, _
-                      Optional ByVal procedureName As String = "", _
-                      Optional ByVal moduleName As String = "", _
-                      Optional ByRef errorCtx As Object = Nothing)
-    If mLoggerStatus Then
-        SYS_Logger.LogCritical actionCode, errorCode, message, procedureName, moduleName
-    End If
-End Sub
+
+
+
 
 Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
@@ -380,15 +350,7 @@ Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String
 End Sub
 
 ' Enhanced MessageBox API
-Public Function ShowErrorMessage(title As String, message As String, Optional allowTicket As Boolean = True) As String
-    If mMessageBoxStatus And mTicketSystemStatus And allowTicket Then
-        ShowErrorMessage = ShowEnhancedMessageBox(title, message, ERROR_MESSAGE, "OK", True)
-    ElseIf mMessageBoxStatus Then
-        ShowErrorMessage = ShowEnhancedMessageBox(title, message, ERROR_MESSAGE)
-    Else
-        ShowErrorMessage = CStr(MsgBox(message, vbCritical, title))
-    End If
-End Function
+
 
 Public Function ShowConfirmation(title As String, message As String) As Boolean
     If mMessageBoxStatus Then

@@ -601,8 +601,13 @@ Public Function ShowWarningMessage(title As String, message As String) As String
 End Function
 
 Public Function ShowErrorMessage(title As String, message As String, Optional allowTicket As Boolean = True) As String
-    ' Convenience function for error messages with ticket option
-    ShowErrorMessage = ShowEnhancedMessageBox(title, message, ERROR_MESSAGE, "OK", allowTicket)
+    If mMessageBoxStatus And mTicketSystemStatus And allowTicket Then
+        ShowErrorMessage = ShowEnhancedMessageBox(title, message, ERROR_MESSAGE, "OK", True)
+    ElseIf mMessageBoxStatus Then
+        ShowErrorMessage = ShowEnhancedMessageBox(title, message, ERROR_MESSAGE)
+    Else
+        ShowErrorMessage = CStr(MsgBox(message, vbCritical, title))
+    End If
 End Function
 
 Public Function ShowConfirmationMessage(title As String, message As String) As Boolean

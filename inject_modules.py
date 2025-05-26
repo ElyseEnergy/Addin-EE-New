@@ -92,36 +92,20 @@ def check_vba_access():
         return False
 
 def inject_modules():
-    if not check_vba_access():
-        return
-
     excel = None
     workbook = None
     try:
         excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
-        if not os.path.exists(excel_file):
-            print(f"ERREUR: Le fichier '{excel_file}' n'existe pas.")
-            return
-
         kill_excel()
         
-        try:
-            excel = win32com.client.Dispatch("Excel.Application")
-        except Exception as e:
-            print(f"ERREUR: Impossible de démarrer Excel: {str(e)}")
-            return
-
+        excel = win32com.client.Dispatch("Excel.Application")
         excel.Visible = False
         excel.DisplayAlerts = False
         
-        try:
-            workbook = excel.Workbooks.Open(excel_file)
-        except Exception as e:
-            print(f"ERREUR: Impossible d'ouvrir le fichier '{excel_file}': {str(e)}")
-            return
-
+        print(f"Ouverture du fichier {excel_file}...")
+        workbook = excel.Workbooks.Open(excel_file)
         vba_project = workbook.VBProject
-
+        
         # D'abord, traiter les UserForms (fichiers .frm)
         for file in os.listdir('.'):
             if file.endswith('.frm'):
@@ -176,24 +160,38 @@ def inject_modules():
                 print(f"Module {module_name} injecté avec succès")
         
         # Sauvegarder et fermer
+        print("\nSauvegarde des modifications...")
         workbook.Save()
-        workbook.Close()
+        time.sleep(1)  # Attendre que la sauvegarde soit terminée
+        
+        print("Fermeture du classeur...")
+        workbook.Close(SaveChanges=True)  # Forcer la sauvegarde à la fermeture
+        time.sleep(1)  # Attendre la fermeture
+        
+        print("Fermeture d'Excel...")
         excel.Quit()
+        time.sleep(1)  # Attendre la fermeture d'Excel
+        
         print("\nInjection terminée avec succès!")
         
     except Exception as e:
         print(f"Erreur générale: {str(e)}")
     finally:
-        if workbook:
-            try:
-                workbook.Close(False)
-            except:
-                pass
-        if excel:
-            try:
+        # S'assurer que tout est bien fermé
+        try:
+            if workbook is not None:
+                workbook.Close(SaveChanges=True)
+        except:
+            pass
+            
+        try:
+            if excel is not None:
                 excel.Quit()
-            except:
-                pass
+        except:
+            pass
+            
+        # Forcer la fermeture d'Excel si nécessaire
+        kill_excel()
 
 if __name__ == "__main__":
     inject_modules()
