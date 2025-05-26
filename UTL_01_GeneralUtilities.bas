@@ -5,28 +5,85 @@ Private Const MODULE_NAME As String = "Utilities"
 Public wsPQData As Worksheet
 
 Sub InitializePQData()
-    On Error Resume Next
+    Const PROC_NAME As String = "InitializePQData"
+    On Error GoTo ErrorHandler
+    
+    LogInfo PROC_NAME & "_Start", "Initialisation de la feuille PQ_DATA", PROC_NAME, MODULE_NAME
+    
+    ' Essayer de récupérer la feuille existante
     Set wsPQData = ActiveWorkbook.Worksheets("PQ_DATA")
-    On Error GoTo 0
     
     ' Si la feuille n'existe pas, la créer
     If wsPQData Is Nothing Then
+        LogInfo PROC_NAME & "_Create", "Création de la feuille PQ_DATA", PROC_NAME, MODULE_NAME
         Set wsPQData = ActiveWorkbook.Worksheets.Add
         wsPQData.Name = "PQ_DATA"
+        
+        ' Configuration initiale de la feuille
+        With wsPQData
+            .Visible = xlSheetVeryHidden
+            .ProtectContents = True
+        End With
+        
+        LogInfo PROC_NAME & "_Created", "Feuille PQ_DATA créée et configurée", PROC_NAME, MODULE_NAME
+    Else
+        LogInfo PROC_NAME & "_Found", "Feuille PQ_DATA trouvée", PROC_NAME, MODULE_NAME
     End If
+    
+    Exit Sub
+    
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de l'initialisation de PQ_DATA: " & Err.Description, PROC_NAME, MODULE_NAME
+    Set wsPQData = Nothing
 End Sub
 
 Function GetLastColumn(ws As Worksheet) As Long
-    GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column +1
+    Const PROC_NAME As String = "GetLastColumn"
+    On Error GoTo ErrorHandler
+    
+    If ws Is Nothing Then
+        LogError PROC_NAME & "_InvalidSheet", "Feuille invalide", PROC_NAME, MODULE_NAME
+        GetLastColumn = 0
+        Exit Function
+    End If
+    
+    GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column + 1
+    LogDebug PROC_NAME & "_Result", "Dernière colonne trouvée: " & GetLastColumn, PROC_NAME, MODULE_NAME
+    Exit Function
+    
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de la recherche de la dernière colonne: " & Err.Description, PROC_NAME, MODULE_NAME
+    GetLastColumn = 0
 End Function
 
 ' --- Utility function for smart truncation ---
 Function TruncateWithEllipsis(text As String, maxLen As Integer) As String
+    Const PROC_NAME As String = "TruncateWithEllipsis"
+    On Error GoTo ErrorHandler
+    
+    ' Validation des paramètres
+    If maxLen < 4 Then
+        LogWarning PROC_NAME & "_InvalidLength", "Longueur maximale trop courte: " & maxLen, PROC_NAME, MODULE_NAME
+        maxLen = 4 ' Minimum pour avoir au moins un caractère + "..."
+    End If
+    
+    If text = "" Then
+        TruncateWithEllipsis = ""
+        Exit Function
+    End If
+    
     If Len(text) > maxLen Then
         TruncateWithEllipsis = Left(text, maxLen - 3) & "..."
+        LogDebug PROC_NAME & "_Truncated", "Texte tronqué de " & Len(text) & " à " & maxLen & " caractères", PROC_NAME, MODULE_NAME
     Else
         TruncateWithEllipsis = text
     End If
+    
+    Exit Function
+    
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de la troncature du texte: " & Err.Description, PROC_NAME, MODULE_NAME
+    TruncateWithEllipsis = text ' Retourner le texte original en cas d'erreur
 End Function
 
 ' Nettoie une chaîne pour en faire un nom de tableau valide

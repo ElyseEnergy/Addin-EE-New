@@ -600,3 +600,66 @@ End Function
 ' Les fonctions GetSystemModeString et GetCurrentLogLevel ont été supprimées car elles sont dupliquées
 ' Utiliser SYS_CoreSystem.GetSystemModeString et SYS_Logger.GetCurrentLogLevel à la place
 
+' ============================================================================
+' ERROR HANDLING SETUP
+' ============================================================================
+
+Private Sub SetupIntegratedErrorHandling()
+    ' Configure la gestion d'erreurs intégrée à travers tous les modules
+    
+    On Error Resume Next
+    
+    ' Initialiser le gestionnaire d'erreurs
+    If Not mErrorHandlerStatus Then
+        mErrorHandlerStatus = InitializeErrorHandler()
+        If mErrorHandlerStatus Then
+            LogInfo "error_handler_setup", "Error handler initialized successfully"
+        Else
+            LogWarning "error_handler_setup_failed", "Failed to initialize error handler"
+            Exit Sub
+        End If
+    End If
+    
+    ' Configurer les options de gestion d'erreurs
+    EnableAutoRecovery ' Activer la récupération automatique
+    EnableUserMessages ' Activer les messages utilisateur
+    
+    ' Configurer les hooks d'erreur globaux
+    Application.EnableEvents = True
+    
+    ' Configurer les gestionnaires d'erreurs spécifiques aux modules
+    SetupModuleErrorHandlers
+    
+    LogInfo "error_handling_setup", "Integrated error handling setup completed"
+    
+    On Error GoTo 0
+End Sub
+
+Private Sub SetupModuleErrorHandlers()
+    ' Configure les gestionnaires d'erreurs spécifiques aux modules
+    
+    ' Logger
+    If mLoggerStatus Then
+        PushErrorHandler "SYS_Logger"
+        LogInfo "error_handler_setup", "Logger error handler configured"
+    End If
+    
+    ' MessageBox
+    If mMessageBoxStatus Then
+        PushErrorHandler "SYS_MessageBox"
+        LogInfo "error_handler_setup", "MessageBox error handler configured"
+    End If
+    
+    ' SharePoint
+    If mSharePointStatus Then
+        PushErrorHandler "SYS_SharePointIntegration"
+        LogInfo "error_handler_setup", "SharePoint error handler configured"
+    End If
+    
+    ' Ticket System
+    If mTicketSystemStatus Then
+        PushErrorHandler "SYS_TicketSystem"
+        LogInfo "error_handler_setup", "Ticket system error handler configured"
+    End If
+End Sub
+

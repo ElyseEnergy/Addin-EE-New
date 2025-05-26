@@ -2,11 +2,15 @@ Option Explicit
 Private Const MODULE_NAME As String = "UI_03_RibbonActions"
 
 Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessage As String) As DataLoadResult
+    Const PROC_NAME As String = "ProcessCategory"
     On Error GoTo ErrorHandler
+    
+    LogInfo PROC_NAME & "_Start", "Traitement de la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
     
     Dim category As CategoryInfo
     Set category = CategoryDefinitions_System.GetCategoryByName(categoryName)
     If category Is Nothing Then
+        LogError PROC_NAME & "_CategoryNotFound", "Catégorie '" & categoryName & "' non trouvée", PROC_NAME, MODULE_NAME
         ElyseMessageBox_System.ShowErrorMessage "Erreur", _
             "Catégorie '" & categoryName & "' non trouvée"
         ProcessCategory = DataLoadResult.Error
@@ -18,9 +22,20 @@ Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessag
     Set loadInfo.Category = category
     
     ProcessCategory = DataLoadManager.ProcessDataLoad(loadInfo)
+    
+    Select Case ProcessCategory
+        Case DataLoadResult.Success
+            LogInfo PROC_NAME & "_Success", "Traitement réussi pour la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
+        Case DataLoadResult.Cancelled
+            LogInfo PROC_NAME & "_Cancelled", "Traitement annulé pour la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
+        Case DataLoadResult.Error
+            LogError PROC_NAME & "_Error", "Erreur lors du traitement de la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
+    End Select
+    
     Exit Function
     
 ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors du traitement de la catégorie " & categoryName & ": " & Err.Description, PROC_NAME, MODULE_NAME
     If Len(errorMessage) > 0 Then
         ElyseMessageBox_System.ShowErrorMessage "Erreur", errorMessage
     Else
@@ -1111,46 +1126,60 @@ ErrorHandler:
     HandleError MODULE_NAME, PROC_NAME
 End Sub
 
-Public Sub ShowNotImplementedMessage(featureName As String)
-    ShowInfoMessage "Not Implemented", "The " & featureName & " feature is not yet implemented."
+' ============================================================================
+' NOT IMPLEMENTED FEATURES HANDLING
+' ============================================================================
+
+Private Sub ShowNotImplementedMessage(featureName As String)
+    Const PROC_NAME As String = "ShowNotImplementedMessage"
+    On Error GoTo ErrorHandler
+    
+    LogWarning PROC_NAME, "Feature not implemented: " & featureName, PROC_NAME, MODULE_NAME
+    ElyseMessageBox_System.ShowInfoMessage "Fonctionnalité non implémentée", _
+        "La fonctionnalité '" & featureName & "' n'est pas encore disponible."
+    Exit Sub
+    
+ErrorHandler:
+    APP_MainOrchestrator.HandleVBAError PROC_NAME, MODULE_NAME
 End Sub
 
+' Callbacks pour les fonctionnalités non implémentées
 Public Sub OnTechnicalAnalysisClick()
-    ShowNotImplementedMessage "technical and economic analysis"
+    ShowNotImplementedMessage "Analyse technique et économique"
 End Sub
 
 Public Sub OnBusinessPlanClick()
-    ShowNotImplementedMessage "business plan"
+    ShowNotImplementedMessage "Business Plan"
 End Sub
 
 Public Sub OnElectricityOptimizationClick()
-    ShowNotImplementedMessage "electricity optimization"
+    ShowNotImplementedMessage "Optimisation électrique"
 End Sub
 
 Public Sub OnLifeCycleAnalysisClick()
-    ShowNotImplementedMessage "Life Cycle Analysis"
+    ShowNotImplementedMessage "Analyse du cycle de vie"
 End Sub
 
 Public Sub OnServerFilesBrowserClick()
-    ShowNotImplementedMessage "server files browser"
+    ShowNotImplementedMessage "Navigateur de fichiers serveur"
 End Sub
 
 Public Sub OnSummarySheetsClick()
-    ShowNotImplementedMessage "summary sheets"
+    ShowNotImplementedMessage "Feuilles de synthèse"
 End Sub
 
 Public Sub OnOPEXManagementClick()
-    ShowNotImplementedMessage "OPEX management"
+    ShowNotImplementedMessage "Gestion OPEX"
 End Sub
 
 Public Sub OnPowerQueryInjectionClick()
-    ShowNotImplementedMessage "PowerQuery injection"
+    ShowNotImplementedMessage "Injection PowerQuery"
 End Sub
 
 Public Sub OnPowerQueryCleanupClick()
-    ShowNotImplementedMessage "PowerQuery cleanup"
+    ShowNotImplementedMessage "Nettoyage PowerQuery"
 End Sub
 
 Public Sub OnRagicDictionaryDebugClick()
-    ShowNotImplementedMessage "Ragic dictionary debug"
+    ShowNotImplementedMessage "Débogage dictionnaire Ragic"
 End Sub
