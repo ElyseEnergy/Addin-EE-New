@@ -330,22 +330,22 @@ End Sub
 ' UNIFIED PUBLIC API
 ' ============================================================================
 
-' Logging API
+' Logging API - Delegated to SYS_Logger
 Public Sub LogInfo(action As String, details As String)
     If mLoggerStatus Then
-        LogEvent action, details, INFO_LEVEL
+        SYS_Logger.LogInfo action, details
     End If
 End Sub
 
 Public Sub LogDebug(action As String, details As String)
     If mLoggerStatus Then
-        LogEvent action, details, DEBUG_LEVEL
+        SYS_Logger.LogDebug action, details
     End If
 End Sub
 
 Public Sub LogWarning(action As String, details As String)
     If mLoggerStatus Then
-        LogEvent action, details, WARNING_LEVEL
+        SYS_Logger.LogWarning action, details
     End If
 End Sub
 
@@ -354,7 +354,7 @@ Public Sub LogError(actionCode As String, errorCode As Long, message As String, 
                    Optional ByVal moduleName As String = "", _
                    Optional ByRef errorCtx As Object = Nothing)
     If mLoggerStatus Then
-        LogEvent actionCode, message, ERROR_LEVEL, procedureName, moduleName, errorCode, errorCtx
+        SYS_Logger.LogError actionCode, errorCode, message, procedureName, moduleName, errorCtx
     End If
 End Sub
 
@@ -363,20 +363,20 @@ Public Sub LogCritical(actionCode As String, errorCode As Long, message As Strin
                       Optional ByVal moduleName As String = "", _
                       Optional ByRef errorCtx As Object = Nothing)
     If mLoggerStatus Then
-        LogEvent actionCode, message, CRITICAL_LEVEL, procedureName, moduleName, errorCode, errorCtx
+        SYS_Logger.LogCritical actionCode, errorCode, message, procedureName, moduleName
     End If
 End Sub
 
 Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    LogUserAction actionCode, description, controlName
+    SYS_Logger.LogUserAction actionCode, description, controlName
 End Sub
 
 Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
     If Not mLoggerStatus Then Exit Sub
-    LogRibbonAction buttonId, additionalInfo
+    SYS_Logger.LogRibbonAction buttonId, additionalInfo
 End Sub
 
 ' Enhanced MessageBox API
@@ -431,8 +431,7 @@ Public Function CreateSupportTicket() As String
         CreateSupportTicket = CreateManualTicket()
     Else
         CreateSupportTicket = "SYSTEM_NOT_AVAILABLE"
-    End If
-End Function
+    End Function
 
 Public Function CreateErrorTicket(errorMsg As String, Optional errorCode As Long = 0) As String
     If mTicketSystemStatus Then

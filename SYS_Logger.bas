@@ -89,7 +89,7 @@ End Sub
 
 Public Sub LogEvent(actionCode As String, message As String, level As LogLevel, _
     Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", _
-    Optional ByVal errorCode As Long = 0, Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext = Nothing)
+    Optional ByVal errorCode As Long = 0, Optional Byval errorCtx As Object = Nothing)
     ' Central logging function that dispatches to specific log functions based on level
     
     If Not mLoggerInitialized Then Exit Sub
@@ -123,7 +123,7 @@ End Sub
 
 Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
     Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", _
-    Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext = Nothing)
+    Optional Byval errorCtx As Object = Nothing)
     ' Specialized logging for errors with error context support
     
     Dim logMessage As String

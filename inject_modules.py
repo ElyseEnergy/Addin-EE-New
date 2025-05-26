@@ -25,18 +25,103 @@ def process_workbook_content(content):
         content = 'VERSION 1.0 CLASS\nBEGIN\n  MultiUse = -1  \'True\nEND\n' + content
     return content
 
-def inject_modules():
-    excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
-    kill_excel()
+def read_file_with_fallback_encoding(file_path):
+    """Essaie de lire le fichier avec différents encodages"""
+    encodings = ['utf-8', 'cp1252', 'iso-8859-1', 'latin1', 'utf-8-sig']
+    last_error = None
     
+    # D'abord essayer de détecter l'encodage
+    try:
+        import chardet
+        with open(file_path, 'rb') as f:
+            raw_data = f.read()
+        detected = chardet.detect(raw_data)
+        if detected['confidence'] > 0.8:
+            try:
+                with open(file_path, 'r', encoding=detected['encoding']) as f:
+                    return f.read()
+            except:
+                pass
+    except ImportError:
+        pass  # chardet n'est pas installé
+    
+    # Essayer les encodages connus
+    for encoding in encodings:
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                content = f.read()
+                # Vérifier si le contenu semble valide
+                if any(invalid_char in content for invalid_char in ['�', '□', '¿']):
+                    continue
+                return content
+        except UnicodeDecodeError as e:
+            last_error = e
+            continue
+        except Exception as e:
+            last_error = e
+            continue
+            
+    raise ValueError(f"Impossible de lire le fichier {file_path} avec les encodages disponibles. Dernière erreur: {str(last_error)}")
+
+def check_vba_access():
+    """Vérifie si l'accès au VBA Project est activé"""
     try:
         excel = win32com.client.Dispatch("Excel.Application")
         excel.Visible = False
+        wb = excel.Workbooks.Add()
+        try:
+            _ = wb.VBProject
+            return True
+        except:
+            print("ERREUR: L'accès au VBA Project n'est pas activé dans Excel.")
+            print("Pour activer l'accès:")
+            print("1. Ouvrez Excel")
+            print("2. Allez dans Fichier > Options > Centre de gestion de la confidentialité > Paramètres du Centre de gestion de la confidentialité")
+            print("3. Cliquez sur 'Paramètres des macros'")
+            print("4. Cochez 'Faire confiance à l'accès au modèle d'objet des projets VBA'")
+            print("5. Cliquez sur OK et redémarrez Excel")
+            return False
+        finally:
+            try:
+                wb.Close(False)
+                excel.Quit()
+            except:
+                pass
+    except Exception as e:
+        print(f"Erreur lors de la vérification de l'accès VBA: {str(e)}")
+        return False
+
+def inject_modules():
+    if not check_vba_access():
+        return
+
+    excel = None
+    workbook = None
+    try:
+        excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
+        if not os.path.exists(excel_file):
+            print(f"ERREUR: Le fichier '{excel_file}' n'existe pas.")
+            return
+
+        kill_excel()
+        
+        try:
+            excel = win32com.client.Dispatch("Excel.Application")
+        except Exception as e:
+            print(f"ERREUR: Impossible de démarrer Excel: {str(e)}")
+            return
+
+        excel.Visible = False
         excel.DisplayAlerts = False
         
-        workbook = excel.Workbooks.Open(excel_file)
+        try:
+            workbook = excel.Workbooks.Open(excel_file)
+        except Exception as e:
+            print(f"ERREUR: Impossible d'ouvrir le fichier '{excel_file}': {str(e)}")
+            return
+
         vba_project = workbook.VBProject
-        
+
         # D'abord, traiter les UserForms (fichiers .frm)
         for file in os.listdir('.'):
             if file.endswith('.frm'):
@@ -73,9 +158,12 @@ def inject_modules():
                 except:
                     pass
                 
-                # Lire le contenu du fichier
-                with open(file, 'r', encoding='utf-8') as f:
-                    content = f.read()
+                # Lire le contenu du fichier avec différents encodages
+                try:
+                    content = read_file_with_fallback_encoding(file)
+                except ValueError as e:
+                    print(f"Erreur lors de la lecture du fichier {file}: {str(e)}")
+                    continue
                 
                 # Traiter le contenu si c'est ThisWorkbook
                 if module_type == 100:
@@ -95,11 +183,17 @@ def inject_modules():
         
     except Exception as e:
         print(f"Erreur générale: {str(e)}")
-        try:
-            workbook.Close(False)
-            excel.Quit()
-        except:
-            pass
+    finally:
+        if workbook:
+            try:
+                workbook.Close(False)
+            except:
+                pass
+        if excel:
+            try:
+                excel.Quit()
+            except:
+                pass
 
 if __name__ == "__main__":
     inject_modules()
