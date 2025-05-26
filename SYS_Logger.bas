@@ -87,7 +87,43 @@ End Sub
 ' CORE LOGGING FUNCTIONS WITH RAGIC INTEGRATION
 ' ============================================================================
 
-Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+Public Sub LogEvent(actionCode As String, message As String, level As LogLevel, _
+    Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", _
+    Optional ByVal errorCode As Long = 0, Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext = Nothing)
+    ' Central logging function that dispatches to specific log functions based on level
+    
+    If Not mLoggerInitialized Then Exit Sub
+    If Not ShouldLog(level) Then Exit Sub
+    
+    Select Case level
+        Case ERROR_LEVEL
+            If Not errorCtx Is Nothing Then
+                LogError actionCode, errorCode, message, IIf(Len(procedureName) > 0, procedureName, errorCtx.ProcedureName), _
+                    IIf(Len(moduleName) > 0, moduleName, errorCtx.ModuleName), errorCtx
+            Else
+                LogError actionCode, errorCode, message, procedureName, moduleName
+            End If
+            
+        Case CRITICAL_LEVEL
+            LogCritical actionCode, errorCode, message, procedureName, moduleName
+            
+        Case WARNING_LEVEL
+            LogWarning actionCode, message, procedureName, moduleName
+            
+        Case INFO_LEVEL
+            LogInfo actionCode, message, procedureName, moduleName
+            
+        Case DEBUG_LEVEL
+            LogDebug actionCode, message, procedureName, moduleName
+            
+        Case Else
+            LogInfo actionCode, message, procedureName, moduleName ' Default to INFO if level is unknown
+    End Select
+End Sub
+
+Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
+    Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", _
+    Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext = Nothing)
     ' Specialized logging for errors with error context support
     
     Dim logMessage As String

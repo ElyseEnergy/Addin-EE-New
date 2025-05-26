@@ -352,16 +352,18 @@ End Sub
 Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
                    Optional ByVal procedureName As String = "", _
                    Optional ByVal moduleName As String = "", _
-                   Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext)
-    If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerStatus Then Exit Sub
-    LogEvent actionCode, errorCode & ": " & message, ERROR_LEVEL, procedureName, moduleName, errorCtx
+                   Optional ByRef errorCtx As SYS_ErrorHandler.ErrorContext = Nothing)
+    If mLoggerStatus Then
+        LogEvent actionCode, message, ERROR_LEVEL, procedureName, moduleName, errorCode, errorCtx
+    End If
 End Sub
 
-Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
-    If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerStatus Then Exit Sub
-    LogCritical actionCode, errorCode, message, procedureName, moduleName
+Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, _
+                      Optional ByVal procedureName As String = "", _
+                      Optional ByVal moduleName As String = "")
+    If mLoggerStatus Then
+        LogEvent actionCode, message, CRITICAL_LEVEL, procedureName, moduleName, errorCode
+    End If
 End Sub
 
 Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
