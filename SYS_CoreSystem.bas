@@ -503,9 +503,13 @@ End Function
 ' ============================================================================
 
 Public Sub InitializeCoreSystemExtras()
-    ' Called by ElyseMain_Orchestrator.InitializeElyseSystem
-    ' Set gEnableRagicLogging based on configuration (e.g., from a settings sheet, environment variable, etc.)
-    ' For now, let's default it to True for demonstration.
-    gEnableRagicLogging = True 
-    Call GetSessionID ' Initialize session ID
+    ' Initialize extra system variables
+    
+    ' Enable Ragic logging by default
+    gEnableRagicLogging = True
+    
+    ' Generate a unique session ID if not already set
+    If gSessionID = "" Then
+        gSessionID = GenerateSessionID()
+    End If
 End Sub

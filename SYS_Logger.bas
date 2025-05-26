@@ -140,9 +140,15 @@ Public Sub LogError(actionCode As String, errorCode As Long, message As String, 
         PrintToImmediate logMessage
         If mLogToFile Then WriteToLogFile "ERROR", logMessage
     End If
-    
-    ' Log to Ragic with error context
-    Call LogToRagic("ERROR", actionCode, message, errorCode, procedureName, moduleName)
+      ' Log to Ragic with error context
+    ' If we have an error context, use its data
+    If Not errorCtx Is Nothing Then
+        Call LogToRagic("ERROR", actionCode, message, errorCode, _
+            IIf(Len(procedureName) > 0, procedureName, errorCtx.ProcedureName), _
+            IIf(Len(moduleName) > 0, moduleName, errorCtx.ModuleName))
+    Else
+        Call LogToRagic("ERROR", actionCode, message, errorCode, procedureName, moduleName)
+    End If
 End Sub
 
 Public Sub LogInfo(actionCode As String, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
@@ -222,18 +228,16 @@ Public Sub LogCritical(actionCode As String, errorCode As Long, message As Strin
         PrintToImmediate logMessage 
         If mLogToFile Then WriteToLogFile "CRITICAL", logMessage
     End If
-    
-    Dim criticalDetails As String
-    criticalDetails = message
-    
-    Dim tempCtx As ErrorContext ' Create a context for critical errors too
+      ' Create detailed error context
+    Dim tempCtx As SYS_ErrorHandler.ErrorContext
     tempCtx.ErrorNumber = errorCode
     tempCtx.ErrorDescription = message
     tempCtx.ProcedureName = procedureName
     tempCtx.ModuleName = moduleName
     tempCtx.Severity = "CRITICAL" ' Explicitly set
     
-    Call LogToRagic("CRITICAL", actionCode, criticalDetails, errorCode, procedureName, moduleName)
+    ' Log to Ragic with full context
+    Call LogToRagic("CRITICAL", actionCode, message, errorCode, procedureName, moduleName)
 End Sub
 
 Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
