@@ -6,7 +6,7 @@ Option Explicit
 ' MODULE DEPENDENCIES
 ' ============================================================================
 ' ElyseMain_Orchestrator est accessible via GetInstance()
-' Note: SYS_MessageBox et SYS_CoreSystem sont des modules, pas besoin de les instancier
+' Note: SYS_MessageBox et SYS_CoreSystem sont des modules, on les utilise directement sans déclaration
 
 Private Const MODULE_NAME As String = "RibbonVisibility"
 
@@ -18,7 +18,7 @@ Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
     Debug.Print "Ribbon_Load appelé"
     Set gRibbon = ribbon
     ' S'assurer que le système est initialisé avant d'utiliser les profils
-    ElyseMain_Orchestrator.Initialize
+    APP_MainOrchestrator.Initialize
     InitializeDemoProfiles
     Debug.Print "gRibbon initialisé"
 End Sub
@@ -196,21 +196,21 @@ Public Sub RibbonButton_OnAction(control As IRibbonControl)
         Case "btnRunReport"
             ElyseMain_Orchestrator.LogInfo PROC_NAME & "_RunReport", "User initiated RunReport.", PROC_NAME, MODULE_NAME
             ' Call RunReport_Sub ' Example call
-            ElyseMessageBox_System.ShowInfoMessage "Action", "Running Report... (placeholder)"
+            SYS_MessageBox.ShowInfoMessage "Action", "Running Report... (placeholder)"
         Case "btnOpenSettings"
             ElyseMain_Orchestrator.LogInfo PROC_NAME & "_OpenSettings", "User initiated OpenSettings.", PROC_NAME, MODULE_NAME
             ' Call OpenSettings_Form.Show ' Example call
-            ElyseMessageBox_System.ShowInfoMessage "Action", "Opening Settings... (placeholder)"
+            SYS_MessageBox.ShowInfoMessage "Action", "Opening Settings... (placeholder)"
         Case Else
             ElyseMain_Orchestrator.LogWarning PROC_NAME & "_UnknownAction", "Unknown ribbon action for control ID: " & control.id, PROC_NAME, MODULE_NAME
-            ElyseMessageBox_System.ShowWarningMessage "Unknown Action", "The action for '" & control.id & "' is not defined."
+            SYS_MessageBox.ShowWarningMessage "Unknown Action", "The action for '" & control.id & "' is not defined."
     End Select
     Exit Sub
 
 ErrorHandler:
     ElyseMain_Orchestrator.HandleError MODULE_NAME, PROC_NAME, "Error in Ribbon Action: " & control.id
     ' Optionally, show a generic error message to the user via the new system
-    ElyseMessageBox_System.ShowErrorMessage "Ribbon Error", "An unexpected error occurred while processing the action for '" & control.id & "'. The error has been logged."
+    SYS_MessageBox.ShowErrorMessage "Ribbon Error", "An unexpected error occurred while processing the action for '" & control.id & "'. The error has been logged."
 End Sub
 
 

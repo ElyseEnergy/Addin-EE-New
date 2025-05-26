@@ -360,35 +360,36 @@ Public Sub LogWarning(action As String, details As String)
     End If
 End Sub
 
-Public Sub LogError(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "", Optional errorCtx As ErrorContext = Nothing)
+Public Sub LogError(actionCode As String, errorCode As Long, message As String, _
+                   Optional ByVal procedureName As String = "", _
+                   Optional ByVal moduleName As String = "", _
+                   Optional errorCtx As SYS_ErrorHandler.ErrorContext)
     If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerInitialized Then Exit Sub ' Should have been initialized by InitializeElyseSystem
-
-    ' Pass the call to the logger module, including the optional ErrorContext
+    If Not mLoggerStatus Then Exit Sub
     ElyseLogger_Module.LogError actionCode, errorCode, message, procedureName, moduleName, errorCtx
 End Sub
 
 Public Sub LogCritical(actionCode As String, errorCode As Long, message As String, Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerInitialized Then Exit Sub
+    If Not mLoggerStatus Then Exit Sub
     ElyseLogger_Module.LogCritical actionCode, errorCode, message, procedureName, moduleName
 End Sub
 
 Public Sub LogFunctionCall(procedureName As String, Optional ByVal moduleName As String = "", Optional params As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerInitialized Then Exit Sub
+    If Not mLoggerStatus Then Exit Sub
     ElyseLogger_Module.LogFunctionCall procedureName, moduleName, params
 End Sub
 
 Public Sub LogUserAction(actionCode As String, description As String, Optional ByVal controlName As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerInitialized Then Exit Sub
+    If Not mLoggerStatus Then Exit Sub
     ElyseLogger_Module.LogUserAction actionCode, description, controlName
 End Sub
 
 Public Sub LogRibbonAction(buttonId As String, Optional additionalInfo As String = "")
     If Not mSystemInitialized Then InitializeElyseSystem
-    If Not mLoggerInitialized Then Exit Sub
+    If Not mLoggerStatus Then Exit Sub
     ElyseLogger_Module.LogRibbonAction buttonId, additionalInfo
 End Sub
 
@@ -418,7 +419,7 @@ Public Function ShowConfirmation(title As String, message As String) As Boolean
         ShowConfirmation = (result = "Yes")
     Else
         ShowConfirmation = (MsgBox(message, vbYesNo + vbQuestion, title) = vbYes)
-    End If
+    End Function
 End Function
 
 Public Function SelectFromList(title As String, message As String, items As Collection) As Long
