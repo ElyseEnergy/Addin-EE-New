@@ -154,3 +154,657 @@
 
 2025-05-26 22:36:34 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
 
+2025-05-26 22:51:36 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:51:36 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:51:36 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 22:51:36 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 22:51:36 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 22:51:36 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 22:51:36 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 22:51:36 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 22:51:36 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 22:51:36 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 22:51:36 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 22:51:36 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:51:36 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:51:36 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 22:51:36 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 22:51:36 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 22:52:42 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:52:42 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:52:42 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 22:52:42 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 22:52:42 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 22:52:42 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 22:52:42 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 22:52:42 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 22:52:42 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 22:52:42 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 22:52:42 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 22:52:42 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:52:42 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:52:42 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 22:52:42 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 22:52:42 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 22:53:31 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:53:31 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:53:31 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 22:53:31 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 22:53:31 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 22:53:31 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 22:53:31 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 22:53:31 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 22:53:31 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 22:53:31 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 22:53:31 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 22:53:31 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:53:31 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:53:31 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 22:53:31 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 22:53:31 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 22:53:44 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 22:57:18 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:57:18 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:57:18 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 22:57:18 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 22:57:18 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 22:57:18 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 22:57:18 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 22:57:18 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 22:57:18 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 22:57:18 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 22:57:18 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 22:57:18 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:57:18 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:57:18 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 22:57:18 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 22:57:18 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 22:59:48 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 22:59:48 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 22:59:48 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 22:59:48 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 22:59:48 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 22:59:48 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 22:59:48 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 22:59:48 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 22:59:48 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 22:59:48 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 22:59:48 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 22:59:48 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:59:48 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 22:59:48 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 22:59:48 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 22:59:48 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 22:59:52 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 23:07:05 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:07:05 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:07:05 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:07:05 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:07:05 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:07:05 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:07:05 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:07:05 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:07:05 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:07:05 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:07:05 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:07:05 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:07:05 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:07:05 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:07:05 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:07:05 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:07:57 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:07:57 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:07:57 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:07:57 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:07:57 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:07:57 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:07:57 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:07:57 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:07:57 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:07:57 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:07:57 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:07:57 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:07:57 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:07:57 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:07:57 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:07:57 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:08:01 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 23:13:54 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:13:54 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:13:54 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:13:54 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:13:54 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:13:54 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:13:54 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:13:54 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:13:54 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:13:54 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:13:54 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:13:54 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:13:54 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:13:54 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:13:54 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:13:54 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:15:05 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:15:05 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:15:05 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:15:05 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:15:06 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:15:06 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:15:06 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:15:06 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:15:06 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:15:06 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:15:06 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:15:06 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:15:06 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:15:06 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:15:06 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:15:06 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:15:06 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:15:06 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:15:06 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:15:06 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:15:06 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:15:09 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 23:21:39 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:21:39 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:21:39 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:21:39 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:21:39 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:21:39 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:21:39 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:21:39 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:21:39 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:21:39 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:21:39 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:21:39 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:21:39 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:21:39 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:21:39 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:21:39 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:23:51 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:23:51 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:23:51 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:23:51 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:23:51 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:23:51 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:23:51 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:23:51 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:23:51 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:23:51 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:23:51 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:23:51 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:23:51 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:23:51 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:23:51 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:23:51 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:23:54 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 23:35:05 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:35:05 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:35:05 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:35:05 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:35:05 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:35:05 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:35:05 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:35:05 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:35:05 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:35:05 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:35:05 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:35:05 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:35:05 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:35:05 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:35:05 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:35:05 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:36:23 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:36:23 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:36:23 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:36:23 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:36:23 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:36:23 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:36:23 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:36:23 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:36:23 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:36:23 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:36:23 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:36:23 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:36:23 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:36:23 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:36:23 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:36:23 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:36:27 | INFO | INFO  [ProcessMetriquesBase_Start] UI_03_RibbonActions.ProcessMetriquesBase: Traitement des métriques de base.
+
+2025-05-26 23:36:27 | INFO | INFO  [ProcessCategory_Start] UI_03_RibbonActions.ProcessCategory: Traitement de la catégorie: Métriques de base
+
+2025-05-26 23:36:27 | ERROR | ERROR [ProcessCategory_Error] UI_03_RibbonActions.ProcessCategory (Code: 13): Erreur lors de l'exécution de l'action: Incompatibilité de type
+
+2025-05-26 23:42:03 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:42:03 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:42:03 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:42:03 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:42:03 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:42:03 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:42:03 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:42:03 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:42:03 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:42:03 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:42:03 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:42:03 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:42:03 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:42:03 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:42:03 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:42:03 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:43:15 | INFO | INFO  [logger_init] : Logger system initialized successfully
+
+2025-05-26 23:43:15 | INFO | INFO  [system_startup] : Elyse Energy system starting up - Mode: DEBUG
+
+2025-05-26 23:43:15 | INFO | INFO  [modules_init_start] : Initializing all system modules
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handler_init] : Initializing centralized error handler
+
+2025-05-26 23:43:15 | DEBUG | DEBUG [error_handler_hooks] : Global error hooks installed
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handler_ready] : Error handler initialized successfully
+
+2025-05-26 23:43:15 | INFO | INFO  [module_loaded] : Error Handler module loaded successfully
+
+2025-05-26 23:43:15 | INFO | INFO  [SYS_SharePointIntegration_init] : Initializing SharePoint integration
+
+2025-05-26 23:43:15 | ERROR | ERROR [SYS_SharePointIntegration_init_error] (Code: 429): Failed to initialize SharePoint object: Un composant ActiveX ne peut pas créer d'objet
+
+2025-05-26 23:43:15 | WARNING | WARN  [module_load_failed] : SharePoint Integration module failed to load or not applicable
+
+2025-05-26 23:43:15 | INFO | INFO  [module_loaded] : MessageBox System module loaded successfully
+
+2025-05-26 23:43:15 | INFO | INFO  [module_loaded] : Ticket System module loaded successfully
+
+2025-05-26 23:43:15 | INFO | INFO  [modules_init_complete] : Module initialization complete
+
+2025-05-26 23:43:15 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:43:15 | INFO | INFO  [error_auto_recovery_enabled] : Automatic error recovery enabled
+
+2025-05-26 23:43:15 | INFO | INFO  [error_messages_enabled] : User error messages enabled
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handler_setup] : Logger error handler configured
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handler_setup] : MessageBox error handler configured
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handler_setup] : Ticket system error handler configured
+
+2025-05-26 23:43:15 | INFO | INFO  [error_handling_setup] : Integrated error handling setup completed
+
+2025-05-26 23:43:15 | INFO | INFO  [system_ready] : Elyse Energy system ready - 6 modules loaded
+
+2025-05-26 23:44:40 | INFO | INFO  [ProcessCompression_Start] UI_03_RibbonActions.ProcessCompression: Traitement des données de compression.
+
+2025-05-26 23:44:40 | INFO | INFO  [ProcessCategory_Start] UI_03_RibbonActions.ProcessCategory: Traitement de la catégorie: Compression
+
+2025-05-26 23:44:40 | ERROR | ERROR [ProcessCategory_Error] UI_03_RibbonActions.ProcessCategory (Code: 13): Erreur lors de l'exécution de l'action: Incompatibilité de type
+
+2025-05-26 23:44:40 | INFO | INFO  [messagebox_enhanced_show] : Title: Erreur | Type: ERROR
+

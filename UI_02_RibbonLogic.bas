@@ -27,6 +27,9 @@ Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
         Exit Sub
     End If
     
+    ' Initialiser le système de messagebox
+    Call SYS_MessageBox.InitMessageBoxStatus
+    
     InitializeDemoProfiles
     Debug.Print "gRibbon initialisé"
     Exit Sub

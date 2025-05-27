@@ -7,29 +7,52 @@ Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
 
 ' Vérifie si une requête PowerQuery existe et la crée si nécessaire
 Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
+    Const PROC_NAME As String = "EnsurePQQueryExists"
+    On Error GoTo ErrorHandler
+    
+    LogInfo PROC_NAME & "_Start", "Début de la vérification de la requête PowerQuery: " & category.PowerQueryName, PROC_NAME, MODULE_NAME
+    
+    ' Validation des paramètres
+    If category Is Nothing Then
+        LogError PROC_NAME & "_InvalidCategory", 0, "Catégorie invalide", PROC_NAME, MODULE_NAME
+        EnsurePQQueryExists = False
+        Exit Function
+    End If
+    
+    If category.PowerQueryName = "" Then
+        LogError PROC_NAME & "_InvalidQueryName", 0, "Nom de requête PowerQuery vide", PROC_NAME, MODULE_NAME
+        EnsurePQQueryExists = False
+        Exit Function
+    End If
+    
     Dim query As String
     query = GeneratePQQueryTemplate(category)
+    LogDebug PROC_NAME & "_TemplateGenerated", "Template de requête généré", PROC_NAME, MODULE_NAME
     
     If QueryExists(category.PowerQueryName) Then
+        LogInfo PROC_NAME & "_QueryExists", "La requête existe, mise à jour de la formule", PROC_NAME, MODULE_NAME
         ' Si la requête existe, mettre à jour sa formule
         On Error Resume Next
         ThisWorkbook.Queries(category.PowerQueryName).Formula = query
         Dim updateError As Long
         updateError = Err.Number
-        On Error GoTo 0
+        On Error GoTo ErrorHandler
         
         If updateError <> 0 Then
-            Debug.Print "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description
+            LogError PROC_NAME & "_UpdateError", updateError, "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description, PROC_NAME, MODULE_NAME
             EnsurePQQueryExists = False
             Exit Function
         End If
         
         ' Rafraîchir la requête
+        LogDebug PROC_NAME & "_RefreshQuery", "Rafraîchissement de la requête", PROC_NAME, MODULE_NAME
         ThisWorkbook.Queries(category.PowerQueryName).Refresh
         EnsurePQQueryExists = True
     Else
+        LogInfo PROC_NAME & "_CreateQuery", "La requête n'existe pas, création en cours", PROC_NAME, MODULE_NAME
         ' Créer la requête si elle n'existe pas
         If Not AddQueryToPowerQuery(category.PowerQueryName, query) Then
+            LogError PROC_NAME & "_CreateError", 0, "Échec de la création de la requête", PROC_NAME, MODULE_NAME
             EnsurePQQueryExists = False
             Exit Function
         End If
@@ -37,33 +60,90 @@ Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
     End If
     
     ' Stocker les types de colonnes après la création de la requête
+    LogDebug PROC_NAME & "_StoreTypes", "Stockage des types de colonnes", PROC_NAME, MODULE_NAME
     StoreColumnTypes category.PowerQueryName
     
+    LogInfo PROC_NAME & "_Success", "Requête PowerQuery vérifiée avec succès", PROC_NAME, MODULE_NAME
     EnsurePQQueryExists = True
+    Exit Function
+
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de la vérification de la requête PowerQuery: " & Err.Description, PROC_NAME, MODULE_NAME
+    EnsurePQQueryExists = False
 End Function
 
 ' Vérifie si une requête PowerQuery existe
 Private Function QueryExists(queryName As String) As Boolean
+    Const PROC_NAME As String = "QueryExists"
+    On Error GoTo ErrorHandler
+    
+    LogDebug PROC_NAME & "_Start", "Vérification de l'existence de la requête: " & queryName, PROC_NAME, MODULE_NAME
+    
+    ' Validation des paramètres
+    If queryName = "" Then
+        LogWarning PROC_NAME & "_EmptyName", "Nom de requête vide", PROC_NAME, MODULE_NAME
+        QueryExists = False
+        Exit Function
+    End If
+    
     On Error Resume Next
     Dim query As Object
     Set query = ThisWorkbook.Queries(queryName)
     QueryExists = (Err.Number = 0)
-    On Error GoTo 0
+    
+    If QueryExists Then
+        LogDebug PROC_NAME & "_Found", "Requête trouvée: " & queryName, PROC_NAME, MODULE_NAME
+    Else
+        LogDebug PROC_NAME & "_NotFound", "Requête non trouvée: " & queryName, PROC_NAME, MODULE_NAME
+    End If
+    
+    On Error GoTo ErrorHandler
+    Exit Function
+
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de la vérification de l'existence de la requête: " & Err.Description, PROC_NAME, MODULE_NAME
+    QueryExists = False
 End Function
 
 ' Ajoute une requête PowerQuery
 Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
+    Const PROC_NAME As String = "AddQueryToPowerQuery"
+    On Error GoTo ErrorHandler
+    
+    LogInfo PROC_NAME & "_Start", "Début de l'ajout de la requête: " & queryName, PROC_NAME, MODULE_NAME
+    
+    ' Validation des paramètres
+    If queryName = "" Then
+        LogError PROC_NAME & "_InvalidName", 0, "Nom de requête vide", PROC_NAME, MODULE_NAME
+        AddQueryToPowerQuery = False
+        Exit Function
+    End If
+    
+    If query = "" Then
+        LogError PROC_NAME & "_InvalidQuery", 0, "Requête vide", PROC_NAME, MODULE_NAME
+        AddQueryToPowerQuery = False
+        Exit Function
+    End If
+    
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
     Dim errNum As Long
     errNum = Err.Number
+    
     If errNum <> 0 Then
-        Debug.Print "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description
+        LogError PROC_NAME & "_AddError", errNum, "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, PROC_NAME, MODULE_NAME
         AddQueryToPowerQuery = False
     Else
+        LogInfo PROC_NAME & "_Success", "Requête ajoutée avec succès: " & queryName, PROC_NAME, MODULE_NAME
         AddQueryToPowerQuery = True
     End If
-    On Error GoTo 0
+    
+    On Error GoTo ErrorHandler
+    Exit Function
+
+ErrorHandler:
+    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de l'ajout de la requête PowerQuery: " & Err.Description, PROC_NAME, MODULE_NAME
+    AddQueryToPowerQuery = False
 End Function
 
 ' Génère le template de requête PowerQuery
@@ -144,7 +224,7 @@ Public Sub RefreshAllPowerQueries(Optional ByVal showErrors As Boolean = True)
     If Err.Number <> 0 Then
         LogError PROC_NAME & "_RefreshAllError", Err.Number, "Error during ThisWorkbook.RefreshAll: " & Err.Description, PROC_NAME, MODULE_NAME
         If showErrors Then
-            ElyseMessageBox_System.ShowErrorMessage "Refresh Error", "An error occurred during the global RefreshAll operation. Some queries or connections might not have refreshed. Details: " & Err.Description
+            ShowErrorMessage "Refresh Error", "An error occurred during the global RefreshAll operation. Some queries or connections might not have refreshed. Details: " & Err.Description
         End If
         errorCount = errorCount + 1 ' Count this as one major error for RefreshAll
         Err.Clear
@@ -185,17 +265,17 @@ Public Sub RefreshAllPowerQueries(Optional ByVal showErrors As Boolean = True)
 
     If errorCount = 0 Then
         LogInfo PROC_NAME & "_EndSuccess", "All Power Queries and connections refreshed successfully.", PROC_NAME, MODULE_NAME
-        If showErrors Then ElyseMessageBox_System.ShowInfoMessage "Refresh Complete", "All Power Queries and connections have been refreshed."
+        If showErrors Then ShowInfoMessage "Refresh Complete", "All Power Queries and connections have been refreshed."
     Else
         LogWarning PROC_NAME & "_EndWithErrors", errorCount & " error(s) occurred during refresh. Check logs for details.", PROC_NAME, MODULE_NAME
-        If showErrors Then ElyseMessageBox_System.ShowWarningMessage "Refresh Complete with Errors", errorCount & " error(s) occurred during the refresh process. Please check the logs for more details."
+        If showErrors Then ShowWarningMessage "Refresh Complete with Errors", errorCount & " error(s) occurred during the refresh process. Please check the logs for more details."
     End If
     
     Exit Sub
 
 ErrorHandler:
     HandleError MODULE_NAME, PROC_NAME
-    If showErrors Then ElyseMessageBox_System.ShowErrorMessage "Critical Refresh Error", "A critical error occurred in RefreshAllPowerQueries. Process aborted. Details: " & Err.Description
+    If showErrors Then ShowErrorMessage "Critical Refresh Error", "A critical error occurred in RefreshAllPowerQueries. Process aborted. Details: " & Err.Description
 End Sub
 
 Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
@@ -233,7 +313,7 @@ Public Function GetQueryLastRefreshDate(ByVal queryName As String) As Date
         Else
             LogWarning PROC_NAME & "_NotFound", "Query or Connection '" & queryName & "' not found.", PROC_NAME, MODULE_NAME
             ' MsgBox "Query or Connection '" & queryName & "' not found.", vbInformation
-            ElyseMessageBox_System.ShowInfoMessage "Query Info", "Query or Connection '" & queryName & "' not found."
+            ShowInfoMessage "Query Info", "Query or Connection '" & queryName & "' not found."
         End If
     End If
     On Error GoTo ErrorHandler ' Restore error handling

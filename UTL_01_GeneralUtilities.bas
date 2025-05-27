@@ -193,11 +193,8 @@ Public Sub ShowUtilityMessage(ByVal message As String, Optional ByVal title As S
     
     LogInfo PROC_NAME & "_Display", "Displaying utility message. Title: " & title & ", Message: " & Left(message, 100) & "...", PROC_NAME, MODULE_NAME
     
-    ' Original: MsgBox message, vbInformation, title
-    ElyseMessageBox_System.ShowInfoMessage title, message
-    Exit Sub
-
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME
-    ' Fallback or log that message box couldn't be shown, though ElyseMessageBox_System should handle its own errors.
+    ' Show message box
+    ShowInfoMessage title, message
+    
+    ' Fallback or log that message box couldn't be shown, though ShowInfoMessage should handle its own errors.
 End Sub

@@ -8,22 +8,21 @@ Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessag
     LogInfo PROC_NAME & "_Start", "Traitement de la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
     
     Dim category As CategoryInfo
-    Set category = CategoryDefinitions_System.GetCategoryByName(categoryName)
-    If category Is Nothing Then
+    category = CFG_01_CategoryDefinitions.GetCategoryByName(categoryName)
+    If category.displayName = "" Then
         LogError PROC_NAME & "_CategoryNotFound", "Catégorie '" & categoryName & "' non trouvée", PROC_NAME, MODULE_NAME
-        ElyseMessageBox_System.ShowErrorMessage "Erreur", _
-            "Catégorie '" & categoryName & "' non trouvée"
+        ShowErrorMessage "Erreur", "Catégorie '" & categoryName & "' non trouvée"
         ProcessCategory = DataLoadResult.Error
         Exit Function
     End If
     
     Dim loadInfo As DataLoadInfo
-    Set loadInfo = New DataLoadInfo
-    Set loadInfo.Category = category
+    loadInfo.Category = category
     
-    ProcessCategory = DataLoadManager.ProcessDataLoad(loadInfo)
+    Dim result As DataLoadResult
+    result = DAT_01_DataLoadManager.ProcessDataLoad(loadInfo)
     
-    Select Case ProcessCategory
+    Select Case result
         Case DataLoadResult.Success
             LogInfo PROC_NAME & "_Success", "Traitement réussi pour la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
         Case DataLoadResult.Cancelled
@@ -32,16 +31,18 @@ Private Function ProcessCategory(ByVal categoryName As String, ByVal errorMessag
             LogError PROC_NAME & "_Error", "Erreur lors du traitement de la catégorie: " & categoryName, PROC_NAME, MODULE_NAME
     End Select
     
+    ProcessCategory = result
+    
     Exit Function
     
 ErrorHandler:
-    LogError PROC_NAME & "_Error", Err.Number, "Erreur lors du traitement de la catégorie " & categoryName & ": " & Err.Description, PROC_NAME, MODULE_NAME
-    If Len(errorMessage) > 0 Then
-        ElyseMessageBox_System.ShowErrorMessage "Erreur", errorMessage
-    Else
-        ElyseMessageBox_System.ShowErrorMessage "Erreur", _
-            "Une erreur s'est produite : " & Err.Description
+    If Err.Number <> 0 Then
+        LogError PROC_NAME & "_Error", Err.Number, "Erreur lors de l'exécution de l'action: " & Err.Description, PROC_NAME, MODULE_NAME
+        ShowErrorMessage "Erreur", "Une erreur est survenue lors de l'exécution de l'action. Détails: " & Err.Description
+        Exit Function
     End If
+    LogError PROC_NAME & "_Error", 0, "Erreur lors de l'exécution de l'action", PROC_NAME, MODULE_NAME
+    ShowErrorMessage "Erreur", "Une erreur est survenue lors de l'exécution de l'action."
     ProcessCategory = DataLoadResult.Error
 End Function
 
@@ -1135,8 +1136,8 @@ Private Sub ShowNotImplementedMessage(featureName As String)
     On Error GoTo ErrorHandler
     
     LogWarning PROC_NAME, "Feature not implemented: " & featureName, PROC_NAME, MODULE_NAME
-    ElyseMessageBox_System.ShowInfoMessage "Fonctionnalité non implémentée", _
-        "La fonctionnalité '" & featureName & "' n'est pas encore disponible."
+    ShowInfoMessage "Fonctionnalité non implémentée", _
+        "Cette fonctionnalité n'est pas encore implémentée."
     Exit Sub
     
 ErrorHandler:

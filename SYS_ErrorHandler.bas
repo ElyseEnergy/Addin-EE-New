@@ -234,7 +234,7 @@ Private Function ExecuteErrorActionAndGetResult(ctx As ErrorContext, Optional ad
 
     Select Case ctx.Severity
         Case "CRITICAL"
-            ElyseMessageBox_System.ShowCriticalMessage "Critical Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            ShowCriticalMessage "Critical Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
                 "A critical error occurred: " & ctx.ErrorDescription & vbCrLf & _
                 "Error Number: " & ctx.ErrorNumber & vbCrLf & _
                 "Additional Info: " & additionalInfo & vbCrLf & _
@@ -242,14 +242,14 @@ Private Function ExecuteErrorActionAndGetResult(ctx As ErrorContext, Optional ad
                 Buttons:=vbOKOnly
             action = "SHOW_CRITICAL_ABORT" ' Suggests user should abort
         Case "HIGH"
-            ElyseMessageBox_System.ShowErrorMessage "Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            ShowErrorMessage "Error in " & ctx.ModuleName & "." & ctx.ProcedureName, _
                 "An error occurred: " & ctx.ErrorDescription & vbCrLf & _
                 "Error Number: " & ctx.ErrorNumber & vbCrLf & _
                 "Additional Info: " & additionalInfo, _
                 Buttons:=vbOKOnly
             action = "SHOW_ERROR"
         Case "MEDIUM"
-            ElyseMessageBox_System.ShowWarningMessage "Warning in " & ctx.ModuleName & "." & ctx.ProcedureName, _
+            ShowWarningMessage "Warning in " & ctx.ModuleName & "." & ctx.ProcedureName, _
                 "A potential issue arose: " & ctx.ErrorDescription & vbCrLf & _
                 "Error Number: " & ctx.ErrorNumber & vbCrLf & _
                 "Additional Info: " & additionalInfo, _
@@ -259,7 +259,7 @@ Private Function ExecuteErrorActionAndGetResult(ctx As ErrorContext, Optional ad
             ' For low severity, often just logging is enough, no message box unless specifically needed.
             ' If additionalInfo suggests a user notification, it could be shown.
             If InStr(1, additionalInfo, "notify_user", vbTextCompare) > 0 Then
-                 ElyseMessageBox_System.ShowInfoMessage "Information", ctx.ErrorDescription, Buttons:=vbOKOnly
+                 ShowInfoMessage "Information", ctx.ErrorDescription, Buttons:=vbOKOnly
                  action = "SHOW_INFO"
             End If
         Case Else

@@ -52,6 +52,16 @@ Private mMessageBoxOpen As Boolean
 Private mCurrentResult As Long
 Private mLastMessageConfig As MessageBoxConfig
 
+' Additional status variables
+Private mMessageBoxStatus As Boolean
+Private mTicketSystemStatus As Boolean
+
+' Initialisation par défaut
+Private Sub InitMessageBoxStatus()
+    mMessageBoxStatus = True
+    mTicketSystemStatus = True
+End Sub
+
 ' ============================================================================
 ' TYPE 1: LIST SELECTION MESSAGEBOX
 ' ============================================================================

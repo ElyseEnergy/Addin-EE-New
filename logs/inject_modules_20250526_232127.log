@@ -1,0 +1,443 @@
+2025-05-26 23:21:27,868 - INFO - Début de l'injection des modules. Log file: logs\inject_modules_20250526_232127.log
+2025-05-26 23:21:27,869 - INFO - Vérification de l'accès au VBA Project
+2025-05-26 23:21:27,950 - DEBUG - Excel démarré en mode invisible
+2025-05-26 23:21:28,404 - DEBUG - Nouveau classeur créé
+2025-05-26 23:21:28,411 - INFO - Accès au VBA Project confirmé
+2025-05-26 23:21:28,557 - DEBUG - Classeur temporaire fermé
+2025-05-26 23:21:28,572 - DEBUG - Excel fermé
+2025-05-26 23:21:29,041 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-05-26 23:21:29,047 - INFO - Tentative de fermeture de toutes les instances Excel...
+2025-05-26 23:21:30,430 - DEBUG - Instance Excel trouvée - PID: 27900, Créé le: 2025-05-26 23:14:56
+2025-05-26 23:21:30,431 - INFO - Instance Excel terminée - PID: 27900, Créé le: 2025-05-26 23:14:56
+2025-05-26 23:21:30,476 - INFO - Attente de 2 secondes après la fermeture d'Excel...
+2025-05-26 23:21:32,477 - INFO - Démarrage d'Excel...
+2025-05-26 23:21:36,280 - DEBUG - Excel démarré en mode invisible, alertes désactivées
+2025-05-26 23:21:36,280 - INFO - Ouverture du fichier C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm...
+2025-05-26 23:21:40,658 - INFO - VBA Project accessible
+2025-05-26 23:21:40,920 - INFO - Composants actuels: ThisWorkbook, Sheet4, Sheet1, Sheet2, frmCustomMessageBox, frmListSelection, frmMarkdownDisplay, frmTicketInput, APP_MainOrchestrator, CFG_01_CategoryDefinitions, CFG_02_RagicFieldDictionary, CFG_03_CustomDataTypes, CFG_04_EnvironmentVariables, DAT_01_DataLoadManager, DAT_02_QueryLoader, DAT_03_PowerQueryManager, DAT_04_PowerQueryDebug, SEC_01_AccessProfiles, SYS_CoreSystem, SYS_ErrorHandler, SYS_Logger, SYS_MessageBox, SYS_SharePointIntegration, SYS_TicketSystem, UI_02_RibbonLogic, UI_03_RibbonActions, UTL_01_GeneralUtilities
+2025-05-26 23:21:40,922 - INFO - UserForms trouvés: frmCustomMessageBox.frm, frmListSelection.frm, frmMarkdownDisplay.frm, frmTicketInput.frm
+2025-05-26 23:21:40,923 - INFO - 
+Traitement du UserForm: frmCustomMessageBox
+2025-05-26 23:21:43,488 - INFO - Ancien UserForm frmCustomMessageBox supprimé
+2025-05-26 23:21:43,488 - DEBUG - Import de C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\frmCustomMessageBox.frm
+2025-05-26 23:21:43,571 - INFO - UserForm frmCustomMessageBox importé avec succès
+2025-05-26 23:21:43,572 - INFO - 
+Traitement du UserForm: frmListSelection
+2025-05-26 23:21:43,598 - INFO - Ancien UserForm frmListSelection supprimé
+2025-05-26 23:21:43,599 - DEBUG - Import de C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\frmListSelection.frm
+2025-05-26 23:21:43,789 - INFO - UserForm frmListSelection importé avec succès
+2025-05-26 23:21:43,791 - INFO - 
+Traitement du UserForm: frmMarkdownDisplay
+2025-05-26 23:21:43,848 - INFO - Ancien UserForm frmMarkdownDisplay supprimé
+2025-05-26 23:21:43,848 - DEBUG - Import de C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\frmMarkdownDisplay.frm
+2025-05-26 23:21:43,917 - INFO - UserForm frmMarkdownDisplay importé avec succès
+2025-05-26 23:21:43,918 - INFO - 
+Traitement du UserForm: frmTicketInput
+2025-05-26 23:21:43,946 - INFO - Ancien UserForm frmTicketInput supprimé
+2025-05-26 23:21:43,947 - DEBUG - Import de C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\frmTicketInput.frm
+2025-05-26 23:21:44,036 - INFO - UserForm frmTicketInput importé avec succès
+2025-05-26 23:21:44,037 - INFO - 
+Modules trouvés: APP_MainOrchestrator.bas, CFG_01_CategoryDefinitions.bas, CFG_02_RagicFieldDictionary.bas, CFG_03_CustomDataTypes.bas, CFG_04_EnvironmentVariables.bas, DAT_01_DataLoadManager.bas, DAT_02_QueryLoader.bas, DAT_03_PowerQueryManager.bas, DAT_04_PowerQueryDebug.bas, frmCustomMessageBox.bas, frmListSelection.bas, frmMarkdownDisplay.bas, frmTicketInput.bas, SEC_01_AccessProfiles.bas, SYS_CoreSystem.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, SYS_MessageBox.bas, SYS_SharePointIntegration.bas, SYS_TicketSystem.bas, ThisWorkbook.cls, UI_02_RibbonLogic.bas, UI_03_RibbonActions.bas, UTL_01_GeneralUtilities.bas
+2025-05-26 23:21:44,038 - DEBUG - Détermination du type de module pour: APP_MainOrchestrator
+2025-05-26 23:21:44,038 - DEBUG - APP_MainOrchestrator -> Type: StdModule (1)
+2025-05-26 23:21:44,038 - INFO - 
+Traitement du module: APP_MainOrchestrator (Type: 1)
+2025-05-26 23:21:44,068 - INFO - Ancien module APP_MainOrchestrator supprimé
+2025-05-26 23:21:44,069 - INFO - Lecture du fichier: APP_MainOrchestrator.bas
+2025-05-26 23:21:44,069 - DEBUG - Taille du fichier: 21670 octets
+2025-05-26 23:21:44,243 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:44,245 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:44,245 - DEBUG - Contenu lu: 21658 caractères
+2025-05-26 23:21:44,324 - DEBUG - Injection du code dans APP_MainOrchestrator
+2025-05-26 23:21:44,369 - INFO - Module APP_MainOrchestrator injecté avec succès
+2025-05-26 23:21:44,371 - DEBUG - Détermination du type de module pour: CFG_01_CategoryDefinitions
+2025-05-26 23:21:44,372 - DEBUG - CFG_01_CategoryDefinitions -> Type: StdModule (1)
+2025-05-26 23:21:44,372 - INFO - 
+Traitement du module: CFG_01_CategoryDefinitions (Type: 1)
+2025-05-26 23:21:44,416 - INFO - Ancien module CFG_01_CategoryDefinitions supprimé
+2025-05-26 23:21:44,417 - INFO - Lecture du fichier: CFG_01_CategoryDefinitions.bas
+2025-05-26 23:21:44,418 - DEBUG - Taille du fichier: 7273 octets
+2025-05-26 23:21:44,434 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:44,434 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:44,435 - DEBUG - Contenu lu: 7241 caractères
+2025-05-26 23:21:44,511 - DEBUG - Injection du code dans CFG_01_CategoryDefinitions
+2025-05-26 23:21:44,537 - INFO - Module CFG_01_CategoryDefinitions injecté avec succès
+2025-05-26 23:21:44,538 - DEBUG - Détermination du type de module pour: CFG_02_RagicFieldDictionary
+2025-05-26 23:21:44,538 - DEBUG - CFG_02_RagicFieldDictionary -> Type: StdModule (1)
+2025-05-26 23:21:44,540 - INFO - 
+Traitement du module: CFG_02_RagicFieldDictionary (Type: 1)
+2025-05-26 23:21:44,590 - INFO - Ancien module CFG_02_RagicFieldDictionary supprimé
+2025-05-26 23:21:44,591 - INFO - Lecture du fichier: CFG_02_RagicFieldDictionary.bas
+2025-05-26 23:21:44,591 - DEBUG - Taille du fichier: 7932 octets
+2025-05-26 23:21:44,604 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:44,606 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:44,606 - DEBUG - Contenu lu: 7887 caractères
+2025-05-26 23:21:44,711 - DEBUG - Injection du code dans CFG_02_RagicFieldDictionary
+2025-05-26 23:21:47,748 - INFO - Module CFG_02_RagicFieldDictionary injecté avec succès
+2025-05-26 23:21:47,749 - DEBUG - Détermination du type de module pour: CFG_03_CustomDataTypes
+2025-05-26 23:21:47,749 - DEBUG - CFG_03_CustomDataTypes -> Type: StdModule (1)
+2025-05-26 23:21:47,750 - INFO - 
+Traitement du module: CFG_03_CustomDataTypes (Type: 1)
+2025-05-26 23:21:47,777 - INFO - Ancien module CFG_03_CustomDataTypes supprimé
+2025-05-26 23:21:47,778 - INFO - Lecture du fichier: CFG_03_CustomDataTypes.bas
+2025-05-26 23:21:47,778 - DEBUG - Taille du fichier: 2688 octets
+2025-05-26 23:21:47,786 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:47,787 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:47,787 - DEBUG - Contenu lu: 2678 caractères
+2025-05-26 23:21:47,912 - DEBUG - Injection du code dans CFG_03_CustomDataTypes
+2025-05-26 23:21:47,932 - INFO - Module CFG_03_CustomDataTypes injecté avec succès
+2025-05-26 23:21:47,933 - DEBUG - Détermination du type de module pour: CFG_04_EnvironmentVariables
+2025-05-26 23:21:47,934 - DEBUG - CFG_04_EnvironmentVariables -> Type: StdModule (1)
+2025-05-26 23:21:47,934 - INFO - 
+Traitement du module: CFG_04_EnvironmentVariables (Type: 1)
+2025-05-26 23:21:47,967 - INFO - Ancien module CFG_04_EnvironmentVariables supprimé
+2025-05-26 23:21:47,968 - INFO - Lecture du fichier: CFG_04_EnvironmentVariables.bas
+2025-05-26 23:21:47,969 - DEBUG - Taille du fichier: 3235 octets
+2025-05-26 23:21:47,997 - DEBUG - EUC-TW Taiwan prober hit error at byte 115
+2025-05-26 23:21:48,012 - DEBUG - utf-8  confidence = 0.505
+2025-05-26 23:21:48,013 - DEBUG - SHIFT_JIS Japanese confidence = 0.01
+2025-05-26 23:21:48,013 - DEBUG - EUC-JP Japanese confidence = 0.01
+2025-05-26 23:21:48,013 - DEBUG - GB2312 Chinese confidence = 0.01
+2025-05-26 23:21:48,015 - DEBUG - EUC-KR Korean confidence = 0.01
+2025-05-26 23:21:48,015 - DEBUG - CP949 Korean confidence = 0.01
+2025-05-26 23:21:48,015 - DEBUG - Big5 Chinese confidence = 0.01
+2025-05-26 23:21:48,016 - DEBUG - EUC-TW not active
+2025-05-26 23:21:48,016 - DEBUG - Johab Korean confidence = 0.01
+2025-05-26 23:21:48,017 - DEBUG - windows-1251 Russian confidence = 0.01
+2025-05-26 23:21:48,017 - DEBUG - KOI8-R Russian confidence = 0.01
+2025-05-26 23:21:48,018 - DEBUG - ISO-8859-5 Russian confidence = 0.01
+2025-05-26 23:21:48,018 - DEBUG - MacCyrillic Russian confidence = 0.01
+2025-05-26 23:21:48,018 - DEBUG - IBM866 Russian confidence = 0.01
+2025-05-26 23:21:48,019 - DEBUG - IBM855 Russian confidence = 0.01
+2025-05-26 23:21:48,019 - DEBUG - ISO-8859-7 Greek confidence = 0.01
+2025-05-26 23:21:48,020 - DEBUG - windows-1253 Greek confidence = 0.01
+2025-05-26 23:21:48,020 - DEBUG - ISO-8859-5 Bulgarian confidence = 0.01
+2025-05-26 23:21:48,021 - DEBUG - windows-1251 Bulgarian confidence = 0.01
+2025-05-26 23:21:48,021 - DEBUG - TIS-620 Thai confidence = 0.0
+2025-05-26 23:21:48,023 - DEBUG - ISO-8859-9 Turkish confidence = 0.47555513522597903
+2025-05-26 23:21:48,025 - DEBUG - windows-1255 Hebrew confidence = 0.0
+2025-05-26 23:21:48,026 - DEBUG - windows-1255 Hebrew confidence = 0.07258971653425335
+2025-05-26 23:21:48,028 - DEBUG - windows-1255 Hebrew confidence = 0.02419657217808445
+2025-05-26 23:21:48,029 - DEBUG - Encodage détecté: {'encoding': 'ISO-8859-1', 'confidence': 0.73, 'language': ''}
+2025-05-26 23:21:48,029 - DEBUG - Tentative de lecture avec l'encodage: utf-8
+2025-05-26 23:21:48,030 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:48,030 - DEBUG - Contenu lu: 3234 caractères
+2025-05-26 23:21:48,143 - DEBUG - Injection du code dans CFG_04_EnvironmentVariables
+2025-05-26 23:21:48,171 - INFO - Module CFG_04_EnvironmentVariables injecté avec succès
+2025-05-26 23:21:48,172 - DEBUG - Détermination du type de module pour: DAT_01_DataLoadManager
+2025-05-26 23:21:48,173 - DEBUG - DAT_01_DataLoadManager -> Type: StdModule (1)
+2025-05-26 23:21:48,175 - INFO - 
+Traitement du module: DAT_01_DataLoadManager (Type: 1)
+2025-05-26 23:21:48,212 - INFO - Ancien module DAT_01_DataLoadManager supprimé
+2025-05-26 23:21:48,214 - INFO - Lecture du fichier: DAT_01_DataLoadManager.bas
+2025-05-26 23:21:48,214 - DEBUG - Taille du fichier: 37499 octets
+2025-05-26 23:21:48,264 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:48,265 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:48,265 - DEBUG - Contenu lu: 37238 caractères
+2025-05-26 23:21:48,363 - DEBUG - Injection du code dans DAT_01_DataLoadManager
+2025-05-26 23:21:48,418 - INFO - Module DAT_01_DataLoadManager injecté avec succès
+2025-05-26 23:21:48,419 - DEBUG - Détermination du type de module pour: DAT_02_QueryLoader
+2025-05-26 23:21:48,419 - DEBUG - DAT_02_QueryLoader -> Type: StdModule (1)
+2025-05-26 23:21:48,419 - INFO - 
+Traitement du module: DAT_02_QueryLoader (Type: 1)
+2025-05-26 23:21:48,469 - INFO - Ancien module DAT_02_QueryLoader supprimé
+2025-05-26 23:21:48,470 - INFO - Lecture du fichier: DAT_02_QueryLoader.bas
+2025-05-26 23:21:48,472 - DEBUG - Taille du fichier: 12970 octets
+2025-05-26 23:21:48,497 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:48,498 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:48,498 - DEBUG - Contenu lu: 12900 caractères
+2025-05-26 23:21:51,727 - DEBUG - Injection du code dans DAT_02_QueryLoader
+2025-05-26 23:21:51,761 - INFO - Module DAT_02_QueryLoader injecté avec succès
+2025-05-26 23:21:51,763 - DEBUG - Détermination du type de module pour: DAT_03_PowerQueryManager
+2025-05-26 23:21:51,763 - DEBUG - DAT_03_PowerQueryManager -> Type: StdModule (1)
+2025-05-26 23:21:51,764 - INFO - 
+Traitement du module: DAT_03_PowerQueryManager (Type: 1)
+2025-05-26 23:21:51,791 - INFO - Ancien module DAT_03_PowerQueryManager supprimé
+2025-05-26 23:21:51,791 - INFO - Lecture du fichier: DAT_03_PowerQueryManager.bas
+2025-05-26 23:21:51,792 - DEBUG - Taille du fichier: 15566 octets
+2025-05-26 23:21:51,807 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:51,808 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:51,809 - DEBUG - Contenu lu: 15486 caractères
+2025-05-26 23:21:51,930 - DEBUG - Injection du code dans DAT_03_PowerQueryManager
+2025-05-26 23:21:51,963 - INFO - Module DAT_03_PowerQueryManager injecté avec succès
+2025-05-26 23:21:51,965 - DEBUG - Détermination du type de module pour: DAT_04_PowerQueryDebug
+2025-05-26 23:21:51,965 - DEBUG - DAT_04_PowerQueryDebug -> Type: StdModule (1)
+2025-05-26 23:21:51,966 - INFO - 
+Traitement du module: DAT_04_PowerQueryDebug (Type: 1)
+2025-05-26 23:21:51,994 - INFO - Ancien module DAT_04_PowerQueryDebug supprimé
+2025-05-26 23:21:51,995 - INFO - Lecture du fichier: DAT_04_PowerQueryDebug.bas
+2025-05-26 23:21:51,995 - DEBUG - Taille du fichier: 10614 octets
+2025-05-26 23:21:52,008 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:52,008 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:52,009 - DEBUG - Contenu lu: 10518 caractères
+2025-05-26 23:21:52,079 - DEBUG - Injection du code dans DAT_04_PowerQueryDebug
+2025-05-26 23:21:52,101 - INFO - Module DAT_04_PowerQueryDebug injecté avec succès
+2025-05-26 23:21:52,102 - DEBUG - Détermination du type de module pour: frmCustomMessageBox
+2025-05-26 23:21:52,103 - DEBUG - frmCustomMessageBox -> Type: MSForm (3)
+2025-05-26 23:21:52,103 - INFO - 
+Traitement du module: frmCustomMessageBox (Type: 3)
+2025-05-26 23:21:52,103 - DEBUG - Module frmCustomMessageBox est un UserForm, déjà traité
+2025-05-26 23:21:52,104 - DEBUG - Détermination du type de module pour: frmListSelection
+2025-05-26 23:21:52,104 - DEBUG - frmListSelection -> Type: MSForm (3)
+2025-05-26 23:21:52,104 - INFO - 
+Traitement du module: frmListSelection (Type: 3)
+2025-05-26 23:21:52,105 - DEBUG - Module frmListSelection est un UserForm, déjà traité
+2025-05-26 23:21:52,105 - DEBUG - Détermination du type de module pour: frmMarkdownDisplay
+2025-05-26 23:21:52,105 - DEBUG - frmMarkdownDisplay -> Type: MSForm (3)
+2025-05-26 23:21:52,106 - INFO - 
+Traitement du module: frmMarkdownDisplay (Type: 3)
+2025-05-26 23:21:52,107 - DEBUG - Module frmMarkdownDisplay est un UserForm, déjà traité
+2025-05-26 23:21:52,107 - DEBUG - Détermination du type de module pour: frmTicketInput
+2025-05-26 23:21:52,107 - DEBUG - frmTicketInput -> Type: MSForm (3)
+2025-05-26 23:21:52,108 - INFO - 
+Traitement du module: frmTicketInput (Type: 3)
+2025-05-26 23:21:52,108 - DEBUG - Module frmTicketInput est un UserForm, déjà traité
+2025-05-26 23:21:52,109 - DEBUG - Détermination du type de module pour: SEC_01_AccessProfiles
+2025-05-26 23:21:52,109 - DEBUG - SEC_01_AccessProfiles -> Type: StdModule (1)
+2025-05-26 23:21:52,109 - INFO - 
+Traitement du module: SEC_01_AccessProfiles (Type: 1)
+2025-05-26 23:21:52,145 - INFO - Ancien module SEC_01_AccessProfiles supprimé
+2025-05-26 23:21:52,146 - INFO - Lecture du fichier: SEC_01_AccessProfiles.bas
+2025-05-26 23:21:52,146 - DEBUG - Taille du fichier: 5396 octets
+2025-05-26 23:21:52,156 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:52,156 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:52,157 - DEBUG - Contenu lu: 5362 caractères
+2025-05-26 23:21:52,252 - DEBUG - Injection du code dans SEC_01_AccessProfiles
+2025-05-26 23:21:52,275 - INFO - Module SEC_01_AccessProfiles injecté avec succès
+2025-05-26 23:21:52,277 - DEBUG - Détermination du type de module pour: SYS_CoreSystem
+2025-05-26 23:21:52,277 - DEBUG - SYS_CoreSystem -> Type: StdModule (1)
+2025-05-26 23:21:52,277 - INFO - 
+Traitement du module: SYS_CoreSystem (Type: 1)
+2025-05-26 23:21:52,307 - INFO - Ancien module SYS_CoreSystem supprimé
+2025-05-26 23:21:52,308 - INFO - Lecture du fichier: SYS_CoreSystem.bas
+2025-05-26 23:21:52,310 - DEBUG - Taille du fichier: 18483 octets
+2025-05-26 23:21:52,342 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:52,344 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:52,345 - DEBUG - Contenu lu: 18476 caractères
+2025-05-26 23:21:52,475 - DEBUG - Injection du code dans SYS_CoreSystem
+2025-05-26 23:21:55,526 - INFO - Module SYS_CoreSystem injecté avec succès
+2025-05-26 23:21:55,526 - DEBUG - Détermination du type de module pour: SYS_ErrorHandler
+2025-05-26 23:21:55,527 - DEBUG - SYS_ErrorHandler -> Type: StdModule (1)
+2025-05-26 23:21:55,527 - INFO - 
+Traitement du module: SYS_ErrorHandler (Type: 1)
+2025-05-26 23:21:55,557 - INFO - Ancien module SYS_ErrorHandler supprimé
+2025-05-26 23:21:55,557 - INFO - Lecture du fichier: SYS_ErrorHandler.bas
+2025-05-26 23:21:55,558 - DEBUG - Taille du fichier: 30356 octets
+2025-05-26 23:21:55,591 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:55,591 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:55,592 - DEBUG - Contenu lu: 30347 caractères
+2025-05-26 23:21:55,678 - DEBUG - Injection du code dans SYS_ErrorHandler
+2025-05-26 23:21:55,716 - INFO - Module SYS_ErrorHandler injecté avec succès
+2025-05-26 23:21:55,716 - DEBUG - Détermination du type de module pour: SYS_Logger
+2025-05-26 23:21:55,717 - DEBUG - SYS_Logger -> Type: StdModule (1)
+2025-05-26 23:21:55,717 - INFO - 
+Traitement du module: SYS_Logger (Type: 1)
+2025-05-26 23:21:55,740 - INFO - Ancien module SYS_Logger supprimé
+2025-05-26 23:21:55,741 - INFO - Lecture du fichier: SYS_Logger.bas
+2025-05-26 23:21:55,742 - DEBUG - Taille du fichier: 25482 octets
+2025-05-26 23:21:55,995 - DEBUG - EUC-TW Taiwan prober hit error at byte 10044
+2025-05-26 23:21:56,084 - DEBUG - utf-8  confidence = 0.938125
+2025-05-26 23:21:56,085 - DEBUG - SHIFT_JIS Japanese confidence = 0.01
+2025-05-26 23:21:56,085 - DEBUG - EUC-JP Japanese confidence = 0.01
+2025-05-26 23:21:56,085 - DEBUG - GB2312 Chinese confidence = 0.01
+2025-05-26 23:21:56,086 - DEBUG - EUC-KR Korean confidence = 0.01
+2025-05-26 23:21:56,087 - DEBUG - CP949 Korean confidence = 0.01
+2025-05-26 23:21:56,088 - DEBUG - Big5 Chinese confidence = 0.01
+2025-05-26 23:21:56,088 - DEBUG - EUC-TW not active
+2025-05-26 23:21:56,088 - DEBUG - Johab Korean confidence = 0.01
+2025-05-26 23:21:56,089 - DEBUG - windows-1251 Russian confidence = 0.01
+2025-05-26 23:21:56,089 - DEBUG - KOI8-R Russian confidence = 0.01
+2025-05-26 23:21:56,089 - DEBUG - ISO-8859-5 Russian confidence = 0.01
+2025-05-26 23:21:56,090 - DEBUG - MacCyrillic Russian confidence = 0.01
+2025-05-26 23:21:56,092 - DEBUG - IBM866 Russian confidence = 0.01
+2025-05-26 23:21:56,092 - DEBUG - IBM855 Russian confidence = 0.01
+2025-05-26 23:21:56,093 - DEBUG - ISO-8859-7 Greek confidence = 0.0
+2025-05-26 23:21:56,095 - DEBUG - windows-1253 Greek confidence = 0.0
+2025-05-26 23:21:56,096 - DEBUG - ISO-8859-5 Bulgarian confidence = 0.01
+2025-05-26 23:21:56,097 - DEBUG - windows-1251 Bulgarian confidence = 0.01
+2025-05-26 23:21:56,098 - DEBUG - TIS-620 Thai confidence = 0.014587346433898519
+2025-05-26 23:21:56,098 - DEBUG - ISO-8859-9 Turkish confidence = 0.4539534791614227
+2025-05-26 23:21:56,098 - DEBUG - windows-1255 Hebrew confidence = 0.0
+2025-05-26 23:21:56,098 - DEBUG - windows-1255 Hebrew confidence = 0.09475900834066045
+2025-05-26 23:21:56,099 - DEBUG - windows-1255 Hebrew confidence = 0.052643893522589136
+2025-05-26 23:21:56,099 - DEBUG - utf-8  confidence = 0.938125
+2025-05-26 23:21:56,100 - DEBUG - SHIFT_JIS Japanese confidence = 0.01
+2025-05-26 23:21:56,100 - DEBUG - EUC-JP Japanese confidence = 0.01
+2025-05-26 23:21:56,101 - DEBUG - GB2312 Chinese confidence = 0.01
+2025-05-26 23:21:56,104 - DEBUG - EUC-KR Korean confidence = 0.01
+2025-05-26 23:21:56,105 - DEBUG - CP949 Korean confidence = 0.01
+2025-05-26 23:21:56,105 - DEBUG - Big5 Chinese confidence = 0.01
+2025-05-26 23:21:56,106 - DEBUG - EUC-TW not active
+2025-05-26 23:21:56,106 - DEBUG - Johab Korean confidence = 0.01
+2025-05-26 23:21:56,107 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.938125, 'language': ''}
+2025-05-26 23:21:56,107 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:56,107 - DEBUG - Contenu lu: 25478 caractères
+2025-05-26 23:21:56,183 - DEBUG - Injection du code dans SYS_Logger
+2025-05-26 23:21:56,227 - INFO - Module SYS_Logger injecté avec succès
+2025-05-26 23:21:56,229 - DEBUG - Détermination du type de module pour: SYS_MessageBox
+2025-05-26 23:21:56,230 - DEBUG - SYS_MessageBox -> Type: StdModule (1)
+2025-05-26 23:21:56,230 - INFO - 
+Traitement du module: SYS_MessageBox (Type: 1)
+2025-05-26 23:21:56,265 - INFO - Ancien module SYS_MessageBox supprimé
+2025-05-26 23:21:56,267 - INFO - Lecture du fichier: SYS_MessageBox.bas
+2025-05-26 23:21:56,268 - DEBUG - Taille du fichier: 28252 octets
+2025-05-26 23:21:56,313 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:21:56,314 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:56,316 - DEBUG - Contenu lu: 28242 caractères
+2025-05-26 23:21:59,224 - DEBUG - Injection du code dans SYS_MessageBox
+2025-05-26 23:21:59,267 - INFO - Module SYS_MessageBox injecté avec succès
+2025-05-26 23:21:59,268 - DEBUG - Détermination du type de module pour: SYS_SharePointIntegration
+2025-05-26 23:21:59,269 - DEBUG - SYS_SharePointIntegration -> Type: StdModule (1)
+2025-05-26 23:21:59,270 - INFO - 
+Traitement du module: SYS_SharePointIntegration (Type: 1)
+2025-05-26 23:21:59,300 - INFO - Ancien module SYS_SharePointIntegration supprimé
+2025-05-26 23:21:59,300 - INFO - Lecture du fichier: SYS_SharePointIntegration.bas
+2025-05-26 23:21:59,301 - DEBUG - Taille du fichier: 28813 octets
+2025-05-26 23:21:59,317 - DEBUG - Encodage détecté: {'encoding': 'ascii', 'confidence': 1.0, 'language': ''}
+2025-05-26 23:21:59,317 - INFO - Fichier lu avec succès using ascii
+2025-05-26 23:21:59,319 - DEBUG - Contenu lu: 28813 caractères
+2025-05-26 23:21:59,393 - DEBUG - Injection du code dans SYS_SharePointIntegration
+2025-05-26 23:21:59,441 - INFO - Module SYS_SharePointIntegration injecté avec succès
+2025-05-26 23:21:59,442 - DEBUG - Détermination du type de module pour: SYS_TicketSystem
+2025-05-26 23:21:59,442 - DEBUG - SYS_TicketSystem -> Type: StdModule (1)
+2025-05-26 23:21:59,443 - INFO - 
+Traitement du module: SYS_TicketSystem (Type: 1)
+2025-05-26 23:21:59,466 - INFO - Ancien module SYS_TicketSystem supprimé
+2025-05-26 23:21:59,467 - INFO - Lecture du fichier: SYS_TicketSystem.bas
+2025-05-26 23:21:59,467 - DEBUG - Taille du fichier: 23125 octets
+2025-05-26 23:21:59,547 - DEBUG - EUC-JP Japanese prober hit error at byte 16819
+2025-05-26 23:21:59,579 - DEBUG - EUC-KR Korean prober hit error at byte 16819
+2025-05-26 23:21:59,595 - DEBUG - CP949 Korean prober hit error at byte 16819
+2025-05-26 23:21:59,611 - DEBUG - Big5 Chinese prober hit error at byte 16820
+2025-05-26 23:21:59,625 - DEBUG - EUC-TW Taiwan prober hit error at byte 16819
+2025-05-26 23:21:59,723 - DEBUG - utf-8 not active
+2025-05-26 23:21:59,723 - DEBUG - SHIFT_JIS Japanese confidence = 0.01
+2025-05-26 23:21:59,724 - DEBUG - EUC-JP not active
+2025-05-26 23:21:59,725 - DEBUG - GB2312 Chinese confidence = 0.01
+2025-05-26 23:21:59,726 - DEBUG - EUC-KR not active
+2025-05-26 23:21:59,726 - DEBUG - CP949 not active
+2025-05-26 23:21:59,726 - DEBUG - Big5 not active
+2025-05-26 23:21:59,727 - DEBUG - EUC-TW not active
+2025-05-26 23:21:59,727 - DEBUG - Johab Korean confidence = 0.01
+2025-05-26 23:21:59,728 - DEBUG - windows-1251 Russian confidence = 0.01
+2025-05-26 23:21:59,728 - DEBUG - KOI8-R Russian confidence = 0.01
+2025-05-26 23:21:59,728 - DEBUG - ISO-8859-5 Russian confidence = 0.01
+2025-05-26 23:21:59,729 - DEBUG - MacCyrillic Russian confidence = 0.0
+2025-05-26 23:21:59,729 - DEBUG - IBM866 Russian confidence = 0.09599621544520229
+2025-05-26 23:21:59,730 - DEBUG - IBM855 Russian confidence = 0.01
+2025-05-26 23:21:59,730 - DEBUG - ISO-8859-7 Greek confidence = 0.01
+2025-05-26 23:21:59,731 - DEBUG - windows-1253 Greek confidence = 0.01
+2025-05-26 23:21:59,731 - DEBUG - ISO-8859-5 Bulgarian confidence = 0.01
+2025-05-26 23:21:59,731 - DEBUG - windows-1251 Bulgarian confidence = 0.01
+2025-05-26 23:21:59,732 - DEBUG - TIS-620 Thai confidence = 0.01
+2025-05-26 23:21:59,732 - DEBUG - ISO-8859-9 Turkish confidence = 0.4886990778396829
+2025-05-26 23:21:59,733 - DEBUG - windows-1255 Hebrew confidence = 0.0
+2025-05-26 23:21:59,733 - DEBUG - windows-1255 Hebrew confidence = 0.01
+2025-05-26 23:21:59,733 - DEBUG - windows-1255 Hebrew confidence = 0.01
+2025-05-26 23:21:59,734 - DEBUG - Encodage détecté: {'encoding': 'Windows-1252', 'confidence': 0.7293218014510706, 'language': ''}
+2025-05-26 23:21:59,735 - DEBUG - Tentative de lecture avec l'encodage: utf-8
+2025-05-26 23:21:59,735 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:21:59,735 - DEBUG - Contenu lu: 23122 caractères
+2025-05-26 23:21:59,800 - DEBUG - Injection du code dans SYS_TicketSystem
+2025-05-26 23:21:59,831 - INFO - Module SYS_TicketSystem injecté avec succès
+2025-05-26 23:21:59,833 - DEBUG - Détermination du type de module pour: ThisWorkbook
+2025-05-26 23:21:59,835 - DEBUG - ThisWorkbook -> Type: Document (100)
+2025-05-26 23:21:59,836 - INFO - 
+Traitement du module: ThisWorkbook (Type: 100)
+2025-05-26 23:21:59,847 - WARNING - Erreur lors de la suppression de ThisWorkbook: (-2147352567, 'Une exception s’est produite.', (0, None, None, None, 0, -2147024809), None)
+2025-05-26 23:21:59,848 - INFO - Lecture du fichier: ThisWorkbook.cls
+2025-05-26 23:21:59,850 - DEBUG - Taille du fichier: 681 octets
+2025-05-26 23:21:59,857 - DEBUG - EUC-JP Japanese prober hit error at byte 317
+2025-05-26 23:21:59,858 - DEBUG - EUC-KR Korean prober hit error at byte 317
+2025-05-26 23:21:59,859 - DEBUG - CP949 Korean prober hit error at byte 317
+2025-05-26 23:21:59,860 - DEBUG - EUC-TW Taiwan prober hit error at byte 317
+2025-05-26 23:21:59,864 - DEBUG - utf-8 not active
+2025-05-26 23:21:59,865 - DEBUG - SHIFT_JIS Japanese confidence = 0.01
+2025-05-26 23:21:59,867 - DEBUG - EUC-JP not active
+2025-05-26 23:21:59,869 - DEBUG - GB2312 Chinese confidence = 0.01
+2025-05-26 23:21:59,869 - DEBUG - EUC-KR not active
+2025-05-26 23:21:59,869 - DEBUG - CP949 not active
+2025-05-26 23:21:59,870 - DEBUG - Big5 Chinese confidence = 0.01
+2025-05-26 23:21:59,870 - DEBUG - EUC-TW not active
+2025-05-26 23:21:59,870 - DEBUG - Johab Korean confidence = 0.01
+2025-05-26 23:21:59,871 - DEBUG - windows-1251 Russian confidence = 0.01
+2025-05-26 23:21:59,871 - DEBUG - KOI8-R Russian confidence = 0.01
+2025-05-26 23:21:59,872 - DEBUG - ISO-8859-5 Russian confidence = 0.01
+2025-05-26 23:21:59,872 - DEBUG - MacCyrillic Russian confidence = 0.01
+2025-05-26 23:21:59,872 - DEBUG - IBM866 Russian confidence = 0.01
+2025-05-26 23:21:59,873 - DEBUG - IBM855 Russian confidence = 0.01
+2025-05-26 23:21:59,873 - DEBUG - ISO-8859-7 Greek confidence = 0.0
+2025-05-26 23:21:59,874 - DEBUG - windows-1253 Greek confidence = 0.0
+2025-05-26 23:21:59,874 - DEBUG - ISO-8859-5 Bulgarian confidence = 0.01
+2025-05-26 23:21:59,874 - DEBUG - windows-1251 Bulgarian confidence = 0.01
+2025-05-26 23:21:59,875 - DEBUG - TIS-620 Thai confidence = 0.01
+2025-05-26 23:21:59,875 - DEBUG - ISO-8859-9 Turkish confidence = 0.45708515458180055
+2025-05-26 23:21:59,875 - DEBUG - windows-1255 Hebrew confidence = 0.0
+2025-05-26 23:21:59,875 - DEBUG - windows-1255 Hebrew confidence = 0.08136690448120554
+2025-05-26 23:21:59,876 - DEBUG - windows-1255 Hebrew confidence = 0.023247686994630156
+2025-05-26 23:21:59,876 - DEBUG - Encodage détecté: {'encoding': 'ISO-8859-1', 'confidence': 0.73, 'language': ''}
+2025-05-26 23:21:59,877 - DEBUG - Tentative de lecture avec l'encodage: utf-8
+2025-05-26 23:21:59,877 - DEBUG - Échec avec utf-8: 'utf-8' codec can't decode byte 0xe8 in position 316: invalid continuation byte
+2025-05-26 23:21:59,879 - DEBUG - Tentative de lecture avec l'encodage: cp1252
+2025-05-26 23:21:59,881 - INFO - Fichier lu avec succès using cp1252
+2025-05-26 23:21:59,882 - DEBUG - Contenu lu: 681 caractères
+2025-05-26 23:21:59,882 - DEBUG - Traitement du contenu du module Workbook
+2025-05-26 23:21:59,883 - DEBUG - Contenu ThisWorkbook traité
+2025-05-26 23:21:59,898 - ERROR - Erreur lors de l'injection de ThisWorkbook: (-2147352567, 'Une exception s’est produite.', (0, None, None, None, 0, -2146827848), None)
+2025-05-26 23:21:59,910 - ERROR - Stacktrace: Traceback (most recent call last):
+  File "C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\inject_modules.py", line 291, in inject_modules
+    new_module = vba_project.VBComponents.Add(module_type)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<COMObject <unknown>>", line 2, in Add
+pywintypes.com_error: (-2147352567, 'Une exception s’est produite.', (0, None, None, None, 0, -2146827848), None)
+
+2025-05-26 23:22:02,205 - DEBUG - Détermination du type de module pour: UI_02_RibbonLogic
+2025-05-26 23:22:02,206 - DEBUG - UI_02_RibbonLogic -> Type: StdModule (1)
+2025-05-26 23:22:02,207 - INFO - 
+Traitement du module: UI_02_RibbonLogic (Type: 1)
+2025-05-26 23:22:02,248 - INFO - Ancien module UI_02_RibbonLogic supprimé
+2025-05-26 23:22:02,250 - INFO - Lecture du fichier: UI_02_RibbonLogic.bas
+2025-05-26 23:22:02,251 - DEBUG - Taille du fichier: 8567 octets
+2025-05-26 23:22:02,264 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:22:02,265 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:22:02,265 - DEBUG - Contenu lu: 8543 caractères
+2025-05-26 23:22:02,328 - DEBUG - Injection du code dans UI_02_RibbonLogic
+2025-05-26 23:22:02,372 - INFO - Module UI_02_RibbonLogic injecté avec succès
+2025-05-26 23:22:02,372 - DEBUG - Détermination du type de module pour: UI_03_RibbonActions
+2025-05-26 23:22:02,373 - DEBUG - UI_03_RibbonActions -> Type: StdModule (1)
+2025-05-26 23:22:02,373 - INFO - 
+Traitement du module: UI_03_RibbonActions (Type: 1)
+2025-05-26 23:22:02,410 - INFO - Ancien module UI_03_RibbonActions supprimé
+2025-05-26 23:22:02,411 - INFO - Lecture du fichier: UI_03_RibbonActions.bas
+2025-05-26 23:22:02,412 - DEBUG - Taille du fichier: 45824 octets
+2025-05-26 23:22:02,469 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:22:02,470 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:22:02,471 - DEBUG - Contenu lu: 45584 caractères
+2025-05-26 23:22:02,540 - DEBUG - Injection du code dans UI_03_RibbonActions
+2025-05-26 23:22:02,613 - INFO - Module UI_03_RibbonActions injecté avec succès
+2025-05-26 23:22:02,616 - DEBUG - Détermination du type de module pour: UTL_01_GeneralUtilities
+2025-05-26 23:22:02,617 - DEBUG - UTL_01_GeneralUtilities -> Type: StdModule (1)
+2025-05-26 23:22:02,618 - INFO - 
+Traitement du module: UTL_01_GeneralUtilities (Type: 1)
+2025-05-26 23:22:02,653 - INFO - Ancien module UTL_01_GeneralUtilities supprimé
+2025-05-26 23:22:02,653 - INFO - Lecture du fichier: UTL_01_GeneralUtilities.bas
+2025-05-26 23:22:02,654 - DEBUG - Taille du fichier: 7574 octets
+2025-05-26 23:22:02,663 - DEBUG - Encodage détecté: {'encoding': 'utf-8', 'confidence': 0.99, 'language': ''}
+2025-05-26 23:22:02,665 - INFO - Fichier lu avec succès using utf-8
+2025-05-26 23:22:02,665 - DEBUG - Contenu lu: 7499 caractères
+2025-05-26 23:22:02,733 - DEBUG - Injection du code dans UTL_01_GeneralUtilities
+2025-05-26 23:22:02,759 - INFO - Module UTL_01_GeneralUtilities injecté avec succès
+2025-05-26 23:22:02,760 - INFO - 
+Sauvegarde des modifications...
+2025-05-26 23:22:06,790 - INFO - Fermeture du classeur...
+2025-05-26 23:22:08,279 - INFO - Fermeture d'Excel...
+2025-05-26 23:22:09,281 - INFO - 
+Injection terminée avec succès!
+2025-05-26 23:22:09,283 - INFO - Nettoyage final...
+2025-05-26 23:22:09,340 - WARNING - Erreur lors de la fermeture du workbook: (-2147417848, 'L’objet invoqué s’est déconnecté de ses clients.', None, None)
+2025-05-26 23:22:09,361 - DEBUG - Excel fermé
+2025-05-26 23:22:09,362 - INFO - Tentative de fermeture de toutes les instances Excel...
+2025-05-26 23:22:11,363 - DEBUG - Instance Excel trouvée - PID: 27284, Créé le: 2025-05-26 23:21:32
+2025-05-26 23:22:11,365 - INFO - Instance Excel terminée - PID: 27284, Créé le: 2025-05-26 23:21:32
+2025-05-26 23:22:11,429 - INFO - Attente de 2 secondes après la fermeture d'Excel...
+2025-05-26 23:22:13,430 - INFO - Nettoyage terminé
