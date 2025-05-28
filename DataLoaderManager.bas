@@ -10,6 +10,11 @@ End Enum
 
 ' Fonction principale de traitement
 Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "ProcessDataLoad"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
@@ -113,12 +118,27 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     
     ' 8. Nettoyer la requête PowerQuery après le collage réussi
     CleanupPowerQuery loadInfo.Category.PowerQueryName
+      ProcessDataLoad = DataLoadResult.Success
+    Exit Function
+
+ErrorHandler:
+    Dim errorMsg As String
+    errorMsg = "Erreur lors du traitement des données pour la catégorie " & loadInfo.Category.Name & ": " & Err.Description
+    HandleError MODULE_NAME, PROC_NAME, errorMsg
     
-    ProcessDataLoad = DataLoadResult.Success
+    ' Nettoyer la requête en cas d'erreur
+    On Error Resume Next
+    CleanupPowerQuery loadInfo.Category.PowerQueryName
+    ProcessDataLoad = DataLoadResult.Error
 End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(Category As CategoryInfo) As Collection
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GetSelectedValues"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim lo As ListObject
     Dim dict As Object
     Dim arrValues() As String
@@ -324,7 +344,9 @@ ErrorHandler:
     If Err.Number = 424 Then  ' "L'objet est requis" - typiquement quand l'utilisateur annule une InputBox
         Set GetSelectedValues = Nothing
     Else
-        MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
+        Dim errorMsg As String
+        errorMsg = "Erreur lors de la sélection des valeurs pour la catégorie " & Category.Name & ": " & Err.Description
+        HandleError MODULE_NAME, PROC_NAME, errorMsg
         Set GetSelectedValues = Nothing
     End If
     Exit Function
@@ -332,6 +354,11 @@ End Function
 
 ' Gère le mode d'affichage (normal/transposé)
 Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GetDisplayMode"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim lo As ListObject
     Dim nbFiches As Long, nbChamps As Long
     Dim previewNormal As String, previewTransposed As String
@@ -373,15 +400,24 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
         GetDisplayMode = True
     ElseIf userChoice = 1 Then
         GetDisplayMode = False
-    Else
-        MsgBox "Veuillez entrer 1 ou 2", vbExclamation
+    Else        MsgBox "Veuillez entrer 1 ou 2", vbExclamation
         GetDisplayMode = -999 ' Code d'erreur spécifique
     End If
+    Exit Function
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection du mode d'affichage"
+    GetDisplayMode = -999 ' Code d'erreur spécifique
 End Function
 
 ' Génère les prévisualisations pour les deux modes
 Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
                            ByRef previewNormal As String, ByRef previewTransposed As String)
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GeneratePreviews"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim i As Long, j As Long, idx As Long
     Dim colWidths() As Integer, rowWidths() As Integer
     Dim v As Variant
@@ -473,10 +509,19 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
         Next v
         previewTransposed = previewTransposed & vbCrLf
     Next i
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération des prévisualisations"
 End Sub
 
 ' Gère la sélection de la destination
 Private Function GetDestination(loadInfo As DataLoadInfo) As Range
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GetDestination"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim lo As ListObject
     Dim nbRows As Long, nbCols As Long
     Dim okPlage As Boolean
@@ -525,12 +570,12 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         GoTo CheckSpace
         
 ErrorHandler:
-        If Err.Number = 424 Then  ' Erreur "L'objet est requis"
+        If Err.Number = 424 Then  ' Erreur "L'objet est requis" (annulation par l'utilisateur)
             MsgBox "Opération annulée", vbInformation
             Set GetDestination = Nothing
             Exit Function
         ElseIf Err.Number <> 0 Then
-            MsgBox "Une erreur s'est produite : " & Err.Description, vbExclamation
+            HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection de la destination: " & Err.Description
             Set GetDestination = Nothing
             Exit Function
         End If
@@ -561,6 +606,11 @@ End Function
 
 ' Colle les données selon le mode choisi
 Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "PasteData"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim lo As ListObject
     Dim tblRange As Range
     Dim i As Long, j As Long
@@ -689,13 +739,26 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
       ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
     ProtectSheetWithTable tblRange.Worksheet
-    Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"    PasteData = True
+    Exit Function
 
-    PasteData = True
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du collage des données: " & Err.Description
+    
+    ' Cleanup en cas d'erreur
+    On Error Resume Next
+    ws.Unprotect
+    PasteData = False
+    Exit Function
 End Function
 
 ' Protège uniquement les tableaux EE_ dans la feuille
 Private Sub ProtectSheetWithTable(ws As Worksheet)
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "ProtectSheetWithTable"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     ws.Unprotect
     
     ' 1. Déverrouiller toutes les cellules
@@ -709,17 +772,25 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
         End If
     Next tbl
     
-    ' 3. Protéger la feuille avec les permissions standard
-    ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
+    ' 3. Protéger la feuille avec les permissions standard    ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
                AllowFormattingColumns:=True, AllowFormattingRows:=True, _
                AllowInsertingColumns:=True, AllowInsertingRows:=True, _
                AllowInsertingHyperlinks:=True, AllowDeletingColumns:=True, _
                AllowDeletingRows:=True, AllowSorting:=True, _
                AllowFiltering:=True, AllowUsingPivotTables:=True
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la protection de la feuille avec les tableaux"
 End Sub
 
 ' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
 Private Function GetUniqueTableName(CategoryName As String) As String
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GetUniqueTableName"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     Dim baseName As String
     baseName = "EE_" & Utilities.SanitizeTableName(CategoryName)
     Dim maxIndex As Long
@@ -743,13 +814,20 @@ Private Function GetUniqueTableName(CategoryName As String) As String
                 End If
             End If
         Next tbl
-    Next ws
-    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
+    Next ws    GetUniqueTableName = baseName & "_" & (maxIndex + 1)
+    Exit Function
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération du nom unique pour le tableau de la catégorie " & CategoryName
+    GetUniqueTableName = baseName & "_ERROR"
 End Function
 
 ' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même
 Public Sub CleanupPowerQuery(queryName As String)
-    On Error Resume Next
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "CleanupPowerQuery"
+    Const MODULE_NAME As String = "DataLoaderManager"
     
     ' 1. Supprimer la table si elle existe
     Dim lo As ListObject
@@ -760,16 +838,25 @@ Public Sub CleanupPowerQuery(queryName As String)
     
     ' 2. Forcer le nettoyage du cache PowerQuery en supprimant la requête
     Dim wb As Workbook
-    Set wb = ThisWorkbook
-    With wb.Queries(queryName)
+    Set wb = ThisWorkbook    With wb.Queries(queryName)
         .Delete
     End With
-    
-    On Error GoTo 0
+    Exit Sub
+
+ErrorHandler:
+    ' Note : On ignore les erreurs ici car c'est une fonction de nettoyage
+    ' qui peut échouer si les éléments n'existent déjà plus
+    Log "cleanup_error", "Erreur ignorée lors du nettoyage de la requête " & queryName & ": " & Err.Description, WARNING_LEVEL, PROC_NAME, MODULE_NAME
+    Resume Next
 End Sub
 
 ' Fonction générique pour traiter une catégorie
 Public Function ProcessCategory(CategoryName As String, Optional errorMessage As String = "") As DataLoadResult
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "ProcessCategory"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    
     If CategoriesCount = 0 Then InitCategories
     
     Dim loadInfo As DataLoadInfo
@@ -795,8 +882,15 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
         ProcessCategory = DataLoadResult.Error
         Exit Function
     End If
-    
-    ProcessCategory = DataLoadResult.Success
+      ProcessCategory = DataLoadResult.Success
+    Exit Function
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de la catégorie " & CategoryName & ": " & Err.Description
+    If errorMessage <> "" Then
+        MsgBox errorMessage, vbExclamation
+    End If
+    ProcessCategory = DataLoadResult.Error
 End Function
 
 

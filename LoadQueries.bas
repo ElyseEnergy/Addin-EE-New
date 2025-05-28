@@ -1,18 +1,19 @@
 Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     On Error GoTo ErrorHandler
     
+    Const PROC_NAME As String = "LoadQuery"
+    Const MODULE_NAME As String = "LoadQueries"
+    
     If QueryName = "" Then
-        HandleError "LoadQueries", "LoadQuery", "Nom de requête vide"
+        HandleError MODULE_NAME, PROC_NAME, "Nom de requête vide"
         Exit Sub
     End If
-    
-    If ws Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spécifiée"
+      If ws Is Nothing Then
+        HandleError MODULE_NAME, PROC_NAME, "Feuille de calcul non spécifiée"
         Exit Sub
     End If
-    
-    If DestCell Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spécifiée"
+      If DestCell Is Nothing Then
+        HandleError MODULE_NAME, PROC_NAME, "Cellule de destination non spécifiée"
         Exit Sub
     End If
     
@@ -55,19 +56,21 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Exit Sub
     
 ErrorHandler:
-    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requête: " & QueryName
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du chargement de la requête: " & QueryName
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
+    Const PROC_NAME As String = "ChooseMultipleValuesFromListWithAll"
+    Const MODULE_NAME As String = "LoadQueries"
+    
     If idList Is Nothing Or displayList Is Nothing Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisées"
+        HandleError MODULE_NAME, PROC_NAME, "Listes non initialisées"
         Exit Function
     End If
-    
-    If idList.Count <> displayList.Count Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la même taille"
+      If idList.Count <> displayList.Count Then
+        HandleError MODULE_NAME, PROC_NAME, "Les listes n'ont pas la même taille"
         Exit Function
     End If
     
@@ -105,19 +108,21 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sélection des valeurs"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection des valeurs"
 End Function
 
 Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
+    Const PROC_NAME As String = "ChooseMultipleValuesFromArrayWithAll"
+    Const MODULE_NAME As String = "LoadQueries"
+    
     If Not IsArray(values) Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisé"
+        HandleError MODULE_NAME, PROC_NAME, "Tableau non initialisé"
         Exit Function
     End If
-    
-    If UBound(values) < 1 Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau vide"
+      If UBound(values) < 1 Then
+        HandleError MODULE_NAME, PROC_NAME, "Tableau vide"
         Exit Function
     End If
     
@@ -160,9 +165,8 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
             End If
         Next i
         
-        ' Si aucune sélection valide n'a été trouvée
-        If Not hasValidSelection Then
-            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sélection valide"
+        ' Si aucune sélection valide n'a été trouvée        If Not hasValidSelection Then
+            HandleError MODULE_NAME, PROC_NAME, "Aucune sélection valide"
             Exit Function
         End If
     End If
@@ -171,5 +175,5 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sélection des valeurs"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection des valeurs"
 End Function

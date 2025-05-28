@@ -71,10 +71,11 @@ Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
     template = "let" & vbCrLf & _
           "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
           "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
-          "    // Trouver la colonne ID quelle que soit sa casse" & vbCrLf & _
+          "    // Trouver la colonne ID en prenant en compte différents formats possibles" & vbCrLf & _
           "    Colonnes = Table.ColumnNames(PromotedHeaders)," & vbCrLf & _
-          "    IdColumn = List.First(List.Select(Colonnes, each Text.Lower(_) = ""id""))," & vbCrLf & _
-          "    AutresColonnes = List.Select(Colonnes, each Text.Lower(_) <> ""id"")," & vbCrLf & _
+          "    PossibleIdColumns = List.Select(Colonnes, each Text.Lower(_) = ""id"" or _ = ""rda #"" or _ = ""dib #"")," & vbCrLf & _
+          "    IdColumn = List.First(PossibleIdColumns)," & vbCrLf & _
+          "    AutresColonnes = List.Select(Colonnes, each _ <> IdColumn)," & vbCrLf & _
           "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
           "    ReorderedColumns = Table.ReorderColumns(PromotedHeaders, {IdColumn} & AutresColonnes)," & vbCrLf & _
           "    // Typer la colonne ID" & vbCrLf & _
@@ -118,7 +119,4 @@ End Sub
 Public Function GetStoredColumnType(queryName As String, columnName As String) As String
     If mColumnTypes Is Nothing Then Exit Function
     If Not mColumnTypes.Exists(queryName) Then Exit Function
-    If Not mColumnTypes(queryName).Exists(columnName) Then Exit Function
-    
-    GetStoredColumnType = mColumnTypes(queryName)(columnName)
-End Function
+    If Not mColumnTypes(queryName).Exi

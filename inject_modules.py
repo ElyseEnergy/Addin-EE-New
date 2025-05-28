@@ -55,7 +55,7 @@ def start_excel():
     kill_excel()  # On s'assure qu'aucune instance n'est en cours
     time.sleep(1)
     try:
-        excel = win32com.client.gencache.EnsureDispatch('Excel.Application')
+        excel = win32com.client.Dispatch('Excel.Application')
         excel.Visible = False  # On essaie de le cacher dès le début
         time.sleep(1)
         return excel

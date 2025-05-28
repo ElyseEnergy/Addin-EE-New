@@ -25,6 +25,11 @@ Private mCurrentLogLevel As LogLevel
 ' ============================================================================
 
 Public Sub InitializeLogger()
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "InitializeLogger"
+    Const MODULE_NAME As String = "SYS_Logger"
+    
     ' Initialisation du niveau de log par défaut
     mCurrentLogLevel = INFO_LEVEL
     
@@ -32,7 +37,11 @@ Public Sub InitializeLogger()
     EnsureLogFolderExists
     
     ' Log d'initialisation
-    Log "sys_init", "Système de logging initialisé", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
+    Log "sys_init", "Système de logging initialisé", INFO_LEVEL, PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'initialisation du système de logging"
 End Sub
 
 ' ============================================================================
@@ -41,16 +50,30 @@ End Sub
 
 ' Assure que le dossier de logs existe
 Private Sub EnsureLogFolderExists()
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "EnsureLogFolderExists"
+    Const MODULE_NAME As String = "SYS_Logger"
+    
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     If Not fso.FolderExists(LOG_FOLDER_PATH) Then
         fso.CreateFolder LOG_FOLDER_PATH
     End If
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création du dossier de logs: " & LOG_FOLDER_PATH
 End Sub
 
 ' Écrit dans le fichier de log
 Private Sub WriteToLogFile(logMessage As String)
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "WriteToLogFile"
+    Const MODULE_NAME As String = "SYS_Logger"
+    
     Dim fso As Object
     Dim logFile As Object
     Dim logFilePath As String
@@ -69,10 +92,18 @@ Private Sub WriteToLogFile(logMessage As String)
     
     ' Fermer le fichier
     logFile.Close
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'écriture dans le fichier de log: " & logFilePath
 End Sub
 
 Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "Log"
+    Const MODULE_NAME As String = "SYS_Logger"
     
     If level < mCurrentLogLevel Then Exit Sub
     
@@ -117,6 +148,11 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     
     ' Écrire dans le fichier de log
     WriteToLogFile logMessage
+    Exit Sub
+
+ErrorHandler:
+    ' Note: On ne peut pas utiliser HandleError ici car cela créerait une boucle infinie
+    Debug.Print "ERREUR CRITIQUE DANS LE SYSTÈME DE LOG: " & Err.Description
 End Sub
 
 ' ============================================================================
@@ -124,12 +160,26 @@ End Sub
 ' ============================================================================
 
 Public Sub SetLogLevel(level As LogLevel)
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "SetLogLevel"
+    Const MODULE_NAME As String = "SYS_Logger"
+    
     mCurrentLogLevel = level
-    Log "log_level_changed", "Niveau de log défini à: " & level, INFO_LEVEL
+    Log "log_level_changed", "Niveau de log défini à: " & level, INFO_LEVEL, PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du changement de niveau de log"
 End Sub
 
 ' Purge les anciens fichiers de log
 Public Sub PurgeOldLogs(Optional ByVal daysToKeep As Integer = 30)
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "PurgeOldLogs"
+    Const MODULE_NAME As String = "SYS_Logger"
+    
     Dim fso As Object
     Dim folder As Object
     Dim file As Object
@@ -149,8 +199,12 @@ Public Sub PurgeOldLogs(Optional ByVal daysToKeep As Integer = 30)
     For Each file In folder.Files
         ' Si le fichier est plus vieux que la date limite, le supprimer
         If file.DateLastModified < cutoffDate Then
-            Log "purge_logs", "Suppression du fichier de log: " & file.Name, INFO_LEVEL, "PurgeOldLogs", "SYS_Logger"
+            Log "purge_logs", "Suppression du fichier de log: " & file.Name, INFO_LEVEL, PROC_NAME, MODULE_NAME
             file.Delete
         End If
     Next file
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la purge des anciens fichiers de log"
 End Sub

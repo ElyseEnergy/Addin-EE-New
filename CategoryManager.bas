@@ -9,6 +9,9 @@ Public CategoriesCount As Long
 Public Sub InitCategories()
     On Error GoTo ErrorHandler
     
+    Const PROC_NAME As String = "InitCategories"
+    Const MODULE_NAME As String = "CategoryManager"
+    
     CategoriesCount = 0
     ReDim Categories(1 To 1)
     LoadRagicDictionary
@@ -56,22 +59,23 @@ Public Sub InitCategories()
     AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
     AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
     AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
-    AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"
-    'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
+    AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"    'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
     'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
     
     Exit Sub
     
 ErrorHandler:
-    HandleError "CategoryManager", "InitCategories", "Erreur lors de l'initialisation des catégories"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'initialisation des catégories"
 End Sub
 
 ' Ajoute une catégorie au tableau
 Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "", Optional sheetName As String = "")
     On Error GoTo ErrorHandler
     
-    If name = "" Or displayName = "" Or path = "" Or categoryGroup = "" Then
-        HandleError "CategoryManager", "AddCategory", "Paramètres invalides pour l'ajout de catégorie"
+    Const PROC_NAME As String = "AddCategory"
+    Const MODULE_NAME As String = "CategoryManager"
+      If name = "" Or displayName = "" Or path = "" Or categoryGroup = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Paramètres invalides pour l'ajout de catégorie"
         Exit Sub
     End If
     
@@ -96,15 +100,17 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
     Exit Sub
     
 ErrorHandler:
-    HandleError "CategoryManager", "AddCategory", "Erreur lors de l'ajout de la catégorie: " & name
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'ajout de la catégorie: " & name
 End Sub
 
 ' Retourne l'index d'une catégorie par son nom d'affichage
 Public Function GetCategoryIndexByName(displayName As String) As Long
     On Error GoTo ErrorHandler
     
-    If displayName = "" Then
-        HandleError "CategoryManager", "GetCategoryIndexByName", "Nom d'affichage vide"
+    Const PROC_NAME As String = "GetCategoryIndexByName"
+    Const MODULE_NAME As String = "CategoryManager"
+      If displayName = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Nom d'affichage vide"
         GetCategoryIndexByName = 0
         Exit Function
     End If
@@ -120,7 +126,7 @@ Public Function GetCategoryIndexByName(displayName As String) As Long
     Exit Function
     
 ErrorHandler:
-    HandleError "CategoryManager", "GetCategoryIndexByName", "Erreur lors de la recherche de l'index de la catégorie: " & displayName
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la recherche de l'index de la catégorie: " & displayName
     GetCategoryIndexByName = 0
 End Function
 
@@ -128,8 +134,10 @@ End Function
 Public Function GetCategoryByName(displayName As String) As CategoryInfo
     On Error GoTo ErrorHandler
     
-    If displayName = "" Then
-        HandleError "CategoryManager", "GetCategoryByName", "Nom d'affichage vide"
+    Const PROC_NAME As String = "GetCategoryByName"
+    Const MODULE_NAME As String = "CategoryManager"
+      If displayName = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Nom d'affichage vide"
         Exit Function
     End If
     
@@ -141,15 +149,17 @@ Public Function GetCategoryByName(displayName As String) As CategoryInfo
     Exit Function
     
 ErrorHandler:
-    HandleError "CategoryManager", "GetCategoryByName", "Erreur lors de la récupération de la catégorie: " & displayName
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de la catégorie: " & displayName
 End Function
 
 ' Retourne toutes les catégories sous forme de tableau
 Public Function GetAllCategories() As Variant
     On Error GoTo ErrorHandler
     
-    If CategoriesCount = 0 Then
-        HandleError "CategoryManager", "GetAllCategories", "Aucune catégorie n'est définie"
+    Const PROC_NAME As String = "GetAllCategories"
+    Const MODULE_NAME As String = "CategoryManager"
+      If CategoriesCount = 0 Then
+        HandleError MODULE_NAME, PROC_NAME, "Aucune catégorie n'est définie"
         Exit Function
     End If
     
@@ -157,5 +167,5 @@ Public Function GetAllCategories() As Variant
     Exit Function
     
 ErrorHandler:
-    HandleError "CategoryManager", "GetAllCategories", "Erreur lors de la récupération de toutes les catégories"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de toutes les catégories"
 End Function
