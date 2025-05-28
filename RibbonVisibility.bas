@@ -7,6 +7,9 @@ Public gRibbon As IRibbonUI
 
 ' Callback appelé lors du chargement du ruban
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
+    ' Initialiser le système de logging
+    SYS_Logger.InitializeLogger
+    
     Log "ribbon", "Ribbon_Load appelé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
     Set gRibbon = ribbon
     InitializeDemoProfiles
