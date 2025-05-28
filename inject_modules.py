@@ -26,9 +26,28 @@ def setup_logging():
     )
     return log_file
 
-def kill_excel():
-    """Ferme toutes les instances d'Excel"""
-    logging.info("Tentative de fermeture de toutes les instances Excel...")
+def get_existing_excel():
+    """Try to connect to an existing Excel instance"""
+    try:
+        excel = win32com.client.GetActiveObject("Excel.Application")
+        logging.info("Connected to existing Excel instance")
+        return excel
+    except Exception as e:
+        logging.debug(f"No existing Excel instance found: {str(e)}")
+        return None
+
+def kill_excel(force=False):
+    """Ferme les instances d'Excel de manière sélective"""
+    if not force:
+        # First try to find our target Excel peacefully
+        try:
+            excel = get_existing_excel()
+            if excel is not None:
+                return False  # Excel instance exists and we want to keep it
+        except Exception:
+            pass
+    
+    logging.info("Tentative de fermeture des instances Excel...")
     killed = False
     try:
         for proc in psutil.process_iter(['pid', 'name', 'create_time']):
@@ -49,14 +68,25 @@ def kill_excel():
         time.sleep(2)
     else:
         logging.info("Aucune instance d'Excel n'a été trouvée")
+    
+    return killed
 
-def start_excel():
-    """Démarre une nouvelle instance d'Excel propre"""
-    kill_excel()  # On s'assure qu'aucune instance n'est en cours
+def start_excel(reuse_existing=True):
+    """Démarre ou réutilise une instance d'Excel"""
+    if reuse_existing:
+        excel = get_existing_excel()
+        if excel is not None:
+            try:
+                excel.Visible = False
+                return excel
+            except Exception:
+                pass  # If we can't control the existing instance, fall back to new one
+    
+    kill_excel(force=True)  # Force kill when we need a fresh instance
     time.sleep(1)
     try:
         excel = win32com.client.Dispatch('Excel.Application')
-        excel.Visible = False  # On essaie de le cacher dès le début
+        excel.Visible = False
         time.sleep(1)
         return excel
     except Exception as e:
@@ -148,13 +178,25 @@ def inject_modules():
             logging.error(f"Le fichier {excel_file} n'existe pas!")
             return
         
-        # Démarrer une nouvelle instance propre
-        excel = start_excel()
+        # Try to reuse existing Excel instance first
+        excel = start_excel(reuse_existing=True)
         if excel is None:
             return
             
-        logging.info(f"Ouverture du fichier {excel_file}...")
-        workbook = excel.Workbooks.Open(excel_file)
+        # Check if workbook is already open
+        try:
+            for wb in excel.Workbooks:
+                if wb.FullName.lower() == excel_file.lower():
+                    workbook = wb
+                    logging.info("Fichier déjà ouvert, réutilisation...")
+                    break
+        except Exception:
+            pass
+            
+        # If workbook wasn't found open, open it
+        if workbook is None:
+            logging.info(f"Ouverture du fichier {excel_file}...")
+            workbook = excel.Workbooks.Open(excel_file)
             
         vba_project = workbook.VBProject
         logging.info("VBA Project accessible")
@@ -196,18 +238,10 @@ def inject_modules():
         # Sauvegarder
         logging.info("\nSauvegarde des modifications...")
         workbook.Save()
-        time.sleep(1)
         
-        # Fermer Excel
-        workbook.Close(SaveChanges=True)
-        excel.Quit()
-        time.sleep(1)
-        
-        # Réouvrir en mode visible
-        excel = win32com.client.Dispatch("Excel.Application")
+        # Make Excel visible
         excel.Visible = True
-        workbook = excel.Workbooks.Open(excel_file)
-        logging.info("Fichier rouvert avec succès en mode visible")
+        logging.info("Excel rendu visible")
         
     except Exception as e:
         logging.error(f"Erreur générale: {str(e)}")

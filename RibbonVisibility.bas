@@ -14,6 +14,8 @@ Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
     Set gRibbon = ribbon
     InitializeDemoProfiles
     Log "ribbon", "gRibbon initialisé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    Log "ribbon", "Initialisation du dictionnaire Ragic", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    LoadRagicDictionary
 End Sub
 
 ' Callback pour le sélecteur de profil

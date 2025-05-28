@@ -10,8 +10,8 @@ Private Const RAGIC_PATH As String = "matching-matrix/6.csv"
 Public Sub LoadRagicDictionary()
     ' Afficher un message à l'utilisateur
     Application.StatusBar = "Chargement du dictionnaire Ragic en cours..."
-    MsgBox "Le premier chargement du dictionnaire Ragic peut prendre quelques instants." & vbCrLf & _
-           "Veuillez patienter...", vbInformation, "Chargement en cours"
+    ' MsgBox "Le premier chargement du dictionnaire Ragic peut prendre quelques instants." & vbCrLf & _
+    '        "Veuillez patienter...", vbInformation, "Chargement en cours"
     
     ' Créer ou récupérer la feuille PQ_DICT
     Set wsPQDict = GetOrCreatePQDictSheet()
