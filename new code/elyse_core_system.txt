@@ -211,7 +211,7 @@ End Function
 Public Function GetCurrentWorkbookName() As String
     ' Get current workbook name safely
     On Error Resume Next
-    GetCurrentWorkbookName = ActiveWorkbook.Name
+    GetCurrentWorkbookName = ThisWorkbook.Name
     If GetCurrentWorkbookName = "" Then GetCurrentWorkbookName = "unknown_workbook"
     On Error GoTo 0
 End Function

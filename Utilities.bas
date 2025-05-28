@@ -3,12 +3,12 @@ Public wsPQData As Worksheet
 
 Sub InitializePQData()
     On Error Resume Next
-    Set wsPQData = ActiveWorkbook.Worksheets("PQ_DATA")
+    Set wsPQData = ThisWorkbook.Worksheets("PQ_DATA")
     On Error GoTo 0
     
     ' Si la feuille n'existe pas, la créer
     If wsPQData Is Nothing Then
-        Set wsPQData = ActiveWorkbook.Worksheets.Add
+        Set wsPQData = ThisWorkbook.Worksheets.Add
         wsPQData.Name = "PQ_DATA"
     End If
 End Sub

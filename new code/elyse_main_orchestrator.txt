@@ -442,7 +442,7 @@ Public Function GetDocumentLocation() As String
     If mSharePointStatus Then
         GetDocumentLocation = GetDisplayablePath()
     Else
-        GetDocumentLocation = ActiveWorkbook.FullName
+        GetDocumentLocation = ThisWorkbook.FullName
     End If
 End Function
 

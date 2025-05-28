@@ -36,3 +36,21 @@ Pour les plannings, la sélection se fait désormais en deux étapes :
 1. Choix du projet (filtre principal)
 2. Choix de la version de planning
 Toutes les lignes correspondant à ces choix sont chargées automatiquement sans nouvelle sélection.
+
+2025.05.28_11.34
+
+1. Intégrer les formulaires templates dans le code
+   => il faut les rendre générique
+   1 générique de type listbox/checkbox
+   1 générique de type range choice
+
+trouver une logique ID pour DIB et Demandes d'achat
+
+trouver un meilleur filtre pour budgets
+
+savoir pourquoi DEVEX plante
+
+mettre en place un tableau de gestion des droits dans Ragic
+
+vérifier le champ hidden avant de faire un copier/coller
+

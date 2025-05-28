@@ -86,7 +86,7 @@ Private Function DetectSharePointEnvironment() As Boolean
     On Error GoTo ErrorHandler
     
     Dim workbookPath As String
-    workbookPath = ActiveWorkbook.FullName
+    workbookPath = ThisWorkbook.FullName
     
     ' Check if path indicates SharePoint
     If InStr(LCase(workbookPath), "sharepoint") > 0 Or _
@@ -169,17 +169,17 @@ Private Sub GetDocumentIDProperties()
     On Error Resume Next
     
     ' Try to get SharePoint Document ID
-    mCurrentDocumentInfo.DocumentID = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocId").Value
+    mCurrentDocumentInfo.DocumentID = ThisWorkbook.BuiltinDocumentProperties("_dlc_DocId").Value
     
     If mCurrentDocumentInfo.DocumentID = "" Then
-        mCurrentDocumentInfo.DocumentID = ActiveWorkbook.CustomDocumentProperties("_dlc_DocId").Value
+        mCurrentDocumentInfo.DocumentID = ThisWorkbook.CustomDocumentProperties("_dlc_DocId").Value
     End If
     
     ' Try to get Item GUID
-    mCurrentDocumentInfo.ItemGUID = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocIdItemGuid").Value
+    mCurrentDocumentInfo.ItemGUID = ThisWorkbook.BuiltinDocumentProperties("_dlc_DocIdItemGuid").Value
     
     If mCurrentDocumentInfo.ItemGUID = "" Then
-        mCurrentDocumentInfo.ItemGUID = ActiveWorkbook.CustomDocumentProperties("_dlc_DocIdItemGuid").Value
+        mCurrentDocumentInfo.ItemGUID = ThisWorkbook.CustomDocumentProperties("_dlc_DocIdItemGuid").Value
     End If
     
     ' Generate fallback ID if no SharePoint ID found
@@ -195,11 +195,11 @@ Private Sub GetDocumentURLProperties()
     On Error Resume Next
     
     ' Get document URL
-    mCurrentDocumentInfo.DocumentURL = ActiveWorkbook.FullName
+    mCurrentDocumentInfo.DocumentURL = ThisWorkbook.FullName
     
     ' Try to get SharePoint-specific URL properties
     Dim sharePointURL As String
-    sharePointURL = ActiveWorkbook.BuiltinDocumentProperties("_dlc_DocIdUrl").Value
+    sharePointURL = ThisWorkbook.BuiltinDocumentProperties("_dlc_DocIdUrl").Value
     
     If sharePointURL <> "" Then
         mCurrentDocumentInfo.DocumentURL = sharePointURL
@@ -251,11 +251,11 @@ Private Sub GetDocumentFileProperties()
     ' Get file-related properties
     On Error Resume Next
     
-    mCurrentDocumentInfo.LastModified = ActiveWorkbook.BuiltinDocumentProperties("Last Save Time").Value
+    mCurrentDocumentInfo.LastModified = ThisWorkbook.BuiltinDocumentProperties("Last Save Time").Value
     
     ' Try to get file size
     Dim filePath As String
-    filePath = ActiveWorkbook.FullName
+    filePath = ThisWorkbook.FullName
     
     If InStr(filePath, "http") = 0 Then ' Local file
         mCurrentDocumentInfo.FileSize = FileLen(filePath)
@@ -269,10 +269,10 @@ Private Sub GetDocumentVersionProperties()
     On Error Resume Next
     
     ' Try to get version information
-    mCurrentDocumentInfo.VersionNumber = ActiveWorkbook.BuiltinDocumentProperties("Revision Number").Value
+    mCurrentDocumentInfo.VersionNumber = ThisWorkbook.BuiltinDocumentProperties("Revision Number").Value
     
     ' Try to get content type
-    mCurrentDocumentInfo.ContentType = ActiveWorkbook.CustomDocumentProperties("Content Type").Value
+    mCurrentDocumentInfo.ContentType = ThisWorkbook.CustomDocumentProperties("Content Type").Value
     
     If mCurrentDocumentInfo.ContentType = "" Then
         mCurrentDocumentInfo.ContentType = "Document"
@@ -405,7 +405,7 @@ Public Function GetFileLocationType() As FileLocationType
     ' Determine the type of file location
     
     Dim filePath As String
-    filePath = ActiveWorkbook.FullName
+    filePath = ThisWorkbook.FullName
     
     If InStr(LCase(filePath), "sharepoint") > 0 Or _
        InStr(LCase(filePath), ".sharepoint.com") > 0 Or _
@@ -462,7 +462,7 @@ Public Function CheckOutDocument() As Boolean
     
     ' Try to check out the document
     ' Note: This requires SharePoint integration APIs which may not be available in all Excel versions
-    ActiveWorkbook.CheckOut
+    ThisWorkbook.CheckOut
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = True
@@ -494,7 +494,7 @@ Public Function CheckInDocument(Optional comment As String = "") As Boolean
         comment = "Checked in via Elyse Energy Excel Add-in"
     End If
     
-    ActiveWorkbook.CheckIn True, comment, True ' Save changes, add comment, make major version
+    ThisWorkbook.CheckIn True, comment, True ' Save changes, add comment, make major version
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = False
@@ -522,7 +522,7 @@ Public Function DiscardCheckOut() As Boolean
     LogInfo "sharepoint_discard_attempt", "Attempting to discard check out"
     
     ' Discard checkout
-    ActiveWorkbook.UndoCheckOut
+    ThisWorkbook.UndoCheckOut
     
     ' Update checkout status
     mCurrentDocumentInfo.IsCheckedOut = False
@@ -548,7 +548,7 @@ Private Function GenerateFileHashID() As String
     Dim filePath As String
     Dim fileSize As Long
     
-    filePath = ActiveWorkbook.FullName
+    filePath = ThisWorkbook.FullName
     
     ' Get file size if possible
     If InStr(filePath, "http") = 0 Then
@@ -660,7 +660,7 @@ Public Function TestSharePointConnectivity() As Boolean
     
     ' Try to access document properties (this tests connectivity)
     Dim testProperty As String
-    testProperty = ActiveWorkbook.BuiltinDocumentProperties("Title").Value
+    testProperty = ThisWorkbook.BuiltinDocumentProperties("Title").Value
     
     ' If we get here without error, connectivity is OK
     LogInfo "sharepoint_connectivity_success", "SharePoint connectivity test passed"
