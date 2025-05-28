@@ -24,23 +24,22 @@ Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optiona
     Dim category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
         category = categories(i)
-        
-        Debug.Print "=== Traitement de " & category.DisplayName & " ==="
-        Debug.Print "URL: " & category.URL
-        Debug.Print "Nom de la requête: " & category.PowerQueryName
+          Log "process_category", "=== Traitement de " & category.DisplayName & " ===", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+        Log "process_category", "URL: " & category.URL, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+        Log "process_category", "Nom de la requête: " & category.PowerQueryName, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         
         ' Créer/Mettre à jour la requête PowerQuery dans l'éditeur
         If Not PQQueryManager.EnsurePQQueryExists(category) Then
-            Debug.Print "ERREUR: Échec de la création de la requête PowerQuery"
+            Log "process_category", "ERREUR: Échec de la création de la requête PowerQuery", ERROR_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
             failureCount = failureCount + 1
             GoTo NextCategory
         End If
         
-        Debug.Print "Succès: Requête créée dans l'éditeur Power Query"
+        Log "process_category", "Succès: Requête créée dans l'éditeur Power Query", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         successCount = successCount + 1
         
 NextCategory:
-        Debug.Print String(50, "-") & vbCrLf
+        Log "process_category", String(50, "-"), DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
     Next i
     
     ' Afficher le résumé
@@ -66,7 +65,7 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     For i = 1 To CategoryManager.CategoriesCount
         category = categories(i)
         
-        Debug.Print "Nettoyage de " & category.PowerQueryName
+        Log "cleanup_pq", "Nettoyage de " & category.PowerQueryName, DEBUG_LEVEL, "ProcessCleanupAllPowerQueries", "PQDebugTools"
         DataLoaderManager.CleanupPowerQuery category.PowerQueryName
     Next i
     
@@ -75,37 +74,37 @@ End Sub
 
 ' Test et debug du RagicDictionary
 Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    Debug.Print "=== Test du RagicDictionary ==="
+    Log "debug_ragic", "=== Test du RagicDictionary ===", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     
     ' 1. Charger le dictionnaire
-    Debug.Print "1. Chargement du dictionnaire..."
+    Log "debug_ragic", "1. Chargement du dictionnaire...", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     LoadRagicDictionary
     
     ' 2. Vérifier si le dictionnaire a été chargé
     If RagicFieldDict Is Nothing Then
-        Debug.Print "ERREUR: Le dictionnaire n'a pas été chargé"
+        Log "debug_ragic", "ERREUR: Le dictionnaire n'a pas été chargé", ERROR_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
         Exit Sub
     End If
     
     ' 3. Afficher le contenu du dictionnaire
-    Debug.Print "2. Contenu du dictionnaire :"
+    Log "debug_ragic", "2. Contenu du dictionnaire :", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     Dim key As Variant
     For Each key In RagicFieldDict.Keys
-        Debug.Print "  " & key & " => " & RagicFieldDict(key)
+        Log "debug_ragic", "  " & key & " => " & RagicFieldDict(key), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     Next key
     
     ' 4. Tester quelques champs
-    Debug.Print "3. Test de quelques champs :"
+    Log "debug_ragic", "3. Test de quelques champs :", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     TestField "CO2 Capture", "Brand"
     TestField "H2 waters electrolysis", "Specific Electricity Consumption (SEC) [MWhe/kgH2]"
     TestField "MeOH - CO2-to-Methanol Synthesis", "CO2 Conversion [%]"
     
-    Debug.Print String(50, "-")
+    Log "debug_ragic", String(50, "-"), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     MsgBox "Test du RagicDictionary terminé. Voir la fenêtre de debug pour les détails.", vbInformation
 End Sub
 
 ' Fonction utilitaire pour tester un champ
 Private Sub TestField(sheetName As String, fieldName As String)
-    Debug.Print "  Test de " & sheetName & "|" & fieldName & " :"
-    Debug.Print "    Hidden = " & IsFieldHidden(sheetName, fieldName)
+    Log "test_field", "Test de " & sheetName & "|" & fieldName & " :", DEBUG_LEVEL, "TestField", "PQDebugTools"
+    Log "test_field", "  Hidden = " & IsFieldHidden(sheetName, fieldName), DEBUG_LEVEL, "TestField", "PQDebugTools"
 End Sub

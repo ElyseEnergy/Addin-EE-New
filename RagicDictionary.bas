@@ -42,7 +42,7 @@ Public Sub LoadRagicDictionary()
         On Error GoTo 0
         
         If updateError <> 0 Then
-            Debug.Print "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description
+            Log "ragic_dict_err", "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
@@ -56,9 +56,8 @@ Public Sub LoadRagicDictionary()
         Dim addError As Long
         addError = Err.Number
         On Error GoTo 0
-        
-        If addError <> 0 Then
-            Debug.Print "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description
+          If addError <> 0 Then
+            Log "ragic_dict_err", "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
@@ -129,7 +128,7 @@ Public Function NormalizeSheetName(sheetName As String) As String
 End Function
 
 Private Sub LoadDictionaryData(ByVal tableName As String)
-    Debug.Print "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict)
+    Log "load_dict", "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict), DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
     Dim lo As ListObject
     On Error Resume Next
     Set lo = wsPQDict.ListObjects(tableName)
@@ -165,9 +164,8 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     End If
 
     Dim i As Long
-    Dim nbLignes As Long
-    nbLignes = lo.DataBodyRange.Rows.Count
-    Debug.Print "Nombre de lignes dans le dictionnaire : " & nbLignes
+    Dim nbLignes As Long    nbLignes = lo.DataBodyRange.Rows.Count
+    Log "load_dict", "Nombre de lignes dans le dictionnaire : " & nbLignes, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 
     Dim key As Variant
     For i = 1 To nbLignes
@@ -178,11 +176,11 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
         End If
     Next i
 
-    Debug.Print "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count
+    Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
     Dim c As Long
     c = 0
     For Each key In RagicFieldDict.Keys
-        Debug.Print key & " => " & RagicFieldDict(key)
+        Log "load_dict", "  " & key & " => " & RagicFieldDict(key), DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
         c = c + 1
         If c > 10 Then Exit For
     Next key
@@ -192,7 +190,7 @@ End Sub
 
 Public Function IsFieldHidden(sheetName As String, fieldName As String) As Boolean
     If RagicFieldDict Is Nothing Then
-        Debug.Print "RagicFieldDict est Nothing dans IsFieldHidden"
+        Log "field_hidden", "RagicFieldDict est Nothing dans IsFieldHidden", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
         Exit Function
     End If
     Dim key As String
@@ -215,17 +213,17 @@ End Function
 
 Public Sub TestIsFieldHidden_BudgetGroupes()
     If RagicFieldDict Is Nothing Then
-        Debug.Print "Dictionnaire non initialisé, chargement en cours..."
+        Log "test_hidden", "Dictionnaire non initialisé, chargement en cours...", INFO_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
         LoadRagicDictionary
     End If
-    Debug.Print "Test IsFieldHidden pour Budget Groupes :"
-    Debug.Print "Champ 1 :"
-    Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Montant Total'"
-    Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Montant Total")
+    Log "test_hidden", "Test IsFieldHidden pour Budget Groupes :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "Champ 1 :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  SheetName = '↳ Budget Groupes', FieldName = 'Montant Total'", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     
-    Debug.Print "Champ 2 :"
-    Debug.Print "  SheetName = '↳ Budget Groupes', FieldName = 'Année'"
-    Debug.Print "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Année")
+    Log "test_hidden", "Champ 2 :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  SheetName = '↳ Budget Groupes', FieldName = 'Année'", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  Résultat : " & IsFieldHidden("↳ Budget Groupes", "Année"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
 
 

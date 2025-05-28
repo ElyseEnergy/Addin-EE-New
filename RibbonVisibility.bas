@@ -7,10 +7,10 @@ Public gRibbon As IRibbonUI
 
 ' Callback appelé lors du chargement du ruban
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
-    Debug.Print "Ribbon_Load appelé"
+    Log "ribbon", "Ribbon_Load appelé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
     Set gRibbon = ribbon
     InitializeDemoProfiles
-    Debug.Print "gRibbon initialisé"
+    Log "ribbon", "gRibbon initialisé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
 End Sub
 
 ' Callback pour le sélecteur de profil
@@ -100,12 +100,12 @@ End Sub
 
 ' Fonction pour forcer le rafraîchissement du ruban
 Public Sub InvalidateRibbon()
-    Debug.Print "InvalidateRibbon appelé"
+    Log "ribbon", "InvalidateRibbon appelé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     If Not gRibbon Is Nothing Then
         gRibbon.Invalidate
-        Debug.Print "Ribbon invalidé"
+        Log "ribbon", "Ribbon invalidé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     Else
-        Debug.Print "gRibbon est Nothing"
+        Log "ribbon", "gRibbon est Nothing", WARNING_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     End If
 End Sub
 

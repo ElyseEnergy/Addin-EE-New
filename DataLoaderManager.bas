@@ -573,12 +573,12 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim ws As Worksheet
     Set ws = loadInfo.FinalDestination.Worksheet
     ws.Unprotect
-    
-    Debug.Print "=== DÉBUT PASTEDATA ===" & vbCrLf & _
+      Log "paste_data", "=== DÉBUT PASTEDATA ===" & vbCrLf & _
                 "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
                 "Catégorie: " & loadInfo.Category.DisplayName & vbCrLf & _
                 "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
-                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count
+                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count, _
+                DEBUG_LEVEL, "PasteData", "DataLoaderManager"
 
     ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
     Dim visibleCols As Collection
@@ -590,22 +590,20 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             visibleCols.Add i
         End If
     Next i
-    
-    If loadInfo.ModeTransposed Then
-        Debug.Print "--- Début collage transposé ---"
+      If loadInfo.ModeTransposed Then
+        Log "paste_data", "--- Début collage transposé ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
         ' Coller en transposé
         For i = 1 To visibleCols.Count
-            Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
+            Log "paste_data", "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
             loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
             loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
         Next i
         
-        currentCol = 1
-        For Each v In loadInfo.SelectedValues
-            Debug.Print "Traitement colonne " & currentCol & ", valeur=" & v
+        currentCol = 1        For Each v In loadInfo.SelectedValues
+            Log "paste_data", "Traitement colonne " & currentCol & ", valeur=" & v, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Debug.Print "  Trouvé à la ligne " & j
+                    Log "paste_data", "  Trouvé à la ligne " & j, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
                     For i = 1 To visibleCols.Count
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
@@ -614,12 +612,10 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                 End If
             Next j
             currentCol = currentCol + 1
-        Next v
-
-        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
-        Debug.Print "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
+        Next v        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
+        Log "paste_data", "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     Else
-        Debug.Print "--- Début collage normal ---"
+        Log "paste_data", "--- Début collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
         ' Coller en normal
         For i = 1 To visibleCols.Count
             Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
@@ -646,21 +642,19 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, visibleCols.Count)
         Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     End If
-    
-    ' Vérification de la validité de la plage
-    Debug.Print "=== VÉRIFICATIONS ==="
-    Debug.Print "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count
-    Debug.Print "Cellules fusionnées: " & tblRange.MergeCells
-    Debug.Print "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count
-    
-    If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
-        Debug.Print "ERREUR: Plage trop petite"
+      ' Vérification de la validité de la plage
+    Log "paste_data", "=== VÉRIFICATIONS ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "Cellules fusionnées: " & tblRange.MergeCells, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+      If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
+        Log "paste_data", "ERREUR: Plage trop petite", ERROR_LEVEL, "PasteData", "DataLoaderManager"
         MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
         PasteData = False
         Exit Function
     End If
     If tblRange.MergeCells Then
-        Debug.Print "ERREUR: Cellules fusionnées détectées"
+        Log "paste_data", "ERREUR: Cellules fusionnées détectées", ERROR_LEVEL, "PasteData", "DataLoaderManager"
         MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
         PasteData = False
         Exit Function
@@ -668,8 +662,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     If tblRange.Worksheet.ListObjects.Count > 0 Then
         Dim tbl As ListObject
         For Each tbl In tblRange.Worksheet.ListObjects
-            If Not Intersect(tblRange, tbl.Range) Is Nothing Then
-                Debug.Print "ERREUR: Intersection avec tableau existant - " & tbl.Name
+            If Not Intersect(tblRange, tbl.Range) Is Nothing Then                Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
                 MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
                 PasteData = False
                 Exit Function
@@ -677,12 +670,11 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next tbl
     End If
     
-    Debug.Print "=== CRÉATION DU TABLEAU ==="
-    ' Mettre en forme le tableau final
-    On Error Resume Next
+    Log "paste_data", "=== CRÉATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    ' Mettre en forme le tableau final    On Error Resume Next
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     If Err.Number <> 0 Then
-        Debug.Print "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")"
+        Log "paste_data", "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
         On Error GoTo 0
         PasteData = False
         Exit Function
@@ -691,11 +683,10 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     tbl.name = GetUniqueTableName(loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
-    Debug.Print "Tableau créé avec succès: " & tbl.Name
-    
-    ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
+    Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+      ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
     ProtectSheetWithTable tblRange.Worksheet
-    Debug.Print "=== FIN PASTEDATA ==="
+    Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
 
     PasteData = True
 End Function

@@ -16,9 +16,8 @@ Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
         Dim updateError As Long
         updateError = Err.Number
         On Error GoTo 0
-        
-        If updateError <> 0 Then
-            Debug.Print "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description
+          If updateError <> 0 Then
+            Log "pq_update", "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description, ERROR_LEVEL, "EnsurePQQueryExists", "PQQueryManager"
             EnsurePQQueryExists = False
             Exit Function
         End If
@@ -54,10 +53,9 @@ End Function
 Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
-    Dim errNum As Long
-    errNum = Err.Number
+    Dim errNum As Long    errNum = Err.Number
     If errNum <> 0 Then
-        Debug.Print "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description
+        Log "pq_add", "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
         AddQueryToPowerQuery = False
     Else
         AddQueryToPowerQuery = True
