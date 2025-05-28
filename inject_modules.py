@@ -179,15 +179,6 @@ def check_vba_access():
             6. Cliquez sur OK et redémarrez Excel
             """)
             return False
-        finally:
-            try:
-                wb.Close(False)
-                logging.debug("Classeur temporaire fermé")
-            except Exception as e:
-                logging.warning(f"Erreur lors de la fermeture du classeur: {str(e)}")
-    except Exception as e:
-        logging.error(f"Erreur lors de la vérification de l'accès VBA: {str(e)}")
-        return False
     finally:
         if excel:
             try:
@@ -195,6 +186,21 @@ def check_vba_access():
                 logging.debug("Excel fermé")
             except Exception as e:
                 logging.warning(f"Erreur lors de la fermeture d'Excel: {str(e)}")
+
+def get_open_workbook(excel_file):
+    """Tente de récupérer le classeur s'il est déjà ouvert"""
+    logging.info("Recherche du classeur déjà ouvert...")
+    try:
+        excel = win32com.client.GetObject(Class="Excel.Application")
+        for wb in excel.Workbooks:
+            if os.path.abspath(wb.FullName) == os.path.abspath(excel_file):
+                logging.info("Classeur trouvé déjà ouvert!")
+                return excel, wb
+        logging.info("Classeur non trouvé parmi les fichiers ouverts")
+        return None, None
+    except Exception as e:
+        logging.debug(f"Aucune instance d'Excel en cours d'exécution: {str(e)}")
+        return None, None
 
 def inject_modules():
     log_file = setup_logging()
@@ -206,24 +212,34 @@ def inject_modules():
     
     excel = None
     workbook = None
+    need_to_reopen = False
+    excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
+    
     try:
-        excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
         logging.info(f"Fichier Excel cible: {excel_file}")
         
         if not os.path.exists(excel_file):
             logging.error(f"Le fichier {excel_file} n'existe pas!")
             return
             
-        kill_excel()
+        # Essayer de récupérer le classeur s'il est déjà ouvert
+        excel, workbook = get_open_workbook(excel_file)
         
-        logging.info("Démarrage d'Excel...")
-        excel = win32com.client.Dispatch("Excel.Application")
-        excel.Visible = False
-        excel.DisplayAlerts = False
-        logging.debug("Excel démarré en mode invisible, alertes désactivées")
-        
-        logging.info(f"Ouverture du fichier {excel_file}...")
-        workbook = excel.Workbooks.Open(excel_file)
+        if excel is None:
+            logging.info("Démarrage d'une nouvelle instance d'Excel...")
+            kill_excel()
+            excel = win32com.client.Dispatch("Excel.Application")
+            excel.Visible = False
+            excel.DisplayAlerts = False
+            logging.debug("Excel démarré en mode invisible, alertes désactivées")
+            
+            logging.info(f"Ouverture du fichier {excel_file}...")
+            workbook = excel.Workbooks.Open(excel_file)
+            need_to_reopen = True
+        else:
+            logging.info("Utilisation de l'instance Excel existante")
+            excel.DisplayAlerts = False
+            
         vba_project = workbook.VBProject
         logging.info("VBA Project accessible")
         
@@ -239,7 +255,6 @@ def inject_modules():
             module_name = os.path.splitext(file)[0]
             logging.info(f"\nTraitement du UserForm: {module_name}")
             
-            # Supprimer l'ancien UserForm s'il existe
             try:
                 if module_name in current_components:
                     vba_project.VBComponents.Remove(vba_project.VBComponents(module_name))
@@ -247,7 +262,6 @@ def inject_modules():
             except Exception as e:
                 logging.warning(f"Erreur lors de la suppression de {module_name}: {str(e)}")
             
-            # Importer le UserForm
             try:
                 frm_path = os.path.abspath(file)
                 logging.debug(f"Import de {frm_path}")
@@ -266,12 +280,10 @@ def inject_modules():
             module_type = get_module_type(module_name)
             logging.info(f"\nTraitement du module: {module_name} (Type: {module_type})")
             
-            # Si c'est un UserForm, on passe
             if module_type == 3:
                 logging.debug(f"Module {module_name} est un UserForm, déjà traité")
                 continue
             
-            # Supprimer l'ancien module
             try:
                 if module_name in current_components:
                     vba_project.VBComponents.Remove(vba_project.VBComponents(module_name))
@@ -279,12 +291,11 @@ def inject_modules():
             except Exception as e:
                 logging.warning(f"Erreur lors de la suppression de {module_name}: {str(e)}")
             
-            # Lire et injecter le nouveau module
             try:
                 content = read_file_with_fallback_encoding(file)
                 logging.debug(f"Contenu lu: {len(content)} caractères")
                 
-                if module_type == 100:  # ThisWorkbook
+                if module_type == 100:
                     content = process_workbook_content(content)
                     logging.debug("Contenu ThisWorkbook traité")
                 
@@ -299,44 +310,44 @@ def inject_modules():
                 logging.error(f"Erreur lors de l'injection de {module_name}: {str(e)}")
                 logging.error(f"Stacktrace: {traceback.format_exc()}")
         
-        # Sauvegarder et fermer
+        # Sauvegarder
         logging.info("\nSauvegarde des modifications...")
         workbook.Save()
         time.sleep(1)
-        
-        logging.info("Fermeture du classeur...")
-        workbook.Close(SaveChanges=True)
-        time.sleep(1)
-        
-        logging.info("Fermeture d'Excel...")
-        excel.Quit()
-        time.sleep(1)
-        
-        logging.info("\nInjection terminée avec succès!")
         
     except Exception as e:
         logging.error(f"Erreur générale: {str(e)}")
         logging.error(f"Stacktrace complet:\n{traceback.format_exc()}")
     finally:
-        # Nettoyage
-        logging.info("Nettoyage final...")
+        # Nettoyage et réouverture
+        logging.info("Finalisation...")
         try:
-            if workbook is not None:
-                workbook.Close(SaveChanges=True)
-                logging.debug("Workbook fermé")
+            if need_to_reopen or not workbook.Windows(1).Visible:
+                # Si on a ouvert une nouvelle instance ou si Excel était invisible
+                if workbook is not None:
+                    workbook.Close(SaveChanges=True)
+                    logging.debug("Workbook fermé")
+                if excel is not None:
+                    excel.Quit()
+                    logging.debug("Excel fermé")
+                time.sleep(1)
+                
+                # Réouvrir en mode visible
+                logging.info("Réouverture du fichier en mode visible...")
+                excel = win32com.client.Dispatch("Excel.Application")
+                excel.Visible = True
+                excel.DisplayAlerts = True
+                workbook = excel.Workbooks.Open(excel_file)
+                logging.info("Fichier rouvert avec succès en mode visible")
+            else:
+                # Si Excel était déjà ouvert et visible, juste mettre à jour l'affichage
+                logging.info("Mise à jour de l'affichage...")
+                excel.Visible = True
+                excel.DisplayAlerts = True
+                workbook.Windows(1).Visible = True
         except Exception as e:
-            logging.warning(f"Erreur lors de la fermeture du workbook: {str(e)}")
-            
-        try:
-            if excel is not None:
-                excel.Quit()
-                logging.debug("Excel fermé")
-        except Exception as e:
-            logging.warning(f"Erreur lors de la fermeture d'Excel: {str(e)}")
-            
-        # Forcer la fermeture d'Excel
-        kill_excel()
-        logging.info("Nettoyage terminé")
+            logging.error(f"Erreur lors de la finalisation: {str(e)}")
+            logging.error(traceback.format_exc())
 
 if __name__ == "__main__":
     try:

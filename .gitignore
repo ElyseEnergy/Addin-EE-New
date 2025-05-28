@@ -1,3 +1,5 @@
 ﻿ENV.bas
 
 /venv
+
+/logs
