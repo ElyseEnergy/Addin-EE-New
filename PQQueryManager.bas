@@ -53,7 +53,8 @@ End Function
 Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
-    Dim errNum As Long    errNum = Err.Number
+    Dim errNum As Long    
+    errNum = Err.Number
     If errNum <> 0 Then
         Log "pq_add", "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
         AddQueryToPowerQuery = False

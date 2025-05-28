@@ -164,7 +164,8 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     End If
 
     Dim i As Long
-    Dim nbLignes As Long    nbLignes = lo.DataBodyRange.Rows.Count
+    Dim nbLignes As Long    
+    nbLignes = lo.DataBodyRange.Rows.Count
     Log "load_dict", "Nombre de lignes dans le dictionnaire : " & nbLignes, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 
     Dim key As Variant

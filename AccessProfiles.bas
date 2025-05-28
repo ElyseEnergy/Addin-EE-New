@@ -19,6 +19,8 @@ Dim ProfilesCount As Long
 
 ' Initialisation des profils de démonstration
 Public Sub InitializeDemoProfiles()
+    On Error GoTo ErrorHandler
+    
     ProfilesCount = 0
     Erase Profiles
     ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dès le début
@@ -49,11 +51,16 @@ Public Sub InitializeDemoProfiles()
                
     ' Par défaut, on commence avec le profil Technical Director
     mCurrentProfile = Technical_Director
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de démonstration"
 End Sub
 
 Private Sub AddProfile(id As DemoProfile, Name As String, _
                       eng As Boolean, fin As Boolean, tools As Boolean, _
-                      allProj As Boolean, projects As Variant)    ' Le tableau est déjà alloué dans InitializeDemoProfiles
+                      allProj As Boolean, projects As Variant)
+    On Error GoTo ErrorHandler
     
     Profiles(id).Name = Name
     Profiles(id).Description = Name
@@ -69,22 +76,48 @@ Private Sub AddProfile(id As DemoProfile, Name As String, _
     Next
     
     ProfilesCount = id
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "AddProfile", "Erreur lors de l'ajout du profil " & Name
 End Sub
 
 ' Définit le profil actif
 Public Sub SetCurrentProfile(profile As DemoProfile)
+    On Error GoTo ErrorHandler
+    
+    If profile < Engineer_Basic Or profile > Full_Admin Then
+        HandleError "AccessProfiles", "SetCurrentProfile", "Profil invalide: " & profile
+        Exit Sub
+    End If
+    
     mCurrentProfile = profile
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "SetCurrentProfile", "Erreur lors du changement de profil"
 End Sub
 
 ' Récupère le profil par ID (suppose que l'ID correspond à l'index)
 Private Function GetProfileById(id As DemoProfile) As AccessProfile
-    If id >= 1 And id <= ProfilesCount Then
-        GetProfileById = Profiles(id)
+    On Error GoTo ErrorHandler
+    
+    If id < Engineer_Basic Or id > Full_Admin Then
+        HandleError "AccessProfiles", "GetProfileById", "ID de profil invalide: " & id
+        Exit Function
     End If
+    
+    GetProfileById = Profiles(id)
+    Exit Function
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la récupération du profil"
 End Function
 
 ' Vérifie si le profil actuel a accès à une fonctionnalité
 Public Function HasAccess(feature As String) As Boolean
+    On Error GoTo ErrorHandler
+    
     Dim prof As AccessProfile
     prof = GetProfileById(mCurrentProfile)
     
@@ -107,11 +140,23 @@ Public Function HasAccess(feature As String) As Boolean
             ' Pour les projets (plus de référence aux projets spécifiques)
             HasAccess = prof.AllProjects
     End Select
+    Exit Function
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la vérification des droits d'accès pour: " & feature
+    HasAccess = False
 End Function
 
 ' Récupère le nom du profil actuel
 Public Function GetCurrentProfileName() As String
+    On Error GoTo ErrorHandler
+    
     GetCurrentProfileName = Profiles(mCurrentProfile).Name
+    Exit Function
+    
+ErrorHandler:
+    HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la récupération du nom du profil actuel"
+    GetCurrentProfileName = "Profil inconnu"
 End Function
 
 

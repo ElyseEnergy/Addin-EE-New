@@ -7,9 +7,12 @@ Public CategoriesCount As Long
 
 ' Initialise les catégories
 Public Sub InitCategories()
+    On Error GoTo ErrorHandler
+    
     CategoriesCount = 0
     ReDim Categories(1 To 1)
     LoadRagicDictionary
+    
     ' # Engineering
     ' ## Technologies
     AddCategory "Compression", "Pas de filtrage", "Compression", "fiches-techniques/16/3.csv", "Technologies"
@@ -47,27 +50,38 @@ Public Sub InitCategories()
     AddCategory "Réceptions", "Nom Founisseur", "Réceptions", "mouvements/20.csv", "Finances"
     
     ' Projets
-        AddCategory "Scénarios techniques", "Projet", "Scénarios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
-        AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets", "Planning link"
-        AddCategory "Plannings de sous phases", "Project", "Plannings de sous phases", "tests/7.csv", "Projets", "Planning link"
-        AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
-        AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
-        AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
-        AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"
-        'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
-        'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
-
+    AddCategory "Scénarios techniques", "Projet", "Scénarios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
+    AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets", "Planning link"
+    AddCategory "Plannings de sous phases", "Project", "Plannings de sous phases", "tests/7.csv", "Projets", "Planning link"
+    AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
+    AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
+    AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
+    AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"
+    'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
+    'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
     
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "CategoryManager", "InitCategories", "Erreur lors de l'initialisation des catégories"
 End Sub
 
 ' Ajoute une catégorie au tableau
 Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "", Optional sheetName As String = "")
+    On Error GoTo ErrorHandler
+    
+    If name = "" Or displayName = "" Or path = "" Or categoryGroup = "" Then
+        HandleError "CategoryManager", "AddCategory", "Paramètres invalides pour l'ajout de catégorie"
+        Exit Sub
+    End If
+    
     Dim idx As Long
     If CategoriesCount = 0 Then
         idx = 1
     Else
         idx = CategoriesCount + 1
     End If
+    
     ReDim Preserve Categories(1 To idx)
     Categories(idx).categoryName = name
     Categories(idx).filterLevel = filterLevel
@@ -79,10 +93,22 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
     If sheetName = "" Then sheetName = displayName
     Categories(idx).SheetName = sheetName
     CategoriesCount = idx
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "CategoryManager", "AddCategory", "Erreur lors de l'ajout de la catégorie: " & name
 End Sub
 
 ' Retourne l'index d'une catégorie par son nom d'affichage
 Public Function GetCategoryIndexByName(displayName As String) As Long
+    On Error GoTo ErrorHandler
+    
+    If displayName = "" Then
+        HandleError "CategoryManager", "GetCategoryIndexByName", "Nom d'affichage vide"
+        GetCategoryIndexByName = 0
+        Exit Function
+    End If
+    
     Dim i As Long
     For i = 1 To CategoriesCount
         If Categories(i).displayName = displayName Then
@@ -91,18 +117,45 @@ Public Function GetCategoryIndexByName(displayName As String) As Long
         End If
     Next i
     GetCategoryIndexByName = 0 ' Non trouvé
+    Exit Function
+    
+ErrorHandler:
+    HandleError "CategoryManager", "GetCategoryIndexByName", "Erreur lors de la recherche de l'index de la catégorie: " & displayName
+    GetCategoryIndexByName = 0
 End Function
 
 ' Retourne une catégorie par son nom d'affichage
 Public Function GetCategoryByName(displayName As String) As CategoryInfo
+    On Error GoTo ErrorHandler
+    
+    If displayName = "" Then
+        HandleError "CategoryManager", "GetCategoryByName", "Nom d'affichage vide"
+        Exit Function
+    End If
+    
     Dim idx As Long
     idx = GetCategoryIndexByName(displayName)
     If idx > 0 Then
         GetCategoryByName = Categories(idx)
     End If
+    Exit Function
+    
+ErrorHandler:
+    HandleError "CategoryManager", "GetCategoryByName", "Erreur lors de la récupération de la catégorie: " & displayName
 End Function
 
 ' Retourne toutes les catégories sous forme de tableau
 Public Function GetAllCategories() As Variant
+    On Error GoTo ErrorHandler
+    
+    If CategoriesCount = 0 Then
+        HandleError "CategoryManager", "GetAllCategories", "Aucune catégorie n'est définie"
+        Exit Function
+    End If
+    
     GetAllCategories = Categories
+    Exit Function
+    
+ErrorHandler:
+    HandleError "CategoryManager", "GetAllCategories", "Erreur lors de la récupération de toutes les catégories"
 End Function

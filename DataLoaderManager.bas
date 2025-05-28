@@ -1,4 +1,4 @@
-' Module: DataLoaderManager
+﻿' Module: DataLoaderManager
 ' Gère le chargement et l'affichage des données pour toutes les catégories
 Option Explicit
 
@@ -118,7 +118,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
 End Function
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
-Private Function GetSelectedValues(category As CategoryInfo) As Collection
+Private Function GetSelectedValues(Category As CategoryInfo) As Collection
     Dim lo As ListObject
     Dim dict As Object
     Dim arrValues() As String
@@ -126,20 +126,20 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
     Dim cell As Range
     Dim v As Variant
     
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(category.PowerQueryName))
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(Category.PowerQueryName))
     ' S'assurer que la table existe, sinon la charger
     If lo Is Nothing Then
-        LoadQueries.LoadQuery category.PowerQueryName, wsPQData, wsPQData.Cells(1, wsPQData.Cells(1, wsPQData.Columns.Count).End(xlToLeft).Column + 1)
-        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(category.PowerQueryName))
+        LoadQueries.LoadQuery Category.PowerQueryName, wsPQData, wsPQData.Cells(1, wsPQData.Cells(1, wsPQData.Columns.Count).End(xlToLeft).Column + 1)
+        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(Category.PowerQueryName))
         If lo Is Nothing Then
-            MsgBox "Impossible de charger la table PowerQuery '" & category.PowerQueryName & "'", vbExclamation
+            MsgBox "Impossible de charger la table PowerQuery '" & Category.PowerQueryName & "'", vbExclamation
             Set GetSelectedValues = Nothing
             Exit Function
         End If
     End If
 
     ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
-    If category.FilterLevel = "Pas de filtrage" Then
+    If Category.FilterLevel = "Pas de filtrage" Then
         On Error Resume Next ' Pour gérer l'annulation de l'InputBox
         
         ' Créer un tableau avec toutes les fiches disponibles
@@ -193,7 +193,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         Set dict = CreateObject("Scripting.Dictionary")
 
         ' Extraire les valeurs uniques
-        For Each cell In lo.ListColumns(category.FilterLevel).DataBodyRange
+        For Each cell In lo.ListColumns(Category.FilterLevel).DataBodyRange
             If Not dict.Exists(cell.Value) Then
                 dict.Add cell.Value, 1
             End If
@@ -222,7 +222,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
         Dim selectedPrimary As Collection
         On Error Resume Next
         Set selectedPrimary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-            "Choisissez une ou plusieurs " & category.FilterLevel & " (ex: 1,3,5 ou *) :")
+            "Choisissez une ou plusieurs " & Category.FilterLevel & " (ex: 1,3,5 ou *) :")
         Dim errorOccurred As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
@@ -239,14 +239,14 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Exit Function
         End If
 
-        If category.SecondaryFilterLevel <> "" Then
+        If Category.SecondaryFilterLevel <> "" Then
             ' Deuxième étape de filtrage
             Set dict = CreateObject("Scripting.Dictionary")
             For i = 1 To lo.DataBodyRange.Rows.Count
                 For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(Category.FilterLevel).Index).Value = v Then
                         Dim secVal As String
-                        secVal = lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value
+                        secVal = lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(Category.SecondaryFilterLevel).Index).Value
                         If Not dict.Exists(secVal) Then dict.Add secVal, 1
                         Exit For
                     End If
@@ -273,7 +273,7 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
             Dim selectedSecondary As Collection
             On Error Resume Next
             Set selectedSecondary = LoadQueries.ChooseMultipleValuesFromArrayWithAll(arrValues, _
-                "Choisissez une ou plusieurs " & category.SecondaryFilterLevel & " (ex: 1,3,5 ou *) :")
+                "Choisissez une ou plusieurs " & Category.SecondaryFilterLevel & " (ex: 1,3,5 ou *) :")
             errorOccurred = (Err.Number <> 0)
             On Error GoTo 0
 
@@ -294,14 +294,14 @@ Private Function GetSelectedValues(category As CategoryInfo) As Collection
                 Dim matchPrimary As Boolean
                 matchPrimary = False
                 For Each v In selectedPrimary
-                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.FilterLevel).Index).Value = v Then
+                    If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(Category.FilterLevel).Index).Value = v Then
                         matchPrimary = True
                         Exit For
                     End If
                 Next v
                 If matchPrimary Then
                     For Each v In selectedSecondary
-                        If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(category.SecondaryFilterLevel).Index).Value = v Then
+                        If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(Category.SecondaryFilterLevel).Index).Value = v Then
                             GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
                             Exit For
                         End If
@@ -333,7 +333,7 @@ End Function
 ' Gère le mode d'affichage (normal/transposé)
 Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim lo As ListObject
-    Dim nbFiches As Long, nbChamps As Long    
+    Dim nbFiches As Long, nbChamps As Long
     Dim previewNormal As String, previewTransposed As String
     Dim userChoice As Double
     Dim i As Long, j As Long, idx As Long
@@ -504,8 +504,8 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         ' Demander à l'utilisateur de sélectionner une cellule
         On Error GoTo ErrorHandler
         Set selectedRange = Application.InputBox( _
-            Prompt:="Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", _
-            Title:="Destination", _
+            prompt:="Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", _
+            title:="Destination", _
             Type:=8)
             
         ' Vérifier si une plage valide a été sélectionnée
@@ -599,7 +599,8 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
         Next i
         
-        currentCol = 1        For Each v In loadInfo.SelectedValues
+        currentCol = 1
+        For Each v In loadInfo.SelectedValues
             Log "paste_data", "Traitement colonne " & currentCol & ", valeur=" & v, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
@@ -612,7 +613,8 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                 End If
             Next j
             currentCol = currentCol + 1
-        Next v        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
+        Next v        
+        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
         Log "paste_data", "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     Else
         Log "paste_data", "--- Début collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
@@ -662,7 +664,8 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     If tblRange.Worksheet.ListObjects.Count > 0 Then
         Dim tbl As ListObject
         For Each tbl In tblRange.Worksheet.ListObjects
-            If Not Intersect(tblRange, tbl.Range) Is Nothing Then                Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
+            If Not Intersect(tblRange, tbl.Range) Is Nothing Then
+                Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
                 MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
                 PasteData = False
                 Exit Function
@@ -681,7 +684,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     End If
     On Error GoTo 0
     
-    tbl.name = GetUniqueTableName(loadInfo.Category.DisplayName)
+    tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
     Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
       ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
@@ -716,9 +719,9 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
 End Sub
 
 ' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
-Private Function GetUniqueTableName(categoryName As String) As String
+Private Function GetUniqueTableName(CategoryName As String) As String
     Dim baseName As String
-    baseName = "EE_" & Utilities.SanitizeTableName(categoryName)
+    baseName = "EE_" & Utilities.SanitizeTableName(CategoryName)
     Dim maxIndex As Long
     maxIndex = 0
     Dim ws As Worksheet
@@ -740,7 +743,7 @@ Private Function GetUniqueTableName(categoryName As String) As String
                 End If
             End If
         Next tbl
-    Next ws    
+    Next ws
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
 
@@ -766,34 +769,36 @@ Public Sub CleanupPowerQuery(queryName As String)
 End Sub
 
 ' Fonction générique pour traiter une catégorie
-Public Function ProcessCategory(categoryName As String, Optional errorMessage As String = "") As DataLoadResult
+Public Function ProcessCategory(CategoryName As String, Optional errorMessage As String = "") As DataLoadResult
     If CategoriesCount = 0 Then InitCategories
     
     Dim loadInfo As DataLoadInfo
-    loadInfo.Category = GetCategoryByName(categoryName)
+    loadInfo.Category = GetCategoryByName(CategoryName)
     If loadInfo.Category.DisplayName = "" Then
-        MsgBox "Catégorie '" & categoryName & "' non trouvée", vbExclamation
+        MsgBox "Catégorie '" & CategoryName & "' non trouvée", vbExclamation
         ProcessCategory = DataLoadResult.Error
         Exit Function
     End If
     
     loadInfo.PreviewRows = 3
     
-    If Not ProcessDataLoad(loadInfo) Then
-        ' Vérifie si c'est une annulation ou une erreur
-        Dim WasCancelled As Boolean
-        If WasCancelled Then
-            ProcessCategory = DataLoadResult.Cancelled
-        Else
-            If errorMessage <> "" Then
-                MsgBox errorMessage, vbExclamation
-            End If
-            ProcessCategory = DataLoadResult.Error
+    Dim result As DataLoadResult
+    result = ProcessDataLoad(loadInfo)
+    
+    If result = DataLoadResult.Cancelled Then
+        ProcessCategory = DataLoadResult.Cancelled
+        Exit Function
+    ElseIf result = DataLoadResult.Error Then
+        If errorMessage <> "" Then
+            MsgBox errorMessage, vbExclamation
         End If
+        ProcessCategory = DataLoadResult.Error
         Exit Function
     End If
     
     ProcessCategory = DataLoadResult.Success
 End Function
+
+
 
 
