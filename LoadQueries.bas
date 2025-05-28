@@ -69,42 +69,37 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
         HandleError MODULE_NAME, PROC_NAME, "Listes non initialisées"
         Exit Function
     End If
-      If idList.Count <> displayList.Count Then
+    If idList.Count <> displayList.Count Then
         HandleError MODULE_NAME, PROC_NAME, "Les listes n'ont pas la même taille"
         Exit Function
     End If
     
-    Dim i As Long
-    Dim userChoice As String
-    Dim selectedIndexes As Variant
+    ' Utiliser le nouveau formulaire de sélection
+    Dim frm As New FilterSelectionForm
+    frm.InitializeWithList displayList, prompt
+    frm.Show vbModal
+    
+    ' Récupérer la sélection
+    Dim selectedItems As Collection
+    Set selectedItems = frm.GetSelectedItems
+    
+    ' Mapper les éléments sélectionnés avec leurs IDs
     Dim selectedValues As New Collection
-    Dim listPrompt As String
-
-    listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
-    For i = 1 To displayList.Count
-        listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
-    Next i
-    
-    userChoice = InputBox(listPrompt, "Sélection", "1")
-    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
-        Exit Function
+    If Not selectedItems Is Nothing Then
+        Dim selectedItem As Variant
+        For Each selectedItem In selectedItems
+            Dim i As Long
+            For i = 1 To displayList.Count
+                If displayList(i) = selectedItem Then
+                    selectedValues.Add idList(i)
+                    Exit For
+                End If
+            Next i
+        Next selectedItem
     End If
     
-    If Trim(userChoice) = "*" Then
-        For i = 1 To idList.Count
-            selectedValues.Add idList(i)
-        Next i
-    Else
-        selectedIndexes = Split(userChoice, ",")
-        For i = LBound(selectedIndexes) To UBound(selectedIndexes)
-            Dim idx As Long
-            idx = Val(Trim(selectedIndexes(i)))
-            If idx >= 1 And idx <= idList.Count Then
-                selectedValues.Add idList(idx)
-            End If
-        Next i
-    End If
     Set ChooseMultipleValuesFromListWithAll = selectedValues
+    Unload frm
     Exit Function
     
 ErrorHandler:
@@ -121,57 +116,38 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         HandleError MODULE_NAME, PROC_NAME, "Tableau non initialisé"
         Exit Function
     End If
-      If UBound(values) < 1 Then
+    If UBound(values) < 1 Then
         HandleError MODULE_NAME, PROC_NAME, "Tableau vide"
         Exit Function
     End If
     
+    ' Convertir le tableau en Collection pour l'affichage
+    Dim displayList As New Collection
     Dim i As Long
-    Dim userChoice As String
-    Dim listPrompt As String
-    
-    ' Construire la liste pour l'InputBox
-    listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
     For i = 1 To UBound(values)
-        listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
+        displayList.Add values(i)
     Next i
-
-    userChoice = InputBox(listPrompt, "Sélection", "1")
-    If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
-        Exit Function
-    End If
     
+    ' Utiliser le nouveau formulaire de sélection
+    Dim frm As New FilterSelectionForm
+    frm.InitializeWithList displayList, prompt
+    frm.Show vbModal
+    
+    ' Récupérer la sélection
     Dim selectedValues As New Collection
-    userChoice = Trim(userChoice)
+    Dim selectedItems As Collection
+    Set selectedItems = frm.GetSelectedItems
     
-    ' Cas spécial : sélection de toutes les valeurs avec *
-    If userChoice = "*" Then
-        For i = 1 To UBound(values)
-            selectedValues.Add values(i)
-        Next i
-    Else
-        ' Sélection de valeurs spécifiques
-        Dim selectedIndexes As Variant
-        selectedIndexes = Split(userChoice, ",")
-        Dim hasValidSelection As Boolean
-        hasValidSelection = False
-        
-        For i = LBound(selectedIndexes) To UBound(selectedIndexes)
-            Dim idx As Long
-            idx = Val(Trim(selectedIndexes(i)))
-            If idx >= 1 And idx <= UBound(values) Then
-                selectedValues.Add values(idx)
-                hasValidSelection = True
-            End If
-        Next i
-        
-        ' Si aucune sélection valide n'a été trouvée        If Not hasValidSelection Then
-            HandleError MODULE_NAME, PROC_NAME, "Aucune sélection valide"
-            Exit Function
-        End If
+    ' Ajouter les valeurs sélectionnées à la collection de retour
+    If Not selectedItems Is Nothing Then
+        Dim selectedItem As Variant
+        For Each selectedItem In selectedItems
+            selectedValues.Add selectedItem
+        Next selectedItem
     End If
     
     Set ChooseMultipleValuesFromArrayWithAll = selectedValues
+    Unload frm
     Exit Function
     
 ErrorHandler:
