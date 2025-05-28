@@ -46,6 +46,34 @@ Public Sub Initialize(ByVal category As CategoryInfo)
     Call CreateFilterUI
 End Sub
 
+' Nouvelle initialisation à partir d'une simple liste de valeurs
+Public Sub InitializeWithList(values As Collection, prompt As String)
+    ' Stocker une configuration minimale
+    filterConfig.Title = prompt
+    filterConfig.Subtitle = ""
+    filterConfig.Category.filterLevel = "value"
+
+    ' Préparer les données à afficher
+    Set selectedItems = New Collection
+    itemCount = 0
+    If Not values Is Nothing Then
+        itemCount = values.Count
+        ReDim itemData(1 To itemCount)
+        Dim i As Long
+        For i = 1 To itemCount
+            itemData(i) = CStr(values(i))
+        Next i
+    Else
+        ReDim itemData(0)
+    End If
+
+    ' Paramétrer l'interface
+    Me.Caption = prompt
+    Me.BackColor = RGB(248, 249, 250)
+
+    Call CreateFilterUI
+End Sub
+
 Private Sub LoadFilterData()
     If filterConfig.Category Is Nothing Then
         MsgBox "Category not initialized.", vbExclamation, "Elyse Energy"
