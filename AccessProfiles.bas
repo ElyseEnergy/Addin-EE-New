@@ -21,6 +21,7 @@ Dim ProfilesCount As Long
 Public Sub InitializeDemoProfiles()
     ProfilesCount = 0
     Erase Profiles
+    ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dès le début
     
     ' Ingénieur de base (accès Engineering + Tools basiques)
     AddProfile Engineer_Basic, "Basic Engineer", _
@@ -52,9 +53,7 @@ End Sub
 
 Private Sub AddProfile(id As DemoProfile, Name As String, _
                       eng As Boolean, fin As Boolean, tools As Boolean, _
-                      allProj As Boolean, projects As Variant)
-    ReDim Preserve Profiles(1 To CInt(id))
-    ProfilesCount = CInt(id)
+                      allProj As Boolean, projects As Variant)    ' Le tableau est déjà alloué dans InitializeDemoProfiles
     
     Profiles(id).Name = Name
     Profiles(id).Description = Name

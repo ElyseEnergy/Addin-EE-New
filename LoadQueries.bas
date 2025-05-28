@@ -1,4 +1,4 @@
-﻿Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
+Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Dim lo As ListObject
     Dim sanitizedName As String
     
