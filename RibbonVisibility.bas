@@ -1,23 +1,23 @@
 Attribute VB_Name = "RibbonVisibility"
 ' Module: RibbonVisibility
-' GÃ¨re la visibilitÃ© des Ã©lÃ©ments du ruban
+' Gère la visibilité des éléments du ruban
 Option Explicit
 
 ' Variable globale pour stocker l'instance du ruban
 Public gRibbon As IRibbonUI
 
-' Callback appelÃ© lors du chargement du ruban
+' Callback appelé lors du chargement du ruban
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
-    ' Initialiser le systÃ¨me de logging
+    ' Initialiser le système de logging
     SYS_Logger.InitializeLogger
     
-    Log "ribbon", "Ribbon_Load appelÃ©", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    Log "ribbon", "Ribbon_Load appelé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
     Set gRibbon = ribbon
     InitializeDemoProfiles
-    Log "ribbon", "gRibbon initialisÃ©", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    Log "ribbon", "gRibbon initialisé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
 End Sub
 
-' Callback pour le sÃ©lecteur de profil
+' Callback pour le sélecteur de profil
 Public Sub OnSelectDemoProfile(control As IRibbonControl)
     Select Case control.id
         Case "btnEngineerBasic": SetCurrentProfile AccessProfiles.Engineer_Basic
@@ -36,37 +36,37 @@ Public Sub GetCurrentProfileLabel(control As IRibbonControl, ByRef label)
     label = "Current Profile: " & GetCurrentProfileName()
 End Sub
 
-' Callback pour la visibilitÃ© du menu Technologies
+' Callback pour la visibilité du menu Technologies
 Public Sub GetTechnologiesVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Engineering")
 End Sub
 
-' Callback pour la visibilitÃ© du menu Utilities
+' Callback pour la visibilité du menu Utilities
 Public Sub GetUtilitiesVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Engineering")
 End Sub
 
-' Callback pour la visibilitÃ© du menu Files
+' Callback pour la visibilité du menu Files
 Public Sub GetServerFilesVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Tools")
 End Sub
 
-' Callback pour la visibilitÃ© du menu Outils
+' Callback pour la visibilité du menu Outils
 Public Sub GetAnalysisToolsVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Tools")
 End Sub
 
-' Callback pour la visibilitÃ© du menu Finances
+' Callback pour la visibilité du menu Finances
 Public Sub GetFinancesVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Finance")
 End Sub
 
-' Callback pour la visibilitÃ© des menus de projets
+' Callback pour la visibilité des menus de projets
 Public Function GetProjectMenuVisibility(projectMenu As String) As Boolean
     ' Extrait le nom du projet du menu (par exemple "Echo" de "summaryEcho")
     Dim projectName As String
     If InStr(1, projectMenu, "GENERIC") > 0 Then
-        GetProjectMenuVisibility = HasAccess("Engineering") ' Seuls les ingÃ©nieurs voient les gÃ©nÃ©riques
+        GetProjectMenuVisibility = HasAccess("Engineering") ' Seuls les ingénieurs voient les génériques
     Else
         projectName = Replace(projectMenu, "summary", "")
         projectName = Replace(projectName, "planning", "")
@@ -102,12 +102,12 @@ Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible A
     visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.id)
 End Sub
 
-' Fonction pour forcer le rafraÃ®chissement du ruban
+' Fonction pour forcer le rafraîchissement du ruban
 Public Sub InvalidateRibbon()
-    Log "ribbon", "InvalidateRibbon appelÃ©", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
+    Log "ribbon", "InvalidateRibbon appelé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     If Not gRibbon Is Nothing Then
         gRibbon.Invalidate
-        Log "ribbon", "Ribbon invalidÃ©", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
+        Log "ribbon", "Ribbon invalidé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     Else
         Log "ribbon", "gRibbon est Nothing", WARNING_LEVEL, "InvalidateRibbon", "RibbonVisibility"
     End If
@@ -118,7 +118,7 @@ Public Sub OnTestButton(control As IRibbonControl)
     MsgBox "Test button clicked!"
 End Sub
 
-' Callback pour la visibilitÃ© du menu Debug (admin only)
+' Callback pour la visibilité du menu Debug (admin only)
 Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Admin")
 End Sub

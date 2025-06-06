@@ -1,16 +1,16 @@
 Attribute VB_Name = "PQDebugTools"
 ' Module : PQDebugTools
-' Module de debug pour injecter et tester les requÃªtes PowerQuery
+' Module de debug pour injecter et tester les requêtes PowerQuery
 Option Explicit
 
-' Module de debug pour tester les requÃªtes PowerQuery dans l'Ã©diteur
+' Module de debug pour tester les requêtes PowerQuery dans l'éditeur
 
-' Force l'injection et le chargement de toutes les requÃªtes PowerQuery
+' Force l'injection et le chargement de toutes les requêtes PowerQuery
 Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ' Initialiser les catÃ©gories
+    ' Initialiser les catégories
     CategoryManager.InitCategories
     
-    ' RÃ©cupÃ©rer l'accÃ¨s direct au tableau de catÃ©gories
+    ' Récupérer l'accès direct au tableau de catégories
     Dim categories() As CategoryInfo
     categories = CategoryManager.categories
     
@@ -20,47 +20,47 @@ Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optiona
     Dim failureCount As Long
     totalCount = CategoryManager.CategoriesCount
     
-    ' Pour chaque catÃ©gorie, injecter la requÃªte
+    ' Pour chaque catégorie, injecter la requête
     Dim i As Long
     Dim Category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
         Category = categories(i)
           Log "process_category", "=== Traitement de " & Category.DisplayName & " ===", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         Log "process_category", "URL: " & Category.URL, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
-        Log "process_category", "Nom de la requÃªte: " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+        Log "process_category", "Nom de la requête: " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         
-        ' CrÃ©er/Mettre Ã  jour la requÃªte PowerQuery dans l'Ã©diteur
+        ' Créer/Mettre à jour la requête PowerQuery dans l'éditeur
         If Not PQQueryManager.EnsurePQQueryExists(Category) Then
-            Log "process_category", "ERREUR: Ã‰chec de la crÃ©ation de la requÃªte PowerQuery", ERROR_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+            Log "process_category", "ERREUR: Échec de la création de la requête PowerQuery", ERROR_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
             failureCount = failureCount + 1
             GoTo NextCategory
         End If
         
-        Log "process_category", "SuccÃ¨s: RequÃªte crÃ©Ã©e dans l'Ã©diteur Power Query", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+        Log "process_category", "Succès: Requête créée dans l'éditeur Power Query", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         successCount = successCount + 1
         
 NextCategory:
         Log "process_category", String(50, "-"), DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
     Next i
     
-    ' Afficher le rÃ©sumÃ©
-    MsgBox "Traitement terminÃ©" & vbCrLf & _
+    ' Afficher le résumé
+    MsgBox "Traitement terminé" & vbCrLf & _
            "Total: " & totalCount & vbCrLf & _
-           "SuccÃ¨s: " & successCount & vbCrLf & _
-           "Ã‰checs: " & failureCount, _
+           "Succès: " & successCount & vbCrLf & _
+           "Échecs: " & failureCount, _
            vbInformation, "Injection PowerQuery"
 End Sub
 
-' Efface toutes les requÃªtes PowerQuery et leurs tableaux associÃ©s
+' Efface toutes les requêtes PowerQuery et leurs tableaux associés
 Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
-    ' Initialiser les catÃ©gories
+    ' Initialiser les catégories
     CategoryManager.InitCategories
     
-    ' RÃ©cupÃ©rer l'accÃ¨s direct au tableau de catÃ©gories
+    ' Récupérer l'accès direct au tableau de catégories
     Dim categories() As CategoryInfo
     categories = CategoryManager.categories
     
-    ' Pour chaque catÃ©gorie, supprimer la requÃªte et le tableau associÃ©
+    ' Pour chaque catégorie, supprimer la requête et le tableau associé
     Dim i As Long
     Dim Category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
@@ -70,7 +70,7 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
         DataLoaderManager.CleanupPowerQuery Category.PowerQueryName
     Next i
     
-    MsgBox "Nettoyage terminÃ©", vbInformation
+    MsgBox "Nettoyage terminé", vbInformation
 End Sub
 
 ' Test et debug du RagicDictionary
@@ -81,9 +81,9 @@ Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional
     Log "debug_ragic", "1. Chargement du dictionnaire...", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     LoadRagicDictionary
     
-    ' 2. VÃ©rifier si le dictionnaire a Ã©tÃ© chargÃ©
+    ' 2. Vérifier si le dictionnaire a été chargé
     If RagicFieldDict Is Nothing Then
-        Log "debug_ragic", "ERREUR: Le dictionnaire n'a pas Ã©tÃ© chargÃ©", ERROR_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
+        Log "debug_ragic", "ERREUR: Le dictionnaire n'a pas été chargé", ERROR_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
         Exit Sub
     End If
     
@@ -101,7 +101,7 @@ Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional
     TestField "MeOH - CO2-to-Methanol Synthesis", "CO2 Conversion [%]"
     
     Log "debug_ragic", String(50, "-"), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
-    MsgBox "Test du RagicDictionary terminÃ©. Voir la fenÃªtre de debug pour les dÃ©tails.", vbInformation
+    MsgBox "Test du RagicDictionary terminé. Voir la fenêtre de debug pour les détails.", vbInformation
 End Sub
 
 ' Fonction utilitaire pour tester un champ

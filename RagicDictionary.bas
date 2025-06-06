@@ -9,21 +9,21 @@ Private Const BASE_NAME As String = "RagicDictionary"
 Private Const RAGIC_PATH As String = "matching-matrix/6.csv"
 
 Public Sub LoadRagicDictionary()
-    ' Afficher un message Ã  l'utilisateur
+    ' Afficher un message à l'utilisateur
     Application.StatusBar = "Chargement du dictionnaire Ragic en cours..."
     MsgBox "Le premier chargement du dictionnaire Ragic peut prendre quelques instants." & vbCrLf & _
            "Veuillez patienter...", vbInformation, "Chargement en cours"
     
-    ' CrÃ©er ou rÃ©cupÃ©rer la feuille PQ_DICT
+    ' Créer ou récupérer la feuille PQ_DICT
     Set wsPQDict = GetOrCreatePQDictSheet()
     
-    ' DÃ©finir les noms standardisÃ©s
+    ' Définir les noms standardisés
     Dim pqName As String
     pqName = "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
     Dim tableName As String
     tableName = "Table_" & Utilities.SanitizeTableName(BASE_NAME)
     
-    ' CrÃ©er une catÃ©gorie pour le dictionnaire
+    ' Créer une catégorie pour le dictionnaire
     Dim dictCategory As CategoryInfo
     With dictCategory
         .CategoryName = BASE_NAME
@@ -33,9 +33,9 @@ Public Sub LoadRagicDictionary()
         .SheetName = BASE_NAME
     End With
     
-    ' VÃ©rifier si la requÃªte existe dÃ©jÃ 
+    ' Vérifier si la requête existe déjà
     If QueryExists(pqName) Then
-        ' Si la requÃªte existe, mettre Ã  jour sa formule
+        ' Si la requête existe, mettre à jour sa formule
         On Error Resume Next
         ThisWorkbook.Queries(pqName).formula = GenerateDictionaryQuery(dictCategory.URL)
         Dim updateError As Long
@@ -43,41 +43,41 @@ Public Sub LoadRagicDictionary()
         On Error GoTo 0
         
         If updateError <> 0 Then
-            Log "ragic_dict_err", "Erreur lors de la mise Ã  jour de la requÃªte " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "ragic_dict_err", "Erreur lors de la mise à jour de la requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
         
-        ' RafraÃ®chir la requÃªte
+        ' Rafraîchir la requête
         ThisWorkbook.Queries(pqName).Refresh
     Else
-        ' CrÃ©er la requÃªte si elle n'existe pas
+        ' Créer la requête si elle n'existe pas
         On Error Resume Next
         ThisWorkbook.Queries.Add pqName, GenerateDictionaryQuery(dictCategory.URL)
         Dim addError As Long
         addError = Err.Number
         On Error GoTo 0
           If addError <> 0 Then
-            Log "ragic_dict_err", "Erreur lors de l'ajout de la requÃªte " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "ragic_dict_err", "Erreur lors de l'ajout de la requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
     End If
     
-    ' Charger les donnÃ©es dans la feuille PQ_DICT
+    ' Charger les données dans la feuille PQ_DICT
     LoadQueries.LoadQuery pqName, wsPQDict, wsPQDict.Range("A1")
     
     ' Initialiser le dictionnaire
     Set RagicFieldDict = CreateObject("Scripting.Dictionary")
     
-    ' Charger les donnÃ©es dans le dictionnaire
+    ' Charger les données dans le dictionnaire
     LoadDictionaryData tableName
     
-    ' RÃ©initialiser la barre de statut
+    ' Réinitialiser la barre de statut
     Application.StatusBar = False
 End Sub
 
-' GÃ©nÃ¨re la requÃªte PowerQuery spÃ©cifique pour le dictionnaire
+' Génère la requête PowerQuery spécifique pour le dictionnaire
 Private Function GenerateDictionaryQuery(ByVal URL As String) As String
     Dim q As String
     q = Chr(34) ' guillemet double
@@ -90,7 +90,7 @@ Private Function GenerateDictionaryQuery(ByVal URL As String) As String
         "    FilteredRows"
 End Function
 
-' VÃ©rifie si une requÃªte PowerQuery existe
+' Vérifie si une requête PowerQuery existe
 Private Function QueryExists(queryName As String) As Boolean
     On Error Resume Next
     Dim q As Object
@@ -105,7 +105,7 @@ Private Function GetOrCreatePQDictSheet() As Worksheet
     On Error GoTo 0
     
     If GetOrCreatePQDictSheet Is Nothing Then
-        ' CrÃ©er la feuille si elle n'existe pas
+        ' Créer la feuille si elle n'existe pas
         Set GetOrCreatePQDictSheet = ThisWorkbook.Worksheets.Add
         GetOrCreatePQDictSheet.Name = "PQ_DICT"
         
@@ -114,10 +114,10 @@ Private Function GetOrCreatePQDictSheet() As Worksheet
     End If
 End Function
 
-' Normalise le nom de la feuille pour la clÃ© dictionnaire
+' Normalise le nom de la feuille pour la clé dictionnaire
 Public Function NormalizeSheetName(SheetName As String) As String
     Dim i As Long, c As String
-    ' Supprime tous les caractÃ¨res non alphanumÃ©riques au dÃ©but
+    ' Supprime tous les caractères non alphanumériques au début
     For i = 1 To Len(SheetName)
         c = Mid(SheetName, i, 1)
         If (c >= "A" And c <= "Z") Or (c >= "a" And c <= "z") Or (c >= "0" And c <= "9") Then
@@ -129,7 +129,7 @@ Public Function NormalizeSheetName(SheetName As String) As String
 End Function
 
 Private Sub LoadDictionaryData(ByVal tableName As String)
-    Log "load_dict", "Tables prÃ©sentes dans PQ_DICT : " & ListAllTableNames(wsPQDict), DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
+    Log "load_dict", "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict), DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
     Dim lo As ListObject
     On Error Resume Next
     Set lo = wsPQDict.ListObjects(tableName)
@@ -147,8 +147,8 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     End If
 
     If lo Is Nothing Then
-        MsgBox "Le tableau '" & tableName & "' n'a pas Ã©tÃ© trouvÃ© dans la feuille PQ_DICT." & vbCrLf & _
-               "Tableaux prÃ©sents : " & ListAllTableNames(wsPQDict), vbExclamation
+        MsgBox "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT." & vbCrLf & _
+               "Tableaux présents : " & ListAllTableNames(wsPQDict), vbExclamation
         Exit Sub
     End If
 
@@ -178,7 +178,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
         End If
     Next i
 
-    Log "load_dict", "Nombre de clÃ©s dans le dictionnaire VBA : " & RagicFieldDict.Count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
+    Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
     Dim c As Long
     c = 0
     For Each key In RagicFieldDict.Keys
@@ -215,17 +215,17 @@ End Function
 
 Public Sub TestIsFieldHidden_BudgetGroupes()
     If RagicFieldDict Is Nothing Then
-        Log "test_hidden", "Dictionnaire non initialisÃ©, chargement en cours...", INFO_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+        Log "test_hidden", "Dictionnaire non initialisé, chargement en cours...", INFO_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
         LoadRagicDictionary
     End If
     Log "test_hidden", "Test IsFieldHidden pour Budget Groupes :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     Log "test_hidden", "Champ 1 :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Montant Total'", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
-    Log "test_hidden", "  RÃ©sultat : " & IsFieldHidden("? Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  Résultat : " & IsFieldHidden("? Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     
     Log "test_hidden", "Champ 2 :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
-    Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'AnnÃ©e'", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
-    Log "test_hidden", "  RÃ©sultat : " & IsFieldHidden("? Budget Groupes", "AnnÃ©e"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Année'", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  Résultat : " & IsFieldHidden("? Budget Groupes", "Année"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
 
 

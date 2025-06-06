@@ -13,9 +13,7 @@ def setup_logging():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(log_dir, f"export_modules_{timestamp}.log")
-    
+    log_file = os.path.join(log_dir, "export_modules.log")
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s',
@@ -168,5 +166,70 @@ def export_vba_modules(xlsm_path, export_dir="."):
     finally:
         kill_excel()  # On s'assure de bien nettoyer à la fin
 
+def export_modules(export_dir="."):
+    log_file = setup_logging()
+    logging.info(f"Début de l'export des modules. Log file: {log_file}")
+    
+    excel = None
+    workbook = None
+    excel_file = r"C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\Addin Elyse Energy - fonctionnel - v2025.06.06.xlsm"
+    
+    try:
+        # Convertir le dossier d'export en chemin absolu
+        export_dir = os.path.abspath(export_dir)
+        
+        logging.info(f"Fichier Excel source: {excel_file}")
+        logging.info(f"Dossier d'export: {export_dir}")
+        
+        if not os.path.exists(excel_file):
+            logging.error(f"Le fichier {excel_file} n'existe pas!")
+            return
+            
+        # S'assurer que le dossier d'export existe
+        os.makedirs(export_dir, exist_ok=True)
+        
+        # Créer une instance Excel
+        excel = win32com.client.Dispatch("Excel.Application")
+        excel.Visible = False
+        workbook = excel.Workbooks.Open(excel_file)
+        
+        vba_project = workbook.VBProject
+        
+        # Exporter tous les composants
+        for comp in vba_project.VBComponents:
+            try:
+                if comp.Type in [1, 2, 3]:  # Module standard, Classe, Formulaire
+                    extension = {1: "bas", 2: "cls", 3: "frm"}[comp.Type]
+                    export_filename = os.path.join(export_dir, f"{comp.Name}.{extension}")
+                    comp.Export(export_filename)
+                    logging.info(f"Module exporté: {export_filename}")
+                else:
+                    # Pour les modules Document (ThisWorkbook, feuilles)
+                    if comp.Type == 100:
+                        export_filename = os.path.join(export_dir, f"{comp.Name}.cls")
+                        comp.Export(export_filename)
+                        logging.info(f"Module Document exporté: {export_filename}")
+            
+            except Exception as e:
+                logging.error(f"Erreur lors de l'export de {comp.Name}: {str(e)}")
+                logging.error(traceback.format_exc())
+        
+    except Exception as e:
+        logging.error(f"Erreur générale: {str(e)}")
+        logging.error(traceback.format_exc())
+    finally:
+        try:
+            if workbook:
+                workbook.Close(SaveChanges=False)
+            if excel:
+                excel.Quit()
+        except:
+            pass
+
 if __name__ == "__main__":
-    export_vba_modules("Addin Elyse Energy.xlsm", ".") 
+    try:
+        export_modules()
+    except Exception as e:
+        print(f"Erreur fatale: {str(e)}")
+        print(traceback.format_exc())
+        sys.exit(1) 

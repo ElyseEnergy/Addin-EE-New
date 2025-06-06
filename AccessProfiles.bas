@@ -1,16 +1,16 @@
 Attribute VB_Name = "AccessProfiles"
 ' Module: AccessProfiles
-' GÃ¨re les profils de dÃ©monstration pour les droits d'accÃ¨s
+' Gère les profils de démonstration pour les droits d'accès
 Option Explicit
 
-' Note: Utilise le type AccessProfile dÃ©fini dans Types.bas
+' Note: Utilise le type AccessProfile défini dans Types.bas
 
 Public Enum DemoProfile
     Engineer_Basic = 0
     Project_Manager = 1
     Finance_Controller = 2
     Technical_Director = 3
-    Business_Analyst = 4    ' RenommÃ© de Multi_Project_Lead pour mieux reflÃ©ter le rÃ´le
+    Business_Analyst = 4    ' Renommé de Multi_Project_Lead pour mieux refléter le rôle
     Full_Admin = 5
 End Enum
 
@@ -18,23 +18,23 @@ Private mCurrentProfile As DemoProfile
 Dim Profiles() As AccessProfile
 Dim ProfilesCount As Long
 
-' Initialisation des profils de dÃ©monstration
+' Initialisation des profils de démonstration
 Public Sub InitializeDemoProfiles()
     On Error GoTo ErrorHandler
     
     ProfilesCount = 0
     Erase Profiles
-    ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dÃ¨s le dÃ©but
+    ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dès le début
     
-    ' IngÃ©nieur de base (accÃ¨s Engineering + Tools basiques)
+    ' Ingénieur de base (accès Engineering + Tools basiques)
     AddProfile Engineer_Basic, "Basic Engineer", _
                True, False, True, False, Array()
                
-    ' Chef de projet (accÃ¨s Tools + Projets)
+    ' Chef de projet (accès Tools + Projets)
     AddProfile Project_Manager, "Project Manager", _
                False, False, True, True, Array()
                
-    ' ContrÃ´leur financier (Finance + tous les budgets)
+    ' Contrôleur financier (Finance + tous les budgets)
     AddProfile Finance_Controller, "Finance Controller", _
                False, True, True, False, Array()
                
@@ -46,16 +46,16 @@ Public Sub InitializeDemoProfiles()
     AddProfile Business_Analyst, "Business Analyst", _
                False, True, True, False, Array()
                
-    ' Admin (accÃ¨s total)
+    ' Admin (accès total)
     AddProfile Full_Admin, "Admin (Full Access)", _
                True, True, True, True, Array()
                
-    ' Par dÃ©faut, on commence avec le profil Technical Director
+    ' Par défaut, on commence avec le profil Technical Director
     mCurrentProfile = Technical_Director
     Exit Sub
     
 ErrorHandler:
-    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de dÃ©monstration"
+    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de démonstration"
 End Sub
 
 Private Sub AddProfile(id As DemoProfile, Name As String, _
@@ -83,7 +83,7 @@ ErrorHandler:
     HandleError "AccessProfiles", "AddProfile", "Erreur lors de l'ajout du profil " & Name
 End Sub
 
-' DÃ©finit le profil actif
+' Définit le profil actif
 Public Sub SetCurrentProfile(profile As DemoProfile)
     On Error GoTo ErrorHandler
     
@@ -99,7 +99,7 @@ ErrorHandler:
     HandleError "AccessProfiles", "SetCurrentProfile", "Erreur lors du changement de profil"
 End Sub
 
-' RÃ©cupÃ¨re le profil par ID (suppose que l'ID correspond Ã  l'index)
+' Récupère le profil par ID (suppose que l'ID correspond à l'index)
 Private Function GetProfileById(id As DemoProfile) As AccessProfile
     On Error GoTo ErrorHandler
     
@@ -112,17 +112,17 @@ Private Function GetProfileById(id As DemoProfile) As AccessProfile
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la rÃ©cupÃ©ration du profil"
+    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la récupération du profil"
 End Function
 
-' VÃ©rifie si le profil actuel a accÃ¨s Ã  une fonctionnalitÃ©
+' Vérifie si le profil actuel a accès à une fonctionnalité
 Public Function HasAccess(feature As String) As Boolean
     On Error GoTo ErrorHandler
     
     Dim prof As AccessProfile
     prof = GetProfileById(mCurrentProfile)
     
-    ' AccÃ¨s total pour l'admin
+    ' Accès total pour l'admin
     If mCurrentProfile = Full_Admin Then
         HasAccess = True
         Exit Function
@@ -138,17 +138,17 @@ Public Function HasAccess(feature As String) As Boolean
         Case "Admin"
             HasAccess = (mCurrentProfile = Full_Admin)
         Case Else
-            ' Pour les projets (plus de rÃ©fÃ©rence aux projets spÃ©cifiques)
+            ' Pour les projets (plus de référence aux projets spécifiques)
             HasAccess = prof.AllProjects
     End Select
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la vÃ©rification des droits d'accÃ¨s pour: " & feature
+    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la vérification des droits d'accès pour: " & feature
     HasAccess = False
 End Function
 
-' RÃ©cupÃ¨re le nom du profil actuel
+' Récupère le nom du profil actuel
 Public Function GetCurrentProfileName() As String
     On Error GoTo ErrorHandler
     
@@ -156,7 +156,7 @@ Public Function GetCurrentProfileName() As String
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la rÃ©cupÃ©ration du nom du profil actuel"
+    HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la récupération du nom du profil actuel"
     GetCurrentProfileName = "Profil inconnu"
 End Function
 

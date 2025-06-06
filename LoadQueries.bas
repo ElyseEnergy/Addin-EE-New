@@ -3,27 +3,27 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
     On Error GoTo ErrorHandler
     
     If queryName = "" Then
-        HandleError "LoadQueries", "LoadQuery", "Nom de requÃªte vide"
+        HandleError "LoadQueries", "LoadQuery", "Nom de requête vide"
         Exit Sub
     End If
     
     If ws Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spÃ©cifiÃ©e"
+        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spécifiée"
         Exit Sub
     End If
     
     If DestCell Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spÃ©cifiÃ©e"
+        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spécifiée"
         Exit Sub
     End If
     
     Dim lo As ListObject
     Dim sanitizedName As String
     
-    ' Nettoyer le nom de la requÃªte pour le nom de tableau
+    ' Nettoyer le nom de la requête pour le nom de tableau
     sanitizedName = "Table_" & Utilities.SanitizeTableName(queryName)
     
-    ' VÃ©rifier si la table existe dÃ©jÃ 
+    ' Vérifier si la table existe déjà
     For Each lo In ws.ListObjects
         If lo.Name = sanitizedName Then
             Exit Sub
@@ -48,27 +48,27 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
         .Refresh BackgroundQuery:=False
     End With
     
-    ' AprÃ¨s le chargement de la requÃªte, s'assurer que le nom est correct
-    Set lo = ws.ListObjects(ws.ListObjects.Count) ' Le dernier tableau crÃ©Ã©
+    ' Après le chargement de la requête, s'assurer que le nom est correct
+    Set lo = ws.ListObjects(ws.ListObjects.Count) ' Le dernier tableau créé
     If Not lo Is Nothing Then
         lo.Name = sanitizedName
     End If
     Exit Sub
     
 ErrorHandler:
-    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requÃªte: " & queryName
+    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requête: " & queryName
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
     If idList Is Nothing Or displayList Is Nothing Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisÃ©es"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisées"
         Exit Function
     End If
     
     If idList.Count <> displayList.Count Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la mÃªme taille"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la même taille"
         Exit Function
     End If
     
@@ -83,7 +83,7 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
         listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
     Next i
     
-    userChoice = InputBox(listPrompt, "SÃ©lection", "1")
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         Exit Function
     End If
@@ -106,14 +106,14 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sÃ©lection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sélection des valeurs"
 End Function
 
 Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
     If Not IsArray(values) Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisÃ©"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisé"
         Exit Function
     End If
     
@@ -132,7 +132,7 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
     Next i
 
-    userChoice = InputBox(listPrompt, "SÃ©lection", "1")
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         Exit Function
     End If
@@ -140,13 +140,13 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
     Dim SelectedValues As New Collection
     userChoice = Trim(userChoice)
     
-    ' Cas spÃ©cial : sÃ©lection de toutes les valeurs avec *
+    ' Cas spécial : sélection de toutes les valeurs avec *
     If userChoice = "*" Then
         For i = 1 To UBound(values)
             SelectedValues.Add values(i)
         Next i
     Else
-        ' SÃ©lection de valeurs spÃ©cifiques
+        ' Sélection de valeurs spécifiques
         Dim selectedIndexes As Variant
         selectedIndexes = Split(userChoice, ",")
         Dim hasValidSelection As Boolean
@@ -161,9 +161,9 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
             End If
         Next i
         
-        ' Si aucune sÃ©lection valide n'a Ã©tÃ© trouvÃ©e
+        ' Si aucune sélection valide n'a été trouvée
         If Not hasValidSelection Then
-            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sÃ©lection valide"
+            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sélection valide"
             Exit Function
         End If
     End If
@@ -172,7 +172,7 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sÃ©lection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sélection des valeurs"
 End Function
 
 

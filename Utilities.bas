@@ -7,7 +7,7 @@ Sub InitializePQData()
     Set wsPQData = ActiveWorkbook.Worksheets("PQ_DATA")
     On Error GoTo 0
     
-    ' Si la feuille n'existe pas, la crÃ©er
+    ' Si la feuille n'existe pas, la créer
     If wsPQData Is Nothing Then
         Set wsPQData = ActiveWorkbook.Worksheets.Add
         wsPQData.Name = "PQ_DATA"
@@ -27,19 +27,19 @@ Function TruncateWithEllipsis(text As String, maxLen As Integer) As String
     End If
 End Function
 
-' Nettoie une chaÃ®ne pour en faire un nom de tableau valide
+' Nettoie une chaîne pour en faire un nom de tableau valide
 Public Function SanitizeTableName(ByVal inputName As String) As String
     Dim result As String
     Dim i As Long
     Dim c As String
     
-    ' Remplacer les caractÃ¨res non valides par des underscores
+    ' Remplacer les caractères non valides par des underscores
     result = inputName
     
     ' Remplacer les espaces par des underscores
     result = Replace(result, " ", "_")
     
-    ' Remplacer les caractÃ¨res spÃ©ciaux courants
+    ' Remplacer les caractères spéciaux courants
     result = Replace(result, "-", "_")
     result = Replace(result, ".", "_")
     result = Replace(result, "(", "")
@@ -50,7 +50,7 @@ Public Function SanitizeTableName(ByVal inputName As String) As String
     ' Supprimer les accents
     result = RemoveDiacritics(result)
     
-    ' Ne garder que les caractÃ¨res alphanumÃ©riques et underscores
+    ' Ne garder que les caractères alphanumériques et underscores
     Dim cleanResult As String
     cleanResult = ""
     For i = 1 To Len(result)
@@ -61,7 +61,7 @@ Public Function SanitizeTableName(ByVal inputName As String) As String
         End If
     Next i
     
-    ' Limiter la longueur Ã  250 caractÃ¨res (garder de la marge pour les suffixes)
+    ' Limiter la longueur à 250 caractères (garder de la marge pour les suffixes)
     If Len(cleanResult) > 250 Then
         cleanResult = Left(cleanResult, 250)
     End If
@@ -72,7 +72,7 @@ End Function
 ' Fonction auxiliaire pour supprimer les accents
 Private Function RemoveDiacritics(ByVal text As String) As String
     Dim i As Long
-    Const AccentedChars = "Ã Ã¡Ã¢Ã£Ã¤Ã§Ã¨Ã©ÃªÃ«Ã¬Ã­Ã®Ã¯Ã±Ã²Ã³Ã´ÃµÃ¶Ã¹ÃºÃ»Ã¼Ã½Ã¿Ã€ÃÃ‚ÃƒÃ„Ã‡ÃˆÃ‰ÃŠÃ‹ÃŒÃÃÃÃ‘Ã’Ã“Ã”Ã•Ã–Ã™ÃšÃ›ÃœÃ"
+    Const AccentedChars = "àáâãäçèéêëìíîïñòóôõöùúûüıÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜİ"
     Const UnaccentedChars = "aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY"
     
     For i = 1 To Len(AccentedChars)
