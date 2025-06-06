@@ -1,3 +1,4 @@
+Attribute VB_Name = "PQQueryManager"
 ' Module: PQQueryManager
 ' Gère la création et la vérification des requêtes PowerQuery
 Option Explicit
@@ -5,29 +6,29 @@ Option Explicit
 Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
 
 ' Vérifie si une requête PowerQuery existe et la crée si nécessaire
-Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
+Public Function EnsurePQQueryExists(Category As CategoryInfo) As Boolean
     Dim query As String
-    query = GeneratePQQueryTemplate(category)
+    query = GeneratePQQueryTemplate(Category)
     
-    If QueryExists(category.PowerQueryName) Then
+    If QueryExists(Category.PowerQueryName) Then
         ' Si la requête existe, mettre à jour sa formule
         On Error Resume Next
-        ThisWorkbook.Queries(category.PowerQueryName).Formula = query
+        ThisWorkbook.Queries(Category.PowerQueryName).formula = query
         Dim updateError As Long
         updateError = Err.Number
         On Error GoTo 0
           If updateError <> 0 Then
-            Log "pq_update", "Erreur lors de la mise à jour de la requête " & category.PowerQueryName & ": " & Err.Description, ERROR_LEVEL, "EnsurePQQueryExists", "PQQueryManager"
+            Log "pq_update", "Erreur lors de la mise à jour de la requête " & Category.PowerQueryName & ": " & Err.Description, ERROR_LEVEL, "EnsurePQQueryExists", "PQQueryManager"
             EnsurePQQueryExists = False
             Exit Function
         End If
         
         ' Rafraîchir la requête
-        ThisWorkbook.Queries(category.PowerQueryName).Refresh
+        ThisWorkbook.Queries(Category.PowerQueryName).Refresh
         EnsurePQQueryExists = True
     Else
         ' Créer la requête si elle n'existe pas
-        If Not AddQueryToPowerQuery(category.PowerQueryName, query) Then
+        If Not AddQueryToPowerQuery(Category.PowerQueryName, query) Then
             EnsurePQQueryExists = False
             Exit Function
         End If
@@ -35,7 +36,7 @@ Public Function EnsurePQQueryExists(category As CategoryInfo) As Boolean
     End If
     
     ' Stocker les types de colonnes après la création de la requête
-    StoreColumnTypes category.PowerQueryName
+    StoreColumnTypes Category.PowerQueryName
     
     EnsurePQQueryExists = True
 End Function
@@ -53,7 +54,7 @@ End Function
 Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
-    Dim errNum As Long    
+    Dim errNum As Long
     errNum = Err.Number
     If errNum <> 0 Then
         Log "pq_add", "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
@@ -65,17 +66,16 @@ Private Function AddQueryToPowerQuery(queryName As String, query As String) As B
 End Function
 
 ' Génère le template de requête PowerQuery
-Private Function GeneratePQQueryTemplate(category As CategoryInfo) As String
+Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
     Dim template As String
     ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
-          "    Source = Csv.Document(Web.Contents(""" & category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
+          "    Source = Csv.Document(Web.Contents(""" & Category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
           "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
-          "    // Trouver la colonne ID en prenant en compte différents formats possibles" & vbCrLf & _
+          "    // Trouver la colonne ID quelle que soit sa casse" & vbCrLf & _
           "    Colonnes = Table.ColumnNames(PromotedHeaders)," & vbCrLf & _
-          "    PossibleIdColumns = List.Select(Colonnes, each Text.Lower(_) = ""id"" or _ = ""RDA #"" or _ = ""DIB #"")," & vbCrLf & _
-          "    IdColumn = List.First(PossibleIdColumns)," & vbCrLf & _
-          "    AutresColonnes = List.Select(Colonnes, each _ <> IdColumn)," & vbCrLf & _
+          "    IdColumn = List.First(List.Select(Colonnes, each Text.Lower(_) = ""id""))," & vbCrLf & _
+          "    AutresColonnes = List.Select(Colonnes, each Text.Lower(_) <> ""id"")," & vbCrLf & _
           "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
           "    ReorderedColumns = Table.ReorderColumns(PromotedHeaders, {IdColumn} & AutresColonnes)," & vbCrLf & _
           "    // Typer la colonne ID" & vbCrLf & _
@@ -123,3 +123,4 @@ Public Function GetStoredColumnType(queryName As String, columnName As String) A
     
     GetStoredColumnType = mColumnTypes(queryName)(columnName)
 End Function
+

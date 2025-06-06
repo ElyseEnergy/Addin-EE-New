@@ -1,3 +1,4 @@
+Attribute VB_Name = "AccessProfiles"
 ' Module: AccessProfiles
 ' Gère les profils de démonstration pour les droits d'accès
 Option Explicit
@@ -20,9 +21,6 @@ Dim ProfilesCount As Long
 ' Initialisation des profils de démonstration
 Public Sub InitializeDemoProfiles()
     On Error GoTo ErrorHandler
-    
-    Const PROC_NAME As String = "InitializeDemoProfiles"
-    Const MODULE_NAME As String = "AccessProfiles"
     
     ProfilesCount = 0
     Erase Profiles
@@ -52,49 +50,45 @@ Public Sub InitializeDemoProfiles()
     AddProfile Full_Admin, "Admin (Full Access)", _
                True, True, True, True, Array()
                
-    ' Par défaut, on commence avec le profil Technical Director    mCurrentProfile = Technical_Director
+    ' Par défaut, on commence avec le profil Technical Director
+    mCurrentProfile = Technical_Director
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'initialisation des profils de démonstration"
+    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de démonstration"
 End Sub
 
 Private Sub AddProfile(id As DemoProfile, Name As String, _
-                      eng As Boolean, fin As Boolean, tools As Boolean, _
-                      allProj As Boolean, projects As Variant)
+                      eng As Boolean, fin As Boolean, Tools As Boolean, _
+                      allProj As Boolean, Projects As Variant)
     On Error GoTo ErrorHandler
-    
-    Const PROC_NAME As String = "AddProfile"
-    Const MODULE_NAME As String = "AccessProfiles"
     
     Profiles(id).Name = Name
     Profiles(id).Description = Name
     Profiles(id).Engineering = eng
     Profiles(id).Finance = fin
-    Profiles(id).tools = tools
+    Profiles(id).Tools = Tools
     Profiles(id).AllProjects = allProj
     
-    Set Profiles(id).projects = New Collection
+    Set Profiles(id).Projects = New Collection
     Dim proj As Variant
-    For Each proj In projects
-        Profiles(id).projects.Add CStr(proj)
+    For Each proj In Projects
+        Profiles(id).Projects.Add CStr(proj)
     Next
     
     ProfilesCount = id
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'ajout du profil " & Name
+    HandleError "AccessProfiles", "AddProfile", "Erreur lors de l'ajout du profil " & Name
 End Sub
 
 ' Définit le profil actif
 Public Sub SetCurrentProfile(profile As DemoProfile)
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "SetCurrentProfile"
-    Const MODULE_NAME As String = "AccessProfiles"
-      If profile < Engineer_Basic Or profile > Full_Admin Then
-        HandleError MODULE_NAME, PROC_NAME, "Profil invalide: " & profile
+    If profile < Engineer_Basic Or profile > Full_Admin Then
+        HandleError "AccessProfiles", "SetCurrentProfile", "Profil invalide: " & profile
         Exit Sub
     End If
     
@@ -102,17 +96,15 @@ Public Sub SetCurrentProfile(profile As DemoProfile)
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du changement de profil"
+    HandleError "AccessProfiles", "SetCurrentProfile", "Erreur lors du changement de profil"
 End Sub
 
 ' Récupère le profil par ID (suppose que l'ID correspond à l'index)
 Private Function GetProfileById(id As DemoProfile) As AccessProfile
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "GetProfileById"
-    Const MODULE_NAME As String = "AccessProfiles"
-      If id < Engineer_Basic Or id > Full_Admin Then
-        HandleError MODULE_NAME, PROC_NAME, "ID de profil invalide: " & id
+    If id < Engineer_Basic Or id > Full_Admin Then
+        HandleError "AccessProfiles", "GetProfileById", "ID de profil invalide: " & id
         Exit Function
     End If
     
@@ -120,15 +112,12 @@ Private Function GetProfileById(id As DemoProfile) As AccessProfile
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération du profil"
+    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la récupération du profil"
 End Function
 
 ' Vérifie si le profil actuel a accès à une fonctionnalité
 Public Function HasAccess(feature As String) As Boolean
     On Error GoTo ErrorHandler
-    
-    Const PROC_NAME As String = "HasAccess"
-    Const MODULE_NAME As String = "AccessProfiles"
     
     Dim prof As AccessProfile
     prof = GetProfileById(mCurrentProfile)
@@ -145,7 +134,7 @@ Public Function HasAccess(feature As String) As Boolean
         Case "Finance"
             HasAccess = prof.Finance
         Case "Tools"
-            HasAccess = prof.tools
+            HasAccess = prof.Tools
         Case "Admin"
             HasAccess = (mCurrentProfile = Full_Admin)
         Case Else
@@ -155,7 +144,7 @@ Public Function HasAccess(feature As String) As Boolean
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la vérification des droits d'accès pour: " & feature
+    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la vérification des droits d'accès pour: " & feature
     HasAccess = False
 End Function
 
@@ -163,14 +152,14 @@ End Function
 Public Function GetCurrentProfileName() As String
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "GetCurrentProfileName"
-    Const MODULE_NAME As String = "AccessProfiles"
-    
     GetCurrentProfileName = Profiles(mCurrentProfile).Name
     Exit Function
     
 ErrorHandler:
     HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la récupération du nom du profil actuel"
+    GetCurrentProfileName = "Profil inconnu"
 End Function
+
+
 
 

@@ -1,3 +1,4 @@
+Attribute VB_Name = "RibbonVisibility"
 ' Module: RibbonVisibility
 ' Gère la visibilité des éléments du ruban
 Option Explicit
@@ -121,3 +122,4 @@ End Sub
 Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Admin")
 End Sub
+

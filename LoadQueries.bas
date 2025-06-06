@@ -1,19 +1,19 @@
-Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
+Attribute VB_Name = "LoadQueries"
+Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "LoadQuery"
-    Const MODULE_NAME As String = "LoadQueries"
+    If queryName = "" Then
+        HandleError "LoadQueries", "LoadQuery", "Nom de requête vide"
+        Exit Sub
+    End If
     
-    If QueryName = "" Then
-        HandleError MODULE_NAME, PROC_NAME, "Nom de requête vide"
+    If ws Is Nothing Then
+        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spécifiée"
         Exit Sub
     End If
-      If ws Is Nothing Then
-        HandleError MODULE_NAME, PROC_NAME, "Feuille de calcul non spécifiée"
-        Exit Sub
-    End If
-      If DestCell Is Nothing Then
-        HandleError MODULE_NAME, PROC_NAME, "Cellule de destination non spécifiée"
+    
+    If DestCell Is Nothing Then
+        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spécifiée"
         Exit Sub
     End If
     
@@ -21,7 +21,7 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Dim sanitizedName As String
     
     ' Nettoyer le nom de la requête pour le nom de tableau
-    sanitizedName = "Table_" & Utilities.SanitizeTableName(QueryName)
+    sanitizedName = "Table_" & Utilities.SanitizeTableName(queryName)
     
     ' Vérifier si la table existe déjà
     For Each lo In ws.ListObjects
@@ -31,10 +31,10 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Next lo
 
     With ws.ListObjects.Add(SourceType:=0, Source:= _
-        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & QueryName & ";Extended Properties=""""", _
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & queryName & ";Extended Properties=""""", _
         Destination:=DestCell).QueryTable
         .CommandType = xlCmdSql
-        .CommandText = Array("SELECT * FROM [" & QueryName & "]")
+        .CommandText = Array("SELECT * FROM [" & queryName & "]")
         .RowNumbers = False
         .FillAdjacentFormulas = False
         .RefreshOnFileOpen = False
@@ -56,28 +56,26 @@ Sub LoadQuery(QueryName As String, ws As Worksheet, DestCell As Range)
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du chargement de la requête: " & QueryName
+    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requête: " & queryName
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "ChooseMultipleValuesFromListWithAll"
-    Const MODULE_NAME As String = "LoadQueries"
-    
     If idList Is Nothing Or displayList Is Nothing Then
-        HandleError MODULE_NAME, PROC_NAME, "Listes non initialisées"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisées"
         Exit Function
     End If
-      If idList.Count <> displayList.Count Then
-        HandleError MODULE_NAME, PROC_NAME, "Les listes n'ont pas la même taille"
+    
+    If idList.Count <> displayList.Count Then
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la même taille"
         Exit Function
     End If
     
     Dim i As Long
     Dim userChoice As String
     Dim selectedIndexes As Variant
-    Dim selectedValues As New Collection
+    Dim SelectedValues As New Collection
     Dim listPrompt As String
 
     listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
@@ -92,37 +90,35 @@ Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList A
     
     If Trim(userChoice) = "*" Then
         For i = 1 To idList.Count
-            selectedValues.Add idList(i)
+            SelectedValues.Add idList(i)
         Next i
     Else
         selectedIndexes = Split(userChoice, ",")
         For i = LBound(selectedIndexes) To UBound(selectedIndexes)
             Dim idx As Long
-            idx = Val(Trim(selectedIndexes(i)))
+            idx = val(Trim(selectedIndexes(i)))
             If idx >= 1 And idx <= idList.Count Then
-                selectedValues.Add idList(idx)
+                SelectedValues.Add idList(idx)
             End If
         Next i
     End If
-    Set ChooseMultipleValuesFromListWithAll = selectedValues
+    Set ChooseMultipleValuesFromListWithAll = SelectedValues
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sélection des valeurs"
 End Function
 
 Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "ChooseMultipleValuesFromArrayWithAll"
-    Const MODULE_NAME As String = "LoadQueries"
-    
     If Not IsArray(values) Then
-        HandleError MODULE_NAME, PROC_NAME, "Tableau non initialisé"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisé"
         Exit Function
     End If
-      If UBound(values) < 1 Then
-        HandleError MODULE_NAME, PROC_NAME, "Tableau vide"
+    
+    If UBound(values) < 1 Then
+        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau vide"
         Exit Function
     End If
     
@@ -141,13 +137,13 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         Exit Function
     End If
     
-    Dim selectedValues As New Collection
+    Dim SelectedValues As New Collection
     userChoice = Trim(userChoice)
     
     ' Cas spécial : sélection de toutes les valeurs avec *
     If userChoice = "*" Then
         For i = 1 To UBound(values)
-            selectedValues.Add values(i)
+            SelectedValues.Add values(i)
         Next i
     Else
         ' Sélection de valeurs spécifiques
@@ -158,22 +154,25 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         
         For i = LBound(selectedIndexes) To UBound(selectedIndexes)
             Dim idx As Long
-            idx = Val(Trim(selectedIndexes(i)))
+            idx = val(Trim(selectedIndexes(i)))
             If idx >= 1 And idx <= UBound(values) Then
-                selectedValues.Add values(idx)
+                SelectedValues.Add values(idx)
                 hasValidSelection = True
             End If
         Next i
         
-        ' Si aucune sélection valide n'a été trouvée        If Not hasValidSelection Then
-            HandleError MODULE_NAME, PROC_NAME, "Aucune sélection valide"
+        ' Si aucune sélection valide n'a été trouvée
+        If Not hasValidSelection Then
+            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sélection valide"
             Exit Function
         End If
     End If
     
-    Set ChooseMultipleValuesFromArrayWithAll = selectedValues
+    Set ChooseMultipleValuesFromArrayWithAll = SelectedValues
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sélection des valeurs"
 End Function
+
+

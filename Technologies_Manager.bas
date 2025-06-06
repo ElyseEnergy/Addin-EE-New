@@ -1,3 +1,4 @@
+Attribute VB_Name = "Technologies_Manager"
 ' Module: H2_Waters_Electrolysis_Manager
 ' Gère le traitement des données d'électrolyse de l'eau
 Option Explicit
@@ -276,3 +277,4 @@ End Sub
 Public Sub ProcessCapexEPC(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     DataLoaderManager.ProcessCategory "Capex EPC", "Erreur lors du traitement du Capex EPC"
 End Sub
+

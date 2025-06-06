@@ -1,3 +1,4 @@
+Attribute VB_Name = "SYS_ErrorHandler"
 Option Explicit
 
 ' ============================================================================
@@ -6,12 +7,12 @@ Option Explicit
 
 ' Types et Enums
 Public Type ErrorContext
-    ErrorNumber As Long
+    errorNumber As Long
     ErrorDescription As String
     ErrorSource As String
-    ProcedureName As String
-    ModuleName As String
-    Timestamp As Date
+    procedureName As String
+    moduleName As String
+    timeStamp As Date
 End Type
 
 Public Enum ErrorSeverity
@@ -58,12 +59,12 @@ Public Sub HandleError(ByVal moduleName As String, ByVal procedureName As String
     ' Créer le contexte d'erreur
     Dim errorCtx As ErrorContext
     With errorCtx
-        .ErrorNumber = Err.Number
+        .errorNumber = Err.Number
         .ErrorDescription = Err.Description
         .ErrorSource = Err.Source
-        .ProcedureName = procedureName
-        .ModuleName = moduleName
-        .Timestamp = Now
+        .procedureName = procedureName
+        .moduleName = moduleName
+        .timeStamp = Now
     End With
     
     ' Déterminer la sévérité
@@ -88,7 +89,7 @@ End Sub
 ' ============================================================================
 
 Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeverity
-    Select Case errorCtx.ErrorNumber
+    Select Case errorCtx.errorNumber
         Case 1004, 1016 ' Erreurs de plage
             DetermineErrorSeverity = LOW_SEVERITY
             
@@ -128,23 +129,23 @@ Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity
     End Select
     
     ' Construire le message
-    message = GetUserFriendlyErrorExplanation(errorCtx.ErrorNumber)
+    message = GetUserFriendlyErrorExplanation(errorCtx.errorNumber)
     If message = "" Then
         message = "Une erreur est survenue lors du traitement de votre demande."
     End If
     
     message = message & vbCrLf & vbCrLf & _
               "Détails techniques:" & vbCrLf & _
-              "Erreur " & errorCtx.ErrorNumber & ": " & errorCtx.ErrorDescription & vbCrLf & _
-              "Emplacement: " & errorCtx.ProcedureName
+              "Erreur " & errorCtx.errorNumber & ": " & errorCtx.ErrorDescription & vbCrLf & _
+              "Emplacement: " & errorCtx.procedureName
     
     ' Afficher le message
     MsgBox message, IIf(severity >= HIGH_SEVERITY, vbCritical, vbExclamation), title
 End Sub
 
 Private Function BuildErrorLogMessage(errorCtx As ErrorContext) As String
-    BuildErrorLogMessage = "Error " & errorCtx.ErrorNumber & " in " & _
-                          errorCtx.ModuleName & "." & errorCtx.ProcedureName & ": " & _
+    BuildErrorLogMessage = "Error " & errorCtx.errorNumber & " in " & _
+                          errorCtx.moduleName & "." & errorCtx.procedureName & ": " & _
                           errorCtx.ErrorDescription
 End Function
 
@@ -177,4 +178,5 @@ Private Function GetUserFriendlyErrorExplanation(errorNumber As Long) As String
         Case Else
             GetUserFriendlyErrorExplanation = ""
     End Select
-End Function 
+End Function
+

@@ -1,3 +1,4 @@
+Attribute VB_Name = "Types"
 ' Module : Types.bas
 ' Centralise tous les types personnalisés du projet
 Option Explicit

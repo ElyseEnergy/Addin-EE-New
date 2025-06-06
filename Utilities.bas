@@ -1,4 +1,5 @@
-﻿' Variables globales
+Attribute VB_Name = "Utilities"
+
 Public wsPQData As Worksheet
 
 Sub InitializePQData()
@@ -14,7 +15,7 @@ Sub InitializePQData()
 End Sub
 
 Function GetLastColumn(ws As Worksheet) As Long
-    GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column +1
+    GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column + 1
 End Function
 
 ' --- Utility function for smart truncation ---
@@ -80,3 +81,4 @@ Private Function RemoveDiacritics(ByVal text As String) As String
     
     RemoveDiacritics = text
 End Function
+
