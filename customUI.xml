@@ -90,7 +90,7 @@
                               imageMso="Synchronize"
                               size="large"
                               onAction="ProcessForceRefreshRagicDictionary"
-                              supertip="Downloads the latest version of the data dictionary from Ragic."/>
+                              getSupertip="GetRagicDictSupertip"/>
                 </ns0:group>
             </ns0:tab>
         </ns0:tabs>

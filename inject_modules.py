@@ -32,30 +32,37 @@ def setup_logging():
     return log_file
 
 def prepare_temp_file(src_file, temp_dir):
-    """Copie et convertit un fichier en CP1252 dans le dossier temporaire"""
-    temp_file = os.path.join(temp_dir, os.path.basename(src_file))
+    """Copie un module VBA dans un dossier temporaire, en gérant l'encodage pour les fichiers texte
+    et en copiant les fichiers .frx associés pour les formulaires .frm."""
+    base_name = os.path.basename(src_file)
+    temp_file = os.path.join(temp_dir, base_name)
     
     try:
-        # D'abord, copier le fichier
-        shutil.copy2(src_file, temp_file)
+        # Pour les formulaires, il faut aussi copier le fichier .frx binaire qui va avec.
+        if src_file.lower().endswith('.frm'):
+            frx_file = src_file[:-4] + '.frx'
+            if os.path.exists(frx_file):
+                shutil.copy2(frx_file, os.path.join(temp_dir, os.path.basename(frx_file)))
+                logging.info(f"Fichier .frx associé '{os.path.basename(frx_file)}' copié.")
         
-        # Essayer de lire en UTF-8
+        # Les modules VBA (.bas, .cls, .frm) sont des fichiers texte.
+        # On s'assure qu'ils sont en encodage CP1252, requis par l'IDE VBA.
         try:
             with open(src_file, 'r', encoding='utf-8') as f:
                 content = f.read()
-            # Si on arrive ici, c'est que le fichier est en UTF-8
-            logging.info(f"Fichier {src_file} détecté en UTF-8, conversion en CP1252...")
-            # Réécrire le fichier temporaire en CP1252
-            with open(temp_file, 'w', encoding='cp1252') as f:
+            # Le fichier source est en UTF-8, on le convertit en CP1252 dans le dossier temp.
+            with open(temp_file, 'w', encoding='cp1252', errors='replace') as f:
                 f.write(content)
-            logging.info(f"Converti en CP1252 dans {temp_file}")
+            logging.info(f"Fichier '{base_name}' converti de UTF-8 à CP1252.")
         except UnicodeDecodeError:
-            # Si on ne peut pas lire en UTF-8, c'est probablement déjà du CP1252
-            logging.info(f"Fichier {src_file} déjà en CP1252")
+            # Le fichier source n'est pas en UTF-8, on suppose qu'il est déjà dans un format compatible
+            # (comme CP1252) et on le copie simplement.
+            shutil.copy2(src_file, temp_file)
+            logging.info(f"Fichier '{base_name}' n'est pas en UTF-8, copié tel quel.")
         
         return temp_file
     except Exception as e:
-        logging.error(f"Erreur lors de la préparation de {src_file}: {str(e)}")
+        logging.error(f"Erreur lors de la préparation du fichier temporaire pour '{base_name}': {str(e)}")
         return None
 
 def get_excel_instance(target_file=None):
@@ -195,61 +202,57 @@ def inject_modules():
         
         vba_project = workbook.VBProject
         
-        # Lister tous les composants actuels
-        current_components = []
-        for comp in vba_project.VBComponents:
-            current_components.append((comp.Name, comp.Type))
-        logging.info(f"Composants actuels: {', '.join(name for name, _ in current_components)}")
-        
-        # Supprimer tous les modules .bas d'un coup
-        for name, type_ in current_components:
-            if type_ == 1:  # vbext_ct_StdModule (.bas)
-                try:
-                    vba_project.VBComponents.Remove(vba_project.VBComponents(name))
-                    logging.info(f"Module .bas supprimé: {name}")
-                except Exception as e:
-                    logging.error(f"Erreur lors de la suppression du module {name}: {str(e)}")
-        
-        # Traiter tous les modules
+        # Dictionnaire des composants existants pour des recherches rapides
+        all_components = {comp.Name: comp.Type for comp in vba_project.VBComponents}
+        logging.info(f"Composants trouvés dans le classeur: {', '.join(all_components.keys())}")
+
+        # Lister les fichiers de module à injecter depuis le disque
         module_files = [f for f in os.listdir('.') if f.endswith(('.bas', '.cls', '.frm'))]
-        logging.info(f"Modules trouvés: {', '.join(module_files)}")
-        
+        logging.info(f"Fichiers de module trouvés sur le disque: {', '.join(module_files)}")
+
+        # Étape 1: Supprimer les anciens composants qui vont être remplacés.
+        # Cela évite les conflits lors de la ré-importation de modules modifiés.
+        # On ne touche PAS aux modules de type Document (Type 100).
         for file in module_files:
             module_name = os.path.splitext(file)[0]
-            
+            if module_name in all_components and all_components[module_name] != 100:
+                try:
+                    vba_project.VBComponents.Remove(vba_project.VBComponents(module_name))
+                    logging.info(f"Ancien composant '{module_name}' supprimé avant la nouvelle injection.")
+                except Exception as e:
+                    logging.warning(f"Impossible de supprimer le composant existant '{module_name}': {e}")
+
+        # Étape 2: Injecter les modules depuis le disque.
+        for file in module_files:
+            module_name = os.path.splitext(file)[0]
             try:
-                # Préparer le fichier temporaire
+                # Prépare le fichier pour l'import (gère l'encodage et les fichiers .frx)
                 temp_file = prepare_temp_file(file, temp_dir)
                 if not temp_file:
                     continue
                 
-                # Vérifier si c'est un module Document (Sheet, ThisWorkbook)
-                is_document = False
-                for name, type_ in current_components:
-                    if name == module_name and type_ == 100:  # vbext_ct_Document
-                        is_document = True
-                        break
-                
-                if is_document:
-                    # Pour les modules Document, on met à jour le code
+                # Cas spécial: mise à jour du code d'un module Document existant.
+                if module_name in all_components and all_components[module_name] == 100:
                     with open(temp_file, 'r', encoding='cp1252') as f:
                         new_code = f.read()
-                    # Enlever l'en-tête CLASS si présent
+                    
+                    # Nettoyage du code avant injection
                     if new_code.startswith('VERSION 1.0 CLASS'):
                         new_code = new_code.split('END\n', 1)[1]
-                    # Nettoyer les attributs VB
                     new_code = clean_document_code(new_code)
-                    vba_project.VBComponents(module_name).CodeModule.DeleteLines(
-                        1, vba_project.VBComponents(module_name).CodeModule.CountOfLines)
-                    vba_project.VBComponents(module_name).CodeModule.AddFromString(new_code)
-                    logging.info(f"Code du module Document {module_name} mis à jour")
+                    
+                    code_module = vba_project.VBComponents(module_name).CodeModule
+                    code_module.DeleteLines(1, code_module.CountOfLines)
+                    code_module.AddFromString(new_code)
+                    logging.info(f"Code du module Document '{module_name}' mis à jour.")
                 else:
-                    # Pour les autres modules, import normal
+                    # Cas standard: importation d'un nouveau module (.bas, .cls, .frm).
+                    # L'ancienne version a déjà été supprimée à l'étape 1.
                     vba_project.VBComponents.Import(temp_file)
-                    logging.info(f"Module {module_name} injecté avec succès")
-                
+                    logging.info(f"Module '{module_name}' importé avec succès depuis '{file}'.")
+            
             except Exception as e:
-                logging.error(f"Erreur lors de l'injection de {module_name}: {str(e)}")
+                logging.error(f"Erreur lors du traitement de '{module_name}' depuis '{file}': {e}")
                 logging.error(traceback.format_exc())
         
         # Sauvegarder

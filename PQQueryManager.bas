@@ -7,38 +7,52 @@ Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
 
 ' Vérifie si une requête PowerQuery existe et la crée si nécessaire
 Public Function EnsurePQQueryExists(Category As CategoryInfo) As Boolean
-    Dim query As String
-    query = GeneratePQQueryTemplate(Category)
+    On Error GoTo ErrorHandler
     
-    If QueryExists(Category.PowerQueryName) Then
-        ' Si la requête existe, mettre à jour sa formule
-        On Error Resume Next
-        ThisWorkbook.Queries(Category.PowerQueryName).formula = query
-        Dim updateError As Long
-        updateError = Err.Number
-        On Error GoTo 0
-          If updateError <> 0 Then
-            Log "pq_update", "Erreur lors de la mise à jour de la requête " & Category.PowerQueryName & ": " & Err.Description, ERROR_LEVEL, "EnsurePQQueryExists", "PQQueryManager"
-            EnsurePQQueryExists = False
-            Exit Function
+    Dim newFormula As String
+    newFormula = GeneratePQQueryTemplate(Category)
+    
+    Dim queryExists As Boolean
+    Dim needsUpdate As Boolean
+    
+    ' Vérifier si la requête existe
+    On Error Resume Next
+    Dim pq As Object ' WorkbookQuery
+    Set pq = ThisWorkbook.Queries(Category.PowerQueryName)
+    queryExists = (Err.Number = 0)
+    On Error GoTo ErrorHandler
+
+    If queryExists Then
+        ' La requête existe, vérifier si la formule a changé
+        If pq.formula <> newFormula Then
+            needsUpdate = True
+            Diagnostics.LogTime "La formule de la requête '" & Category.PowerQueryName & "' a changé. Mise à jour nécessaire."
+        Else
+            needsUpdate = False
+            Diagnostics.LogTime "La requête '" & Category.PowerQueryName & "' est déjà à jour. Pas de modification."
         End If
-        
-        ' Rafraîchir la requête
-        ThisWorkbook.Queries(Category.PowerQueryName).Refresh
-        EnsurePQQueryExists = True
     Else
-        ' Créer la requête si elle n'existe pas
-        If Not AddQueryToPowerQuery(Category.PowerQueryName, query) Then
-            EnsurePQQueryExists = False
-            Exit Function
-        End If
-        EnsurePQQueryExists = True
+        ' La requête n'existe pas, il faut la créer
+        needsUpdate = True
+        Diagnostics.LogTime "La requête '" & Category.PowerQueryName & "' n'existe pas. Création nécessaire."
     End If
     
-    ' Stocker les types de colonnes après la création de la requête
-    StoreColumnTypes Category.PowerQueryName
+    If needsUpdate Then
+        If queryExists Then
+            ' Mise à jour de la formule
+            pq.formula = newFormula
+        Else
+            ' Ajout de la nouvelle requête
+            ThisWorkbook.Queries.Add Category.PowerQueryName, newFormula
+        End If
+    End If
     
     EnsurePQQueryExists = True
+    Exit Function
+
+ErrorHandler:
+    Log "pq_error", "Erreur critique dans EnsurePQQueryExists pour " & Category.PowerQueryName & ": " & Err.Description, ERROR_LEVEL, "EnsurePQQueryExists", "PQQueryManager"
+    EnsurePQQueryExists = False
 End Function
 
 ' Vérifie si une requête PowerQuery existe

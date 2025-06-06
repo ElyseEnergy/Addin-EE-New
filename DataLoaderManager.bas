@@ -24,106 +24,194 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     End If
     Diagnostics.LogTime "Après EnsurePQQueryExists"
     
+    ' --- RETOUR VISUEL PENDANT LE CHARGEMENT ---
+    Application.Cursor = xlWait
+    Application.StatusBar = "Téléchargement des données pour '" & loadInfo.Category.DisplayName & "' en cours..."
+    DoEvents ' Forcer l'affichage du statut
+    
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
     Diagnostics.LogTime "Avant LoadQuery (téléchargement des données)"
     LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
     Diagnostics.LogTime "Après LoadQuery (téléchargement des données)"
     
-    Diagnostics.LogTime "Avant affichage du formulaire GetSelectedValues"
-    Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
-    Diagnostics.LogTime "Après retour du formulaire GetSelectedValues"
-    If loadInfo.SelectedValues Is Nothing Then
+    ' Restaurer le curseur et la barre de statut
+    Application.Cursor = xlDefault
+    Application.StatusBar = False
+    
+    ' --- APPEL AU NOUVEAU FORMULAIRE UNIQUE ---
+    Diagnostics.LogTime "Avant affichage du formulaire frmDataSelector"
+    Dim selectorForm As New frmDataSelector
+    selectorForm.ShowForCategory loadInfo.Category
+    
+    ' Récupérer les résultats du formulaire
+    If selectorForm.IsCancelled Then
+        Unload selectorForm
+        Set selectorForm = Nothing
         CleanupPowerQuery loadInfo.Category.PowerQueryName
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
-    ' Si un filtre est appliqué et qu'il n'y a pas de filtre secondaire,
-    ' proposer la sélection des fiches correspondantes
-    If loadInfo.Category.FilterLevel <> "Pas de filtrage" And loadInfo.Category.SecondaryFilterLevel = "" Then
-        Dim lo As ListObject
-        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-        Dim idList As New Collection
-        Dim displayList As New Collection
-        Dim i As Long, v As Variant
-        Dim displayColIndex As Long
-        displayColIndex = 2 ' Afficher la colonne 2 (nom)
-        ' Parcourir les lignes et ne garder que celles correspondant au(x) filtre(s) choisi(s)
-        For i = 1 To lo.DataBodyRange.Rows.Count
-            For Each v In loadInfo.SelectedValues
-                If lo.DataBodyRange.Rows(i).Columns(lo.ListColumns(loadInfo.Category.FilterLevel).Index).Value = v Then
-                    idList.Add lo.DataBodyRange.Rows(i).Columns(1).Value
-                    displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
-                End If
-            Next v
-        Next i        ' Proposer la sélection des fiches parmi displayList
-        Dim finalSelection As Collection
-        On Error Resume Next
-        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
-        Dim errorOccurred As Boolean
-        errorOccurred = (Err.Number <> 0)
-        On Error GoTo 0
-        
-    ' Si l'utilisateur a annulé ou une erreur s'est produite
-    If errorOccurred Or finalSelection Is Nothing Then
-        ' Nettoyer la requête avant de sortir
-        CleanupPowerQuery loadInfo.Category.PowerQueryName
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    End If
-        
-        ' Si aucune fiche n'a été sélectionnée
-        If finalSelection.Count = 0 Then
-            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
-            ' Nettoyer la requête avant de sortir
-            CleanupPowerQuery loadInfo.Category.PowerQueryName
-            ProcessDataLoad = DataLoadResult.Cancelled
-            Exit Function
-        End If
-        
-        Set loadInfo.SelectedValues = finalSelection
-    End If
+    Set loadInfo.SelectedValues = selectorForm.SelectedValues
+    loadInfo.ModeTransposed = selectorForm.ModeTransposed
+    Set loadInfo.FinalDestination = selectorForm.FinalDestination
     
-    Diagnostics.LogTime "Avant affichage du formulaire GetDisplayMode"
-    Dim displayModeResult As Variant
-    displayModeResult = GetDisplayMode(loadInfo)
-    Diagnostics.LogTime "Après retour du formulaire GetDisplayMode"
-    If displayModeResult = -999 Then ' Code d'erreur spécifique
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    End If
-    loadInfo.ModeTransposed = displayModeResult
-    
-    Diagnostics.LogTime "Avant affichage de la boîte de dialogue GetDestination"
-    Set loadInfo.FinalDestination = GetDestination(loadInfo)
-    Diagnostics.LogTime "Après retour de la boîte de dialogue GetDestination"
-    If loadInfo.FinalDestination Is Nothing Then
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    End If
-    
-    Diagnostics.LogTime "Avant appel à PasteData"
+    Unload selectorForm
+    Set selectorForm = Nothing
+    Diagnostics.LogTime "Après retour du formulaire frmDataSelector"
+
+    ' Coller les données avec la méthode optimisée
+    Diagnostics.LogTime "Avant appel à PasteData (Optimisé)"
     If Not PasteData(loadInfo) Then
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
-    Diagnostics.LogTime "Après appel à PasteData"
+    Diagnostics.LogTime "Après appel à PasteData (Optimisé)"
     
+    ' Activer la feuille de destination
     With loadInfo.FinalDestination
         .Parent.Activate
         .Select
-        .Parent.Range(.Address).Select
-        ActiveWindow.ScrollRow = .Row
-        ActiveWindow.ScrollColumn = .Column
     End With
     
+    ' Nettoyer la requête (si nécessaire)
     Diagnostics.LogTime "Avant CleanupPowerQuery"
     CleanupPowerQuery loadInfo.Category.PowerQueryName
     Diagnostics.LogTime "Après CleanupPowerQuery"
     
     ProcessDataLoad = DataLoadResult.Success
 End Function
+
+' Colle les données en utilisant une méthode de tableau (array) ultra-rapide
+Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
+    Diagnostics.LogTime "Début de PasteData (Méthode Array)"
+    
+    On Error GoTo ErrorHandler
+    
+    Dim lo As ListObject
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
+    
+    ' --- DÉBUT SECTION CRITIQUE ---
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.Calculation = xlCalculationManual
+    Diagnostics.LogTime "Fonctionnalités Excel désactivées"
+    
+    ' 1. Déterminer les colonnes visibles
+    Dim visibleCols As Collection
+    Set visibleCols = New Collection
+    Dim colIndices() As Long
+    Dim i As Long, j As Long
+    
+    For i = 1 To lo.ListColumns.Count
+        If Not IsFieldHidden(loadInfo.Category.SheetName, lo.HeaderRowRange.Cells(1, i).Value) Then
+            visibleCols.Add lo.HeaderRowRange.Cells(1, i).Value
+            ReDim Preserve colIndices(1 To visibleCols.Count)
+            colIndices(visibleCols.Count) = i
+        End If
+    Next i
+    Diagnostics.LogTime "Colonnes visibles identifiées"
+
+    ' 2. Construire le tableau de données en mémoire
+    Dim dataArray() As Variant
+    Dim numRows As Long, numCols As Long
+    numCols = visibleCols.Count
+    numRows = loadInfo.SelectedValues.Count + 1 ' +1 pour l'en-tête
+    
+    If loadInfo.ModeTransposed Then
+        ReDim dataArray(1 To numCols, 1 To numRows) ' Inverser pour la transposition
+    Else
+        ReDim dataArray(1 To numRows, 1 To numCols)
+    End If
+
+    ' Remplir la ligne d'en-tête
+    For j = 1 To numCols
+        If loadInfo.ModeTransposed Then dataArray(j, 1) = visibleCols(j) Else dataArray(1, j) = visibleCols(j)
+    Next j
+
+    ' Remplir les lignes de données
+    Dim dictSourceData As Object
+    Set dictSourceData = CreateObject("Scripting.Dictionary")
+    For i = 1 To lo.DataBodyRange.Rows.Count
+        dictSourceData(lo.DataBodyRange.Cells(i, 1).Value) = lo.DataBodyRange.Rows(i)
+    Next i
+    
+    Dim rowCounter As Long
+    rowCounter = 2
+    For i = 1 To loadInfo.SelectedValues.Count
+        Dim sourceRow As Range
+        Set sourceRow = dictSourceData(loadInfo.SelectedValues(i))
+        For j = 1 To numCols
+            If loadInfo.ModeTransposed Then
+                dataArray(j, rowCounter) = sourceRow.Cells(1, colIndices(j)).Value
+            Else
+                dataArray(rowCounter, j) = sourceRow.Cells(1, colIndices(j)).Value
+            End If
+        Next j
+        rowCounter = rowCounter + 1
+    Next i
+    Diagnostics.LogTime "Tableau de données construit en mémoire"
+
+    ' 3. Coller le tableau en une seule opération
+    Dim destRange As Range
+    If loadInfo.ModeTransposed Then
+        Set destRange = loadInfo.FinalDestination.Resize(numCols, numRows)
+    Else
+        Set destRange = loadInfo.FinalDestination.Resize(numRows, numCols)
+    End If
+    
+    destRange.Value2 = dataArray
+    Diagnostics.LogTime "Tableau collé dans la feuille"
+
+    ' 4. Mettre en forme comme un tableau Excel (ListObject)
+    Dim tbl As ListObject
+    loadInfo.FinalDestination.Worksheet.Unprotect
+    Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, destRange, , xlYes)
+    tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
+    tbl.TableStyle = "TableStyleMedium9"
+    Diagnostics.LogTime "Objet Tableau (ListObject) créé et formaté"
+    
+    ' 5. Protéger la feuille
+    ProtectSheetWithTable loadInfo.FinalDestination.Worksheet
+    Diagnostics.LogTime "Feuille protégée"
+    
+    PasteData = True
+
+ErrorHandler:
+    ' --- FIN SECTION CRITIQUE ---
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
+    Diagnostics.LogTime "Fonctionnalités Excel réactivées"
+
+    If Err.Number <> 0 Then
+        MsgBox "An error occurred during the paste operation: " & vbCrLf & Err.Description, vbCritical
+        PasteData = False
+    End If
+    
+    ' Attendre la fin des calculs
+    Diagnostics.WaitAndLogCalculation
+End Function
+
+' Supprime une requête PowerQuery et le tableau associé pour libérer la mémoire
+Public Sub CleanupPowerQuery(queryName As String)
+    On Error Resume Next
+    Dim lo As ListObject
+    Dim tName As String
+    tName = "Table_" & Utilities.SanitizeTableName(queryName)
+    
+    ' Suppression plus robuste, ne plante pas si la feuille ou la table n'existe pas
+    Set lo = wsPQData.ListObjects(tName)
+    If Not lo Is Nothing Then
+        lo.Delete
+    End If
+    
+    ThisWorkbook.Queries(queryName).Delete
+    
+    Log "cleanup_pq", "Nettoyage de " & queryName & " et " & tName, DEBUG_LEVEL, "CleanupPowerQuery", "DataLoaderManager"
+    On Error GoTo 0
+End Sub
 
 ' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(Category As CategoryInfo) As Collection
@@ -567,161 +655,6 @@ CheckSpace:
     Loop Until okPlage
 End Function
 
-' Colle les données selon le mode choisi
-Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
-    Diagnostics.LogTime "Début de PasteData"
-    Dim lo As ListObject
-    Dim tblRange As Range
-    Dim i As Long, j As Long
-    Dim v As Variant
-    Dim currentCol As Long, currentRow As Long
-    
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-    
-    Dim ws As Worksheet
-    Set ws = loadInfo.FinalDestination.Worksheet
-    
-    ' --- DÉBUT SECTION CRITIQUE ---
-    Application.ScreenUpdating = False
-    Application.EnableEvents = False
-    Application.Calculation = xlCalculationManual
-    Diagnostics.LogTime "Fonctionnalités Excel désactivées"
-    
-    ws.Unprotect
-    
-    Dim visibleCols As Collection
-    Set visibleCols = New Collection
-    Dim header As String
-    For i = 1 To lo.ListColumns.Count
-        header = lo.HeaderRowRange.Cells(1, i).Value
-        If Not IsFieldHidden(loadInfo.Category.SheetName, header) Then
-            visibleCols.Add i
-        End If
-    Next i
-    Diagnostics.LogTime "Colonnes visibles identifiées"
-    
-    If loadInfo.ModeTransposed Then
-        Log "paste_data", "--- Début collage transposé ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-        ' Coller en transposé
-        For i = 1 To visibleCols.Count
-            Log "paste_data", "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-            loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
-        Next i
-        
-        currentCol = 1
-        For Each v In loadInfo.SelectedValues
-            Log "paste_data", "Traitement colonne " & currentCol & ", valeur=" & v, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Log "paste_data", "  Trouvé à la ligne " & j, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-                    For i = 1 To visibleCols.Count
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
-                    Next i
-                    Exit For
-                End If
-            Next j
-            currentCol = currentCol + 1
-        Next v
-        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
-        Log "paste_data", "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Else
-        Log "paste_data", "--- Début collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-        ' Coller en normal
-        For i = 1 To visibleCols.Count
-            Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
-        Next i
-        
-        currentRow = 1
-        For Each v In loadInfo.SelectedValues
-            Debug.Print "Traitement ligne " & currentRow & ", valeur=" & v
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Debug.Print "  Trouvé à la ligne " & j
-                    For i = 1 To visibleCols.Count
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
-                    Next i
-                    Exit For
-                End If
-            Next j
-            currentRow = currentRow + 1
-        Next v
-
-        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, visibleCols.Count)
-        Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
-    End If
-      ' Vérification de la validité de la plage
-    Log "paste_data", "=== VÉRIFICATIONS ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Cellules fusionnées: " & tblRange.MergeCells, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-      If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
-        Log "paste_data", "ERREUR: Plage trop petite", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
-        PasteData = False
-        Exit Function
-    End If
-    If tblRange.MergeCells Then
-        Log "paste_data", "ERREUR: Cellules fusionnées détectées", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
-        PasteData = False
-        Exit Function
-    End If
-    If tblRange.Worksheet.ListObjects.Count > 0 Then
-        Dim tbl As ListObject
-        For Each tbl In tblRange.Worksheet.ListObjects
-            If Not Intersect(tblRange, tbl.Range) Is Nothing Then
-                Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
-                MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
-                PasteData = False
-                Exit Function
-            End If
-        Next tbl
-    End If
-    
-    Log "paste_data", "=== CRÉATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    ' Mettre en forme le tableau final
-    On Error Resume Next
-    Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
-    If Err.Number <> 0 Then
-        Log "paste_data", "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        On Error GoTo 0
-        PasteData = False
-        Exit Function
-    End If
-    On Error GoTo 0
-    
-    Diagnostics.LogTime "Après création de l'objet Tableau"
-
-    tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
-    tbl.TableStyle = "TableStyleMedium9"
-    Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-
-    ' Protéger finement la feuille
-    ProtectSheetWithTable ws
-    
-    Diagnostics.LogTime "Après protection de la feuille"
-
-    ' Réactiver les fonctionnalités Excel
-    Application.ScreenUpdating = True
-    Application.EnableEvents = True
-    Application.Calculation = xlCalculationAutomatic
-    Diagnostics.LogTime "Fonctionnalités Excel réactivées"
-
-    ' Attend la fin des calculs et loggue le temps que ça prend
-    Diagnostics.WaitAndLogCalculation
-    
-    Diagnostics.LogTime "FIN TOTALE (main réellement rendue à l'utilisateur)"
-
-    Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-
-    PasteData = True
-End Function
-
 ' Protège uniquement les tableaux EE_ dans la feuille
 Private Sub ProtectSheetWithTable(ws As Worksheet)
     ws.Unprotect
@@ -774,27 +707,6 @@ Private Function GetUniqueTableName(CategoryName As String) As String
     Next ws
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
-
-' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même
-Public Sub CleanupPowerQuery(queryName As String)
-    On Error Resume Next
-    
-    ' 1. Supprimer la table si elle existe
-    Dim lo As ListObject
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(queryName))
-    If Not lo Is Nothing Then
-        lo.Delete
-    End If
-    
-    ' 2. Forcer le nettoyage du cache PowerQuery en supprimant la requête
-    Dim wb As Workbook
-    Set wb = ThisWorkbook
-    With wb.Queries(queryName)
-        .Delete
-    End With
-    
-    On Error GoTo 0
-End Sub
 
 ' Fonction générique pour traiter une catégorie
 Public Function ProcessCategory(CategoryName As String, Optional errorMessage As String = "") As DataLoadResult

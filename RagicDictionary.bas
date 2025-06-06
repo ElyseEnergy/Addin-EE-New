@@ -10,12 +10,27 @@ Private Const RAGIC_PATH As String = "matching-matrix/6.csv"
 Private Const PROP_LAST_REFRESH As String = "RagicDictLastRefresh"
 
 '==================================================================================================
-' CALLBACK DU RUBAN
+' CALLBACKS DU RUBAN
 '==================================================================================================
 
 ' Callback pour le bouton du ruban pour forcer le rafraîchissement
 Public Sub ProcessForceRefreshRagicDictionary(ByVal control As IRibbonControl)
     ForceRefreshRagicDictionary
+End Sub
+
+' Callback pour l'info-bulle (supertip) du bouton de rafraîchissement
+Public Sub GetRagicDictSupertip(control As IRibbonControl, ByRef supertip)
+    Dim lastUpdate As Date
+    lastUpdate = GetLastRefreshDate() ' On réutilise la fonction existante
+    
+    Dim lastUpdateText As String
+    If lastUpdate > 0 Then
+        lastUpdateText = "Last update: " & Format(lastUpdate, "yyyy-mm-dd")
+    Else
+        lastUpdateText = "Never updated. Click to download."
+    End If
+    
+    supertip = "Downloads the latest version of the data dictionary from Ragic." & vbCrLf & vbCrLf & lastUpdateText
 End Sub
 
 '==================================================================================================
@@ -114,15 +129,22 @@ Public Sub LoadRagicDictionary()
         SetLastRefreshDate VBA.Date
         
         ' Sauvegarder le classeur pour rendre la date de mise à jour persistante
+        Log "load_dict", "Tentative de sauvegarde forcée du classeur pour persistance de la date...", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         On Error Resume Next
+        ' On marque explicitement le classeur comme ayant des modifications non enregistrées pour forcer la sauvegarde
+        ThisWorkbook.Saved = False
         ThisWorkbook.Save
         If Err.Number <> 0 Then
-            Log "ragic_dict_err", "Impossible de sauvegarder le classeur après mise à jour du dictionnaire. La date ne sera pas persistante.", WARNING_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "ragic_dict_err", "ERREUR lors de la sauvegarde du classeur: " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         Else
-            Log "load_dict", "Classeur sauvegardé pour persistance de la date de mise à jour.", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "load_dict", "Classeur sauvegardé avec succès. La date de mise à jour est maintenant persistante.", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         End If
         On Error GoTo 0
         
+        ' Invalider le contrôle du ruban pour mettre à jour l'info-bulle
+        If Not RibbonVisibility.gRibbon Is Nothing Then
+            RibbonVisibility.gRibbon.InvalidateControl "btnForceRefreshRagic"
+        End If
     Else
         Log "load_dict", "Chargement du dictionnaire Ragic depuis le cache local (feuille PQ_DICT).", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
     End If
