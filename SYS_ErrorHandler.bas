@@ -2,7 +2,7 @@ Attribute VB_Name = "SYS_ErrorHandler"
 Option Explicit
 
 ' ============================================================================
-' SYS_ErrorHandler - Gestionnaire d'erreurs simplifié
+' SYS_ErrorHandler - Gestionnaire d'erreurs simplifiÃ©
 ' ============================================================================
 
 ' Types et Enums
@@ -22,7 +22,7 @@ Public Enum ErrorSeverity
     CRITICAL_SEVERITY = 4
 End Enum
 
-' Variables d'état
+' Variables d'Ã©tat
 Private mErrorHandlerActive As Boolean
 
 ' ============================================================================
@@ -56,7 +56,7 @@ End Sub
 Public Sub HandleError(ByVal moduleName As String, ByVal procedureName As String, Optional ByVal additionalInfo As String = "")
     On Error GoTo ErrorHandler
     
-    ' Créer le contexte d'erreur
+    ' CrÃ©er le contexte d'erreur
     Dim errorCtx As ErrorContext
     With errorCtx
         .errorNumber = Err.Number
@@ -67,21 +67,21 @@ Public Sub HandleError(ByVal moduleName As String, ByVal procedureName As String
         .timeStamp = Now
     End With
     
-    ' Déterminer la sévérité
+    ' DÃ©terminer la sÃ©vÃ©ritÃ©
     Dim severity As ErrorSeverity
     severity = DetermineErrorSeverity(errorCtx)
     
     ' Loguer l'erreur
     Log "error_occurred", BuildErrorLogMessage(errorCtx), severity
     
-    ' Afficher le message approprié
+    ' Afficher le message appropriÃ©
     ShowErrorMessage errorCtx, severity
     
     Exit Sub
     
 ErrorHandler:
     ' En cas d'erreur dans le gestionnaire d'erreurs
-    MsgBox "Une erreur est survenue dans le gestionnaire d'erreurs. Détails: " & Err.Description, vbCritical, "Erreur Critique"
+    MsgBox "Une erreur est survenue dans le gestionnaire d'erreurs. DÃ©tails: " & Err.Description, vbCritical, "Erreur Critique"
 End Sub
 
 ' ============================================================================
@@ -96,7 +96,7 @@ Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeveri
         Case 9, 13, 91 ' Erreurs de type, objet
             DetermineErrorSeverity = MEDIUM_SEVERITY
             
-        Case 7, 11 ' Mémoire, division par zéro
+        Case 7, 11 ' MÃ©moire, division par zÃ©ro
             DetermineErrorSeverity = HIGH_SEVERITY
             
         Case 429, 462 ' Erreurs ActiveX
@@ -135,7 +135,7 @@ Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity
     End If
     
     message = message & vbCrLf & vbCrLf & _
-              "Détails techniques:" & vbCrLf & _
+              "DÃ©tails techniques:" & vbCrLf & _
               "Erreur " & errorCtx.errorNumber & ": " & errorCtx.ErrorDescription & vbCrLf & _
               "Emplacement: " & errorCtx.procedureName
     
@@ -152,28 +152,28 @@ End Function
 Private Function GetUserFriendlyErrorExplanation(errorNumber As Long) As String
     Select Case errorNumber
         Case 1004
-            GetUserFriendlyErrorExplanation = "La plage ou la cellule spécifiée n'a pas été trouvée. Veuillez vérifier que les données existent et réessayer."
+            GetUserFriendlyErrorExplanation = "La plage ou la cellule spÃ©cifiÃ©e n'a pas Ã©tÃ© trouvÃ©e. Veuillez vÃ©rifier que les donnÃ©es existent et rÃ©essayer."
             
         Case 1016
-            GetUserFriendlyErrorExplanation = "Aucune donnée correspondante n'a été trouvée. Vous devrez peut-être ajuster vos critères de recherche."
+            GetUserFriendlyErrorExplanation = "Aucune donnÃ©e correspondante n'a Ã©tÃ© trouvÃ©e. Vous devrez peut-Ãªtre ajuster vos critÃ¨res de recherche."
             
         Case 13
-            GetUserFriendlyErrorExplanation = "Il y a eu un problème avec le format des données. Veuillez vérifier que toutes les valeurs sont au format attendu."
+            GetUserFriendlyErrorExplanation = "Il y a eu un problÃ¨me avec le format des donnÃ©es. Veuillez vÃ©rifier que toutes les valeurs sont au format attendu."
             
         Case 9
-            GetUserFriendlyErrorExplanation = "Un calcul n'a pas pu être effectué car certaines données requises sont manquantes ou invalides."
+            GetUserFriendlyErrorExplanation = "Un calcul n'a pas pu Ãªtre effectuÃ© car certaines donnÃ©es requises sont manquantes ou invalides."
             
         Case 91
-            GetUserFriendlyErrorExplanation = "Un composant requis n'est pas disponible. Le système va tenter de le réinitialiser."
+            GetUserFriendlyErrorExplanation = "Un composant requis n'est pas disponible. Le systÃ¨me va tenter de le rÃ©initialiser."
             
         Case 429
-            GetUserFriendlyErrorExplanation = "Il y a eu un problème de connexion à un service requis. Veuillez réessayer dans un moment."
+            GetUserFriendlyErrorExplanation = "Il y a eu un problÃ¨me de connexion Ã  un service requis. Veuillez rÃ©essayer dans un moment."
             
         Case 462
-            GetUserFriendlyErrorExplanation = "Un serveur ou un service distant ne répond pas. Veuillez vérifier votre connexion réseau."
+            GetUserFriendlyErrorExplanation = "Un serveur ou un service distant ne rÃ©pond pas. Veuillez vÃ©rifier votre connexion rÃ©seau."
             
         Case 7
-            GetUserFriendlyErrorExplanation = "Le système manque de mémoire. Veuillez fermer d'autres applications et réessayer."
+            GetUserFriendlyErrorExplanation = "Le systÃ¨me manque de mÃ©moire. Veuillez fermer d'autres applications et rÃ©essayer."
             
         Case Else
             GetUserFriendlyErrorExplanation = ""

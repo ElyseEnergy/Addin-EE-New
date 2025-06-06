@@ -88,7 +88,7 @@ def check_vba_access():
 def convert_to_utf8(file_path):
     """Convertit un fichier de CP1252 vers UTF-8"""
     try:
-        # Lire en cp1252
+        # Lire en CP1252
         with open(file_path, 'r', encoding='cp1252') as f:
             content = f.read()
         
@@ -203,12 +203,16 @@ def export_modules(export_dir="."):
                     export_filename = os.path.join(export_dir, f"{comp.Name}.{extension}")
                     comp.Export(export_filename)
                     logging.info(f"Module exporté: {export_filename}")
+                    # Convertir en UTF-8
+                    convert_to_utf8(export_filename)
                 else:
                     # Pour les modules Document (ThisWorkbook, feuilles)
                     if comp.Type == 100:
                         export_filename = os.path.join(export_dir, f"{comp.Name}.cls")
                         comp.Export(export_filename)
                         logging.info(f"Module Document exporté: {export_filename}")
+                        # Convertir en UTF-8
+                        convert_to_utf8(export_filename)
             
             except Exception as e:
                 logging.error(f"Erreur lors de l'export de {comp.Name}: {str(e)}")

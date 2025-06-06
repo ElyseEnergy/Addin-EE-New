@@ -1,6 +1,6 @@
 Attribute VB_Name = "DataLoaderManager"
 ' Module: DataLoaderManager
-' G�re le chargement et l'affichage des donn�es pour toutes les cat�gories
+' Gère le chargement et l'affichage des données pour toutes les catégories
 Option Explicit
 
 Public Enum DataLoadResult
@@ -14,29 +14,29 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
-    ' 1. V�rifier/Cr�er la requ�te PQ
+    ' 1. Vérifier/Créer la requête PQ
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
-        MsgBox "Erreur lors de la cr�ation de la requ�te PowerQuery", vbExclamation
+        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     
-    ' 2. Charger les donn�es
+    ' 2. Charger les données
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
     LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
     
-    ' 3. G�rer la s�lection des valeurs
+    ' 3. Gérer la sélection des valeurs
     Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
     If loadInfo.SelectedValues Is Nothing Then
-        ' Nettoyer la requ�te avant de sortir
+        ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.Category.PowerQueryName
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
-    ' Si un filtre est appliqu� et qu'il n'y a pas de filtre secondaire,
-    ' proposer la s�lection des fiches correspondantes
+    ' Si un filtre est appliqué et qu'il n'y a pas de filtre secondaire,
+    ' proposer la sélection des fiches correspondantes
     If loadInfo.Category.FilterLevel <> "Pas de filtrage" And loadInfo.Category.SecondaryFilterLevel = "" Then
         Dim lo As ListObject
         Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
@@ -53,26 +53,26 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
                     displayList.Add lo.DataBodyRange.Rows(i).Columns(displayColIndex).Value
                 End If
             Next v
-        Next i        ' Proposer la s�lection des fiches parmi displayList
+        Next i        ' Proposer la sélection des fiches parmi displayList
         Dim finalSelection As Collection
         On Error Resume Next
-        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches � coller pour la " & loadInfo.Category.FilterLevel & " s�lectionn�e :")
+        Set finalSelection = LoadQueries.ChooseMultipleValuesFromListWithAll(idList, displayList, "Choisissez les fiches à coller pour la " & loadInfo.Category.FilterLevel & " sélectionnée :")
         Dim errorOccurred As Boolean
         errorOccurred = (Err.Number <> 0)
         On Error GoTo 0
         
-    ' Si l'utilisateur a annul� ou une erreur s'est produite
+    ' Si l'utilisateur a annulé ou une erreur s'est produite
     If errorOccurred Or finalSelection Is Nothing Then
-        ' Nettoyer la requ�te avant de sortir
+        ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.Category.PowerQueryName
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
         
-        ' Si aucune fiche n'a �t� s�lectionn�e
+        ' Si aucune fiche n'a été sélectionnée
         If finalSelection.Count = 0 Then
-            MsgBox "Aucune fiche s�lectionn�e. Op�ration annul�e.", vbExclamation
-            ' Nettoyer la requ�te avant de sortir
+            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
+            ' Nettoyer la requête avant de sortir
             CleanupPowerQuery loadInfo.Category.PowerQueryName
             ProcessDataLoad = DataLoadResult.Cancelled
             Exit Function
@@ -81,23 +81,23 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
         Set loadInfo.SelectedValues = finalSelection
     End If
     
-    ' 4. G�rer le mode d'affichage
+    ' 4. Gérer le mode d'affichage
     Dim displayModeResult As Variant
     displayModeResult = GetDisplayMode(loadInfo)
-    If displayModeResult = -999 Then ' Code d'erreur sp�cifique
+    If displayModeResult = -999 Then ' Code d'erreur spécifique
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     loadInfo.ModeTransposed = displayModeResult
     
-    ' 5. G�rer la destination
+    ' 5. Gérer la destination
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
     If loadInfo.FinalDestination Is Nothing Then
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
-    ' 6. Coller les donn�es
+    ' 6. Coller les données
     If Not PasteData(loadInfo) Then
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
@@ -106,19 +106,19 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     ' 7. S'assurer que la destination est visible
     With loadInfo.FinalDestination
         .Parent.Activate  ' Activer la feuille de destination
-        .Select          ' S�lectionner la cellule de d�part
-        .Parent.Range(.Address).Select  ' S�lectionner le range complet
+        .Select          ' Sélectionner la cellule de départ
+        .Parent.Range(.Address).Select  ' Sélectionner le range complet
         ActiveWindow.ScrollRow = .Row   ' S'assurer que le haut du tableau est visible
         ActiveWindow.ScrollColumn = .Column  ' S'assurer que la gauche du tableau est visible
     End With
     
-    ' 8. Nettoyer la requ�te PowerQuery apr�s le collage r�ussi
+    ' 8. Nettoyer la requête PowerQuery après le collage réussi
     CleanupPowerQuery loadInfo.Category.PowerQueryName
     
     ProcessDataLoad = DataLoadResult.Success
 End Function
 
-' R�cup�re les valeurs s�lectionn�es selon le niveau de filtrage
+' Récupère les valeurs sélectionnées selon le niveau de filtrage
 Private Function GetSelectedValues(Category As CategoryInfo) As Collection
     Dim lo As ListObject
     Dim dict As Object
@@ -139,11 +139,11 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
         End If
     End If
 
-    ' Si pas de filtrage, permettre � l'utilisateur de choisir directement dans la liste compl�te
+    ' Si pas de filtrage, permettre à l'utilisateur de choisir directement dans la liste complète
     If Category.FilterLevel = "Pas de filtrage" Then
-        On Error Resume Next ' Pour g�rer l'annulation de l'InputBox
+        On Error Resume Next ' Pour gérer l'annulation de l'InputBox
         
-        ' Cr�er un tableau avec toutes les fiches disponibles
+        ' Créer un tableau avec toutes les fiches disponibles
         Dim displayArray() As String
         ReDim displayArray(1 To lo.DataBodyRange.Rows.Count)
         For i = 1 To lo.DataBodyRange.Rows.Count
@@ -151,9 +151,9 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
             displayArray(i) = lo.DataBodyRange.Rows(i).Columns(2).Value
         Next i
         
-        ' Pr�senter les valeurs � l'utilisateur
+        ' Présenter les valeurs à l'utilisateur
         Set GetSelectedValues = LoadQueries.ChooseMultipleValuesFromArrayWithAll(displayArray, _
-            "Choisissez une ou plusieurs fiches � charger (ex: 1,3,5 ou *) :")
+            "Choisissez une ou plusieurs fiches à charger (ex: 1,3,5 ou *) :")
             
         If Err.Number <> 0 Then
             Set GetSelectedValues = Nothing
@@ -161,11 +161,11 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
         End If
         On Error GoTo 0
         
-        ' G�rer la s�lection initiale
+        ' Gérer la sélection initiale
         Dim selectedIndices As Collection
         Set selectedIndices = GetSelectedValues
         
-        ' Si l'utilisateur a annul� ou n'a rien s�lectionn�
+        ' Si l'utilisateur a annulé ou n'a rien sélectionné
         If selectedIndices Is Nothing Then
             Set GetSelectedValues = Nothing
             Exit Function
@@ -174,7 +174,7 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
         ' Convertir les valeurs en IDs
         Set GetSelectedValues = New Collection
         For Each v In selectedIndices
-            ' v est la valeur affich�e, on doit retrouver la ligne correspondante
+            ' v est la valeur affichée, on doit retrouver la ligne correspondante
             For i = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(i).Columns(2).Value = v Then
                     GetSelectedValues.Add lo.DataBodyRange.Rows(i).Columns(1).Value
@@ -183,14 +183,14 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
             Next i
         Next v
         
-        ' V�rifier si des IDs ont �t� ajout�s
+        ' Vérifier si des IDs ont été ajoutés
         If GetSelectedValues.Count = 0 Then
-            MsgBox "Aucune fiche s�lectionn�e. Op�ration annul�e.", vbExclamation
+            MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
             Set GetSelectedValues = Nothing
             Exit Function
         End If
     Else
-        ' Cr�er un dictionnaire pour stocker les valeurs uniques
+        ' Créer un dictionnaire pour stocker les valeurs uniques
         Set dict = CreateObject("Scripting.Dictionary")
 
         ' Extraire les valeurs uniques
@@ -229,19 +229,19 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
         On Error GoTo 0
 
         If errorOccurred Or selectedPrimary Is Nothing Then
-            MsgBox "Op�ration annul�e", vbInformation
+            MsgBox "Opération annulée", vbInformation
             Set GetSelectedValues = Nothing
             Exit Function
         End If
 
         If selectedPrimary.Count = 0 Then
-            MsgBox "Aucune valeur s�lectionn�e. Op�ration annul�e.", vbExclamation
+            MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
             Set GetSelectedValues = Nothing
             Exit Function
         End If
 
         If Category.SecondaryFilterLevel <> "" Then
-            ' Deuxi�me �tape de filtrage
+            ' Deuxième étape de filtrage
             Set dict = CreateObject("Scripting.Dictionary")
             For i = 1 To lo.DataBodyRange.Rows.Count
                 For Each v In selectedPrimary
@@ -279,13 +279,13 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
             On Error GoTo 0
 
             If errorOccurred Or selectedSecondary Is Nothing Then
-                MsgBox "Op�ration annul�e", vbInformation
+                MsgBox "Opération annulée", vbInformation
                 Set GetSelectedValues = Nothing
                 Exit Function
             End If
 
             If selectedSecondary.Count = 0 Then
-                MsgBox "Aucune valeur s�lectionn�e. Op�ration annul�e.", vbExclamation
+                MsgBox "Aucune valeur sélectionnée. Opération annulée.", vbExclamation
                 Set GetSelectedValues = Nothing
                 Exit Function
             End If
@@ -311,7 +311,7 @@ Private Function GetSelectedValues(Category As CategoryInfo) As Collection
             Next i
 
             If GetSelectedValues.Count = 0 Then
-                MsgBox "Aucune fiche s�lectionn�e. Op�ration annul�e.", vbExclamation
+                MsgBox "Aucune fiche sélectionnée. Opération annulée.", vbExclamation
                 Set GetSelectedValues = Nothing
                 Exit Function
             End If
@@ -331,7 +331,7 @@ ErrorHandler:
     Exit Function
 End Function
 
-' G�re le mode d'affichage (normal/transpos�)
+' Gère le mode d'affichage (normal/transposé)
 Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     Dim lo As ListObject
     Dim nbFiches As Long, nbChamps As Long
@@ -345,16 +345,16 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
     nbFiches = loadInfo.SelectedValues.Count
     nbChamps = lo.ListColumns.Count
     
-    ' Pr�parer les exemples pour l'inputbox de mode
+    ' Préparer les exemples pour l'inputbox de mode
     previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
     previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
-      ' G�n�rer les pr�visualisations
+      ' Générer les prévisualisations
     GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
     
-    ' Afficher d'abord les pr�visualisations dans une MsgBox
-    MsgBox "Pr�visualisations des modes disponibles :" & vbCrLf & vbCrLf & _
+    ' Afficher d'abord les prévisualisations dans une MsgBox
+    MsgBox "Prévisualisations des modes disponibles :" & vbCrLf & vbCrLf & _
            previewNormal & vbCrLf & previewTransposed, _
-           vbInformation, "Aper�u des modes"
+           vbInformation, "Aperçu des modes"
            
     ' Puis demander le choix avec une InputBox simple
     Dim modePrompt As String
@@ -362,25 +362,25 @@ Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
                  "1 pour NORMAL" & vbCrLf & _
                  "2 pour TRANSPOSE"
     userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
-      ' Si l'utilisateur a cliqu� sur Annuler (Type:=2 retourne False pour Annuler)
+      ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
     If userChoice = 0 Then
-        MsgBox "Op�ration annul�e", vbInformation
-        GetDisplayMode = -999 ' Code d'erreur sp�cifique
+        MsgBox "Opération annulée", vbInformation
+        GetDisplayMode = -999 ' Code d'erreur spécifique
         Exit Function
     End If
     
-    ' V�rifier la validit� de la r�ponse
+    ' Vérifier la validité de la réponse
     If userChoice = 2 Then
         GetDisplayMode = True
     ElseIf userChoice = 1 Then
         GetDisplayMode = False
     Else
         MsgBox "Veuillez entrer 1 ou 2", vbExclamation
-        GetDisplayMode = -999 ' Code d'erreur sp�cifique
+        GetDisplayMode = -999 ' Code d'erreur spécifique
     End If
 End Function
 
-' G�n�re les pr�visualisations pour les deux modes
+' Génère les prévisualisations pour les deux modes
 Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
                            ByRef previewNormal As String, ByRef previewTransposed As String)
     Dim i As Long, j As Long, idx As Long
@@ -410,7 +410,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
         idx = idx + 1
     Next v
     
-    ' G�n�rer la pr�visualisation normale
+    ' Générer la prévisualisation normale
     previewNormal = previewNormal & "| "
     For i = 1 To WorksheetFunction.Min(4, nbChamps)
         Dim head As String
@@ -476,7 +476,7 @@ Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
     Next i
 End Sub
 
-' G�re la s�lection de la destination
+' Gère la sélection de la destination
 Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     Dim lo As ListObject
     Dim nbRows As Long, nbCols As Long
@@ -485,40 +485,40 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
     
     Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
-    ' Calculer la taille n�cessaire
+    ' Calculer la taille nécessaire
     If loadInfo.ModeTransposed Then
         nbRows = lo.ListColumns.Count
-        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-t�tes
+        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
     Else
-        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-t�tes
+        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
         nbCols = lo.ListColumns.Count
     End If
       ' Informer l'utilisateur
-    MsgBox "La plage n�cessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation      ' Demander la cellule de destination et v�rifier la place
+    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation      ' Demander la cellule de destination et vérifier la place
     Do
         Dim selectedRange As Range
         
-        ' Activer Excel pour la s�lection
+        ' Activer Excel pour la sélection
         Application.Interactive = True
         Application.ScreenUpdating = True
         
-        ' Demander � l'utilisateur de s�lectionner une cellule
+        ' Demander à l'utilisateur de sélectionner une cellule
         On Error GoTo ErrorHandler
         Set selectedRange = Application.InputBox( _
-            prompt:="S�lectionnez la cellule o� charger les fiches (" & nbRows & " x " & nbCols & ")", _
+            prompt:="Sélectionnez la cellule où charger les fiches (" & nbRows & " x " & nbCols & ")", _
             title:="Destination", _
             Type:=8)
             
-        ' V�rifier si une plage valide a �t� s�lectionn�e
+        ' Vérifier si une plage valide a été sélectionnée
         If selectedRange Is Nothing Then
-            MsgBox "Aucune cellule s�lectionn�e. Op�ration annul�e.", vbInformation
+            MsgBox "Aucune cellule sélectionnée. Opération annulée.", vbInformation
             Set GetDestination = Nothing
             Exit Function
         End If
         
         ' S'assurer que c'est une seule cellule
         If selectedRange.Cells.Count > 1 Then
-            MsgBox "Veuillez s�lectionner une seule cellule.", vbExclamation
+            MsgBox "Veuillez sélectionner une seule cellule.", vbExclamation
             GoTo ContinueLoop
         End If
         
@@ -527,7 +527,7 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         
 ErrorHandler:
         If Err.Number = 424 Then  ' Erreur "L'objet est requis"
-            MsgBox "Op�ration annul�e", vbInformation
+            MsgBox "Opération annulée", vbInformation
             Set GetDestination = Nothing
             Exit Function
         ElseIf Err.Number <> 0 Then
@@ -555,12 +555,12 @@ CheckSpace:
         Next i
         
         If Not okPlage Then
-            MsgBox "La plage s�lectionn�e n'est pas vide. Veuillez choisir un autre emplacement.", vbExclamation
+            MsgBox "La plage sélectionnée n'est pas vide. Veuillez choisir un autre emplacement.", vbExclamation
         End If
     Loop Until okPlage
 End Function
 
-' Colle les donn�es selon le mode choisi
+' Colle les données selon le mode choisi
 Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Dim lo As ListObject
     Dim tblRange As Range
@@ -570,18 +570,18 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
-    ' D�prot�ger la feuille de destination avant tout collage
+    ' Déprotéger la feuille de destination avant tout collage
     Dim ws As Worksheet
     Set ws = loadInfo.FinalDestination.Worksheet
     ws.Unprotect
-      Log "paste_data", "=== D�BUT PASTEDATA ===" & vbCrLf & _
-                "Mode Transpos�: " & loadInfo.ModeTransposed & vbCrLf & _
-                "Cat�gorie: " & loadInfo.Category.DisplayName & vbCrLf & _
+      Log "paste_data", "=== DÉBUT PASTEDATA ===" & vbCrLf & _
+                "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
+                "Catégorie: " & loadInfo.Category.DisplayName & vbCrLf & _
                 "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
-                "Nombre de valeurs s�lectionn�es: " & loadInfo.SelectedValues.Count, _
+                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count, _
                 DEBUG_LEVEL, "PasteData", "DataLoaderManager"
 
-    ' D�terminer les colonnes visibles en fonction du dictionnaire Ragic
+    ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
     Dim visibleCols As Collection
     Set visibleCols = New Collection
     Dim header As String
@@ -592,8 +592,8 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         End If
     Next i
       If loadInfo.ModeTransposed Then
-        Log "paste_data", "--- D�but collage transpos� ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-        ' Coller en transpos�
+        Log "paste_data", "--- Début collage transposé ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+        ' Coller en transposé
         For i = 1 To visibleCols.Count
             Log "paste_data", "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
             loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
@@ -605,7 +605,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             Log "paste_data", "Traitement colonne " & currentCol & ", valeur=" & v, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Log "paste_data", "  Trouv� � la ligne " & j, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+                    Log "paste_data", "  Trouvé à la ligne " & j, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
                     For i = 1 To visibleCols.Count
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
                         loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
@@ -616,9 +616,9 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             currentCol = currentCol + 1
         Next v
         Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
-        Log "paste_data", "Plage transpos�e d�finie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+        Log "paste_data", "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     Else
-        Log "paste_data", "--- D�but collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+        Log "paste_data", "--- Début collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
         ' Coller en normal
         For i = 1 To visibleCols.Count
             Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
@@ -631,7 +631,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             Debug.Print "Traitement ligne " & currentRow & ", valeur=" & v
             For j = 1 To lo.DataBodyRange.Rows.Count
                 If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Debug.Print "  Trouv� � la ligne " & j
+                    Debug.Print "  Trouvé à la ligne " & j
                     For i = 1 To visibleCols.Count
                         loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
                         loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
@@ -643,22 +643,22 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Next v
 
         Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, visibleCols.Count)
-        Debug.Print "Plage normale d�finie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
+        Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
     End If
-      ' V�rification de la validit� de la plage
-    Log "paste_data", "=== V�RIFICATIONS ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+      ' Vérification de la validité de la plage
+    Log "paste_data", "=== VÉRIFICATIONS ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     Log "paste_data", "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Cellules fusionn�es: " & tblRange.MergeCells, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "Cellules fusionnées: " & tblRange.MergeCells, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     Log "paste_data", "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
       If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
         Log "paste_data", "ERREUR: Plage trop petite", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de cr�er un tableau : la plage s�lectionn�e est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
+        MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
         PasteData = False
         Exit Function
     End If
     If tblRange.MergeCells Then
-        Log "paste_data", "ERREUR: Cellules fusionn�es d�tect�es", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de cr�er un tableau : la plage contient des cellules fusionn�es.", vbExclamation
+        Log "paste_data", "ERREUR: Cellules fusionnées détectées", ERROR_LEVEL, "PasteData", "DataLoaderManager"
+        MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
         PasteData = False
         Exit Function
     End If
@@ -667,18 +667,18 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         For Each tbl In tblRange.Worksheet.ListObjects
             If Not Intersect(tblRange, tbl.Range) Is Nothing Then
                 Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
-                MsgBox "Impossible de cr�er un tableau : la plage contient d�j� un tableau Excel.", vbExclamation
+                MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
                 PasteData = False
                 Exit Function
             End If
         Next tbl
     End If
     
-    Log "paste_data", "=== CR�ATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Log "paste_data", "=== CRÉATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
     ' Mettre en forme le tableau final    On Error Resume Next
     Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     If Err.Number <> 0 Then
-        Log "paste_data", "ERREUR lors de la cr�ation du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
+        Log "paste_data", "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
         On Error GoTo 0
         PasteData = False
         Exit Function
@@ -687,19 +687,19 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
-    Log "paste_data", "Tableau cr�� avec succ�s: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-      ' Prot�ger finement la feuille : seules les valeurs des tableaux EE_ sont prot�g�es
+    Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+      ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
     ProtectSheetWithTable tblRange.Worksheet
     Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
 
     PasteData = True
 End Function
 
-' Prot�ge uniquement les tableaux EE_ dans la feuille
+' Protège uniquement les tableaux EE_ dans la feuille
 Private Sub ProtectSheetWithTable(ws As Worksheet)
     ws.Unprotect
     
-    ' 1. D�verrouiller toutes les cellules
+    ' 1. Déverrouiller toutes les cellules
     ws.Cells.Locked = False
     
     ' 2. Verrouiller uniquement les cellules des tableaux EE_
@@ -710,7 +710,7 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
         End If
     Next tbl
     
-    ' 3. Prot�ger la feuille avec les permissions standard
+    ' 3. Protéger la feuille avec les permissions standard
     ws.Protect UserInterfaceOnly:=True, AllowFormattingCells:=True, _
                AllowFormattingColumns:=True, AllowFormattingRows:=True, _
                AllowInsertingColumns:=True, AllowInsertingRows:=True, _
@@ -719,7 +719,7 @@ Private Sub ProtectSheetWithTable(ws As Worksheet)
                AllowFiltering:=True, AllowUsingPivotTables:=True
 End Sub
 
-' G�n�re un nom unique pour un nouveau tableau en incr�mentant l'indice
+' Génère un nom unique pour un nouveau tableau en incrémentant l'indice
 Private Function GetUniqueTableName(CategoryName As String) As String
     Dim baseName As String
     baseName = "EE_" & Utilities.SanitizeTableName(CategoryName)
@@ -748,7 +748,7 @@ Private Function GetUniqueTableName(CategoryName As String) As String
     GetUniqueTableName = baseName & "_" & (maxIndex + 1)
 End Function
 
-' Nettoie la requ�te PowerQuery en supprimant son tableau associ� et la requ�te elle-m�me
+' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même
 Public Sub CleanupPowerQuery(queryName As String)
     On Error Resume Next
     
@@ -759,7 +759,7 @@ Public Sub CleanupPowerQuery(queryName As String)
         lo.Delete
     End If
     
-    ' 2. Forcer le nettoyage du cache PowerQuery en supprimant la requ�te
+    ' 2. Forcer le nettoyage du cache PowerQuery en supprimant la requête
     Dim wb As Workbook
     Set wb = ThisWorkbook
     With wb.Queries(queryName)
@@ -769,14 +769,14 @@ Public Sub CleanupPowerQuery(queryName As String)
     On Error GoTo 0
 End Sub
 
-' Fonction g�n�rique pour traiter une cat�gorie
+' Fonction générique pour traiter une catégorie
 Public Function ProcessCategory(CategoryName As String, Optional errorMessage As String = "") As DataLoadResult
     If CategoriesCount = 0 Then InitCategories
     
     Dim loadInfo As DataLoadInfo
     loadInfo.Category = GetCategoryByName(CategoryName)
     If loadInfo.Category.DisplayName = "" Then
-        MsgBox "Cat�gorie '" & CategoryName & "' non trouv�e", vbExclamation
+        MsgBox "Catégorie '" & CategoryName & "' non trouvée", vbExclamation
         ProcessCategory = DataLoadResult.Error
         Exit Function
     End If

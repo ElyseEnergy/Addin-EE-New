@@ -2,7 +2,7 @@ Attribute VB_Name = "SYS_Logger"
 Option Explicit
 
 ' ============================================================================
-' SYS_Logger - Système de Logging Simplifié
+' SYS_Logger - SystÃ¨me de Logging SimplifiÃ©
 ' ============================================================================
 
 ' Chemin absolu du dossier de logs
@@ -26,14 +26,14 @@ Private mCurrentLogLevel As LogLevel
 ' ============================================================================
 
 Public Sub InitializeLogger()
-    ' Initialisation du niveau de log par défaut
+    ' Initialisation du niveau de log par dÃ©faut
     mCurrentLogLevel = INFO_LEVEL
     
     ' S'assurer que le dossier de logs existe
     EnsureLogFolderExists
     
     ' Log d'initialisation
-    Log "sys_init", "Système de logging initialisé", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
+    Log "sys_init", "SystÃ¨me de logging initialisÃ©", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
 End Sub
 
 ' ============================================================================
@@ -50,7 +50,7 @@ Private Sub EnsureLogFolderExists()
     End If
 End Sub
 
-' Écrit dans le fichier de log
+' Ã‰crit dans le fichier de log
 Private Sub WriteToLogFile(logMessage As String)
     Dim fso As Object
     Dim logFile As Object
@@ -65,7 +65,7 @@ Private Sub WriteToLogFile(logMessage As String)
     ' Ouvrir le fichier en mode append (8 = ForAppending, -1 = TristateMixed pour Unicode)
     Set logFile = fso.OpenTextFile(logFilePath, 8, True, -1)
     
-    ' Écrire le message
+    ' Ã‰crire le message
     logFile.WriteLine logMessage
     
     ' Fermer le fichier
@@ -81,7 +81,7 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     Dim levelString As String
     Dim timeStamp As String
     
-    ' Déterminer le niveau de log
+    ' DÃ©terminer le niveau de log
     Select Case level
         Case DEBUG_LEVEL
             levelString = "DEBUG"
@@ -116,7 +116,7 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     ' Afficher dans Immediate Window
     Debug.Print logMessage
     
-    ' Écrire dans le fichier de log
+    ' Ã‰crire dans le fichier de log
     WriteToLogFile logMessage
 End Sub
 
@@ -126,7 +126,7 @@ End Sub
 
 Public Sub SetLogLevel(level As LogLevel)
     mCurrentLogLevel = level
-    Log "log_level_changed", "Niveau de log défini à: " & level, INFO_LEVEL
+    Log "log_level_changed", "Niveau de log dÃ©fini Ã : " & level, INFO_LEVEL
 End Sub
 
 ' Purge les anciens fichiers de log
