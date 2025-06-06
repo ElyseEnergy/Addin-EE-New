@@ -11,25 +11,29 @@ End Enum
 
 ' Fonction principale de traitement
 Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
+    Diagnostics.LogTime "Début de ProcessDataLoad pour la catégorie: " & loadInfo.Category.DisplayName
+
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     
-    ' 1. Vérifier/Créer la requête PQ
+    Diagnostics.LogTime "Avant EnsurePQQueryExists"
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
         MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
+    Diagnostics.LogTime "Après EnsurePQQueryExists"
     
-    ' 2. Charger les données
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
+    Diagnostics.LogTime "Avant LoadQuery (téléchargement des données)"
     LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+    Diagnostics.LogTime "Après LoadQuery (téléchargement des données)"
     
-    ' 3. Gérer la sélection des valeurs
+    Diagnostics.LogTime "Avant affichage du formulaire GetSelectedValues"
     Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
+    Diagnostics.LogTime "Après retour du formulaire GetSelectedValues"
     If loadInfo.SelectedValues Is Nothing Then
-        ' Nettoyer la requête avant de sortir
         CleanupPowerQuery loadInfo.Category.PowerQueryName
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
@@ -81,39 +85,42 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
         Set loadInfo.SelectedValues = finalSelection
     End If
     
-    ' 4. Gérer le mode d'affichage
+    Diagnostics.LogTime "Avant affichage du formulaire GetDisplayMode"
     Dim displayModeResult As Variant
     displayModeResult = GetDisplayMode(loadInfo)
+    Diagnostics.LogTime "Après retour du formulaire GetDisplayMode"
     If displayModeResult = -999 Then ' Code d'erreur spécifique
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     loadInfo.ModeTransposed = displayModeResult
     
-    ' 5. Gérer la destination
+    Diagnostics.LogTime "Avant affichage de la boîte de dialogue GetDestination"
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
+    Diagnostics.LogTime "Après retour de la boîte de dialogue GetDestination"
     If loadInfo.FinalDestination Is Nothing Then
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
     End If
     
-    ' 6. Coller les données
+    Diagnostics.LogTime "Avant appel à PasteData"
     If Not PasteData(loadInfo) Then
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
+    Diagnostics.LogTime "Après appel à PasteData"
     
-    ' 7. S'assurer que la destination est visible
     With loadInfo.FinalDestination
-        .Parent.Activate  ' Activer la feuille de destination
-        .Select          ' Sélectionner la cellule de départ
-        .Parent.Range(.Address).Select  ' Sélectionner le range complet
-        ActiveWindow.ScrollRow = .Row   ' S'assurer que le haut du tableau est visible
-        ActiveWindow.ScrollColumn = .Column  ' S'assurer que la gauche du tableau est visible
+        .Parent.Activate
+        .Select
+        .Parent.Range(.Address).Select
+        ActiveWindow.ScrollRow = .Row
+        ActiveWindow.ScrollColumn = .Column
     End With
     
-    ' 8. Nettoyer la requête PowerQuery après le collage réussi
+    Diagnostics.LogTime "Avant CleanupPowerQuery"
     CleanupPowerQuery loadInfo.Category.PowerQueryName
+    Diagnostics.LogTime "Après CleanupPowerQuery"
     
     ProcessDataLoad = DataLoadResult.Success
 End Function
@@ -562,6 +569,7 @@ End Function
 
 ' Colle les données selon le mode choisi
 Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
+    Diagnostics.LogTime "Début de PasteData"
     Dim lo As ListObject
     Dim tblRange As Range
     Dim i As Long, j As Long
@@ -570,18 +578,17 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     
     Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
-    ' Déprotéger la feuille de destination avant tout collage
     Dim ws As Worksheet
     Set ws = loadInfo.FinalDestination.Worksheet
+    
+    ' --- DÉBUT SECTION CRITIQUE ---
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+    Application.Calculation = xlCalculationManual
+    Diagnostics.LogTime "Fonctionnalités Excel désactivées"
+    
     ws.Unprotect
-      Log "paste_data", "=== DÉBUT PASTEDATA ===" & vbCrLf & _
-                "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
-                "Catégorie: " & loadInfo.Category.DisplayName & vbCrLf & _
-                "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
-                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count, _
-                DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-
-    ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
+    
     Dim visibleCols As Collection
     Set visibleCols = New Collection
     Dim header As String
@@ -591,7 +598,9 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             visibleCols.Add i
         End If
     Next i
-      If loadInfo.ModeTransposed Then
+    Diagnostics.LogTime "Colonnes visibles identifiées"
+    
+    If loadInfo.ModeTransposed Then
         Log "paste_data", "--- Début collage transposé ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
         ' Coller en transposé
         For i = 1 To visibleCols.Count
@@ -675,8 +684,9 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     End If
     
     Log "paste_data", "=== CRÉATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    ' Mettre en forme le tableau final    On Error Resume Next
-    Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
+    ' Mettre en forme le tableau final
+    On Error Resume Next
+    Set tbl = ws.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
     If Err.Number <> 0 Then
         Log "paste_data", "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
         On Error GoTo 0
@@ -685,11 +695,28 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     End If
     On Error GoTo 0
     
+    Diagnostics.LogTime "Après création de l'objet Tableau"
+
     tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
     tbl.TableStyle = "TableStyleMedium9"
     Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-      ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
-    ProtectSheetWithTable tblRange.Worksheet
+
+    ' Protéger finement la feuille
+    ProtectSheetWithTable ws
+    
+    Diagnostics.LogTime "Après protection de la feuille"
+
+    ' Réactiver les fonctionnalités Excel
+    Application.ScreenUpdating = True
+    Application.EnableEvents = True
+    Application.Calculation = xlCalculationAutomatic
+    Diagnostics.LogTime "Fonctionnalités Excel réactivées"
+
+    ' Attend la fin des calculs et loggue le temps que ça prend
+    Diagnostics.WaitAndLogCalculation
+    
+    Diagnostics.LogTime "FIN TOTALE (main réellement rendue à l'utilisateur)"
+
     Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
 
     PasteData = True

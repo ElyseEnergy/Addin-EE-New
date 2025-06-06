@@ -35,7 +35,8 @@
                         <ns0:button id="btnMetriquesRED" label="Métriques RED III" onAction="ProcessMetriquesRED" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnEmissions" label="Emissions" onAction="ProcessEmissions" imageMso="AcceptInvitation"/>
                     </ns0:menu>
-                    <ns0:button id="btnInfraLog" label="Logistique" onAction="ProcessInfraLog" image="logistics" size="large" getVisible="GetTechnologiesVisibility"/>                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
+                    <ns0:button id="btnInfraLog" label="Logistique" onAction="ProcessInfraLog" image="logistics" size="large" getVisible="GetTechnologiesVisibility"/>                    
+                    <ns0:menu id="menuUtilities" label="Utilities" image="utilities" size="large" getVisible="GetUtilitiesVisibility">
                         <ns0:button id="btnChiller" label="Chiller" onAction="ProcessChiller" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnCoolingWater" label="Cooling Water Production" onAction="ProcessCoolingWater" imageMso="AcceptInvitation"/>
                         <ns0:button id="btnHeatProd" label="Heat Production" onAction="ProcessHeatProd" imageMso="AcceptInvitation"/>
@@ -56,12 +57,14 @@
                     <ns0:button id="btnBusinessPlan" label="Business Plan" onAction="OnBusinessPlan" image="business_plan" size="large" enabled="false"/>
                     <ns0:button id="btnElecOptim" label="Optimisation d'achat d'électricité" onAction="OnElecOptim" image="tool_electricity" size="large" enabled="false"/>
                     <ns0:button id="btnLCA" label="Analyse en cycle de vie" onAction="OnLCA" image="tool_lca" size="large" enabled="false"/>
-                </ns0:group>                <ns0:group id="grpFinances" label="Finances">
+                </ns0:group>                
+                    <ns0:group id="grpFinances" label="Finances">
                     <ns0:button id="btnCorpoBudgets" label="Budgets corpo" onAction="ProcessBudgetCorpo" image="budget_corp" getVisible="GetFinancesVisibility" size="large"/>
                     <ns0:button id="btnBudgetRequests" label="Demandes évolutions budgétaires" onAction="ProcessDIB" image="budget_dib" getVisible="GetFinancesVisibility" size="large"/>
                     <ns0:button id="btnPurchaseRequests" label="Demandes d'achats" onAction="ProcessDemandesAchat" image="budget_po" getVisible="GetFinancesVisibility" size="large"/>
                     <ns0:button id="btnReceptions" label="Réceptions" onAction="ProcessReceptions" image="budget_reception" getVisible="GetFinancesVisibility" size="large"/>
-                </ns0:group>                <ns0:group id="grpProjects" label="Projets">
+                </ns0:group>                
+                    <ns0:group id="grpProjects" label="Projets">
                     <ns0:button id="btnSummarySheets" label="Fiches récapitulatives" onAction="OnSummarySheets" image="projects_summaries" size="large" getVisible="GetSummarySheetsVisibility" enabled="false"/>
                     <ns0:menu id="menuPlannings" label="Plannings" image="plannings" size="large" getVisible="GetPlanningsVisibility">
                         <ns0:button id="btnPlanningPhases" label="Plannings de phase" onAction="ProcessPlanningPhases" imageMso="AcceptInvitation"/>
@@ -79,6 +82,15 @@
                         <ns0:button id="btnCleanupPQ" label="Cleanup All PowerQueries" onAction="ProcessCleanupAllPowerQueries" imageMso="DeleteTable"/>
                         <ns0:button id="btnDebugRagicDict" label="Debug RagicDictionary" onAction="ProcessDebugRagicDictionary" imageMso="DictionaryLookup"/>
                     </ns0:menu>
+                </ns0:group>
+
+                <ns0:group id="grpSettings" label="Settings">
+                    <ns0:button id="btnForceRefreshRagic"
+                              label="Update Data Dictionary"
+                              imageMso="Synchronize"
+                              size="large"
+                              onAction="ProcessForceRefreshRagicDictionary"
+                              supertip="Downloads the latest version of the data dictionary from Ragic."/>
                 </ns0:group>
             </ns0:tab>
         </ns0:tabs>
