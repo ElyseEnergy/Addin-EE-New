@@ -62,7 +62,7 @@ def get_excel_instance(target_file=None):
     """Récupère une instance Excel existante avec notre fichier ou en crée une nouvelle"""
     try:
         # Essayer de se connecter à une instance existante
-        excel = win32com.client.GetObject(Class="Excel.Application")
+        excel = win32com.client.GetActiveObject("Excel.Application")
         
         # Si on a un fichier cible, vérifier s'il est déjà ouvert
         if target_file:
@@ -72,15 +72,17 @@ def get_excel_instance(target_file=None):
                     logging.info(f"Fichier {target_file} déjà ouvert dans Excel")
                     return excel, wb
         
-        # Si on arrive ici, soit pas d'instance Excel, soit fichier non ouvert
-        raise Exception("Pas d'instance Excel utilisable")
+        # Si le fichier n'est pas ouvert dans cette instance, on la ferme
+        excel.Quit()
         
-    except:
-        # Créer une nouvelle instance
-        excel = win32com.client.Dispatch("Excel.Application")
-        excel.Visible = False
-        logging.info("Nouvelle instance Excel créée")
-        return excel, None
+    except Exception as e:
+        logging.debug(f"Pas d'instance Excel active: {str(e)}")
+    
+    # Créer une nouvelle instance
+    excel = win32com.client.DispatchEx("Excel.Application")
+    excel.Visible = False
+    logging.info("Nouvelle instance Excel créée")
+    return excel, None
 
 def check_vba_access():
     """Vérifie si l'accès au VBA Project est activé"""
@@ -89,8 +91,7 @@ def check_vba_access():
     wb = None
     
     try:
-        excel = win32com.client.Dispatch('Excel.Application')
-        excel.Visible = False
+        excel = win32com.client.DispatchEx('Excel.Application')
         wb = excel.Workbooks.Add()
         
         try:
@@ -135,6 +136,19 @@ def remove_all_bas_modules(vba_project):
     
     logging.info(f"Total des modules .bas supprimés: {len(modules_to_remove)}")
 
+def clean_document_code(code):
+    """Nettoie le code d'un module Document en enlevant les attributs VB"""
+    lines = code.split('\n')
+    cleaned_lines = []
+    skip_attributes = True
+    
+    for line in lines:
+        if line.strip().startswith('Attribute VB_'):
+            continue  # On saute les lignes d'attributs
+        cleaned_lines.append(line)
+    
+    return '\n'.join(cleaned_lines)
+
 def inject_modules():
     log_file = setup_logging()
     logging.info(f"Début de l'injection des modules. Log file: {log_file}")
@@ -142,7 +156,7 @@ def inject_modules():
     if not check_vba_access():
         logging.error("Accès VBA non disponible. Arrêt du processus.")
         return
-    
+
     excel = None
     workbook = None
     excel_file = os.path.abspath("Addin Elyse Energy.xlsm")
@@ -161,17 +175,40 @@ def inject_modules():
         
         # Récupérer ou créer une instance Excel
         excel, workbook = get_excel_instance(excel_file)
+        
+        # Si on n'a pas récupéré le workbook, on l'ouvre
         if not workbook:
-            workbook = excel.Workbooks.Open(excel_file)
+            try:
+                workbook = excel.Workbooks.Open(excel_file)
+            except Exception as e:
+                logging.error(f"Erreur lors de l'ouverture du fichier: {str(e)}")
+                # Essayer de fermer toutes les instances Excel
+                try:
+                    os.system('taskkill /F /IM excel.exe')
+                    time.sleep(2)  # Attendre que Excel se ferme
+                    excel = win32com.client.DispatchEx("Excel.Application")
+                    excel.Visible = False
+                    workbook = excel.Workbooks.Open(excel_file)
+                except Exception as e2:
+                    logging.error(f"Impossible d'ouvrir le fichier même après avoir fermé Excel: {str(e2)}")
+                    raise
         
         vba_project = workbook.VBProject
         
         # Lister tous les composants actuels
-        current_components = {comp.Name: comp.Type for comp in vba_project.VBComponents}
-        logging.info(f"Composants actuels: {', '.join(current_components.keys())}")
+        current_components = []
+        for comp in vba_project.VBComponents:
+            current_components.append((comp.Name, comp.Type))
+        logging.info(f"Composants actuels: {', '.join(name for name, _ in current_components)}")
         
         # Supprimer tous les modules .bas d'un coup
-        remove_all_bas_modules(vba_project)
+        for name, type_ in current_components:
+            if type_ == 1:  # vbext_ct_StdModule (.bas)
+                try:
+                    vba_project.VBComponents.Remove(vba_project.VBComponents(name))
+                    logging.info(f"Module .bas supprimé: {name}")
+                except Exception as e:
+                    logging.error(f"Erreur lors de la suppression du module {name}: {str(e)}")
         
         # Traiter tous les modules
         module_files = [f for f in os.listdir('.') if f.endswith(('.bas', '.cls', '.frm'))]
@@ -187,13 +224,11 @@ def inject_modules():
                     continue
                 
                 # Vérifier si c'est un module Document (Sheet, ThisWorkbook)
-                is_document = (module_name in current_components and 
-                             current_components[module_name] == 100)  # vbext_ct_Document
-                
-                if not is_document and module_name in current_components:
-                    # On peut supprimer les modules non-Document
-                    vba_project.VBComponents.Remove(vba_project.VBComponents(module_name))
-                    logging.info(f"Ancien module {module_name} supprimé")
+                is_document = False
+                for name, type_ in current_components:
+                    if name == module_name and type_ == 100:  # vbext_ct_Document
+                        is_document = True
+                        break
                 
                 if is_document:
                     # Pour les modules Document, on met à jour le code
@@ -202,6 +237,8 @@ def inject_modules():
                     # Enlever l'en-tête CLASS si présent
                     if new_code.startswith('VERSION 1.0 CLASS'):
                         new_code = new_code.split('END\n', 1)[1]
+                    # Nettoyer les attributs VB
+                    new_code = clean_document_code(new_code)
                     vba_project.VBComponents(module_name).CodeModule.DeleteLines(
                         1, vba_project.VBComponents(module_name).CodeModule.CountOfLines)
                     vba_project.VBComponents(module_name).CodeModule.AddFromString(new_code)
@@ -234,7 +271,7 @@ def inject_modules():
         
     except Exception as e:
         logging.error(f"Erreur générale: {str(e)}")
-        logging.error(f"Stacktrace complet:\n{traceback.format_exc()}")
+        logging.error(traceback.format_exc())
         try:
             if workbook:
                 workbook.Close(SaveChanges=False)
