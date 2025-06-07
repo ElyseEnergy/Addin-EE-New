@@ -8,13 +8,17 @@ Public gRibbon As IRibbonUI
 
 ' Callback appelé lors du chargement du ruban
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
-    ' Initialiser le système de logging
+    ' Initialiser le système de logging (doit être la première chose)
     SYS_Logger.InitializeLogger
     
-    Log "ribbon", "Ribbon_Load appelé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    Log "ribbon", "Ribbon_Load appelé. Le ruban est en cours d'affichage.", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
     Set gRibbon = ribbon
-    InitializeDemoProfiles
-    Log "ribbon", "gRibbon initialisé", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
+    
+    ' Planifie les tâches de démarrage plus lourdes (chargement du dictionnaire, préchauffage PQ)
+    ' pour s'exécuter 2 secondes après que l'UI soit apparue, afin de ne pas bloquer l'utilisateur.
+    Application.OnTime Now + TimeValue("00:00:02"), "Utilities.RunStartupTasks"
+    
+    Log "ribbon", "Tâches de démarrage planifiées. L'interface est maintenant fluide.", DEBUG_LEVEL, "Ribbon_Load", "RibbonVisibility"
 End Sub
 
 ' Callback pour le sélecteur de profil

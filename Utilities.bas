@@ -11,7 +11,145 @@ Public Const ADDIN_VERSION_MAJOR As Integer = 1
 Public Const ADDIN_VERSION_MINOR As Integer = 0
 Public Const ADDIN_VERSION_PATCH As Integer = 0
 
-Sub InitializePQData()
+' --- NOUVELLES ROUTINES DE DÉMARRAGE ASYNCHRONE ---
+
+' Tâche principale de démarrage, appelée de manière asynchrone.
+Public Sub RunStartupTasks()
+    ' On Error Resume Next ' Empêche tout crash si une tâche de fond échoue.
+    ' Const PROC_NAME As String = "RunStartupTasks"
+    ' Const MODULE_NAME_STR As String = "Utilities" ' Explicitly define module name for logger
+
+    ' SYS_Logger.Log "startup", "RunStartupTasks: Démarrage des tâches d'arrière-plan...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    
+    ' 1. Préchauffe le moteur Power Query pour accélérer le premier vrai appel
+    ' SYS_Logger.Log "startup", "RunStartupTasks: Appel de WarmUpPowerQueryEngine...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    ' WarmUpPowerQueryEngine
+    ' SYS_Logger.Log "startup", "RunStartupTasks: WarmUpPowerQueryEngine terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    
+    ' ' 2. Charge le dictionnaire de données en arrière-plan
+    ' SYS_Logger.Log "startup", "RunStartupTasks: Appel de LoadRagicDictionary...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    ' LoadRagicDictionary ' Assurez-vous que cette fonction existe et est accessible
+    ' SYS_Logger.Log "startup", "RunStartupTasks: LoadRagicDictionary terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    
+    ' 3. Initialise les profils d'accès
+    SYS_Logger.Log "startup", "RunStartupTasks: Appel de InitializeDemoProfiles...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    InitializeDemoProfiles ' Rétablir l'appel
+    SYS_Logger.Log "startup", "RunStartupTasks: InitializeDemoProfiles terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    
+    ' SYS_Logger.Log "startup", "RunStartupTasks: Tâches d'arrière-plan terminées.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+End Sub
+
+' Crée, rafraîchit et supprime une requête bidon pour forcer le moteur M à s'initialiser.
+Private Sub WarmUpPowerQueryEngine()
+    On Error GoTo ErrorHandler
+    Const PROC_NAME As String = "WarmUpPowerQueryEngine"
+    Const MODULE_NAME_STR As String = "Utilities"
+    Const WARMUP_QUERY_NAME As String = "Internal_WarmUp"
+    Dim formula As String
+    Dim qry As Object ' WorkbookQuery
+    Dim bQueryRefreshedSuccessfully As Boolean
+    bQueryRefreshedSuccessfully = False
+
+    SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Début du préchauffage.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    formula = "let Source = ""Done"" in Source"
+
+    ' Attempt to delete the query if it already exists
+    Dim existingQuery As Object
+    On Error Resume Next ' Temporarily ignore error if query doesn't exist for this check
+    Set existingQuery = ThisWorkbook.Queries(WARMUP_QUERY_NAME)
+    On Error GoTo 0 ' Restore broader error handling immediately
+
+    If Not existingQuery Is Nothing Then
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: La requête de préchauffage '" & WARMUP_QUERY_NAME & "' existe déjà. Tentative de suppression...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+        On Error Resume Next ' Handle error specifically during deletion
+        existingQuery.Delete
+        If Err.Number <> 0 Then
+            SYS_Logger.Log "pq_warmup_warn", "WarmUpPowerQueryEngine: Échec de la suppression de la requête existante '" & WARMUP_QUERY_NAME & "'. Erreur: " & Err.Description, WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
+            Err.Clear
+            ' Decide if this is critical; for warmup, maybe we can continue if deletion fails.
+        Else
+            SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Requête existante '" & WARMUP_QUERY_NAME & "' supprimée.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+        End If
+        On Error GoTo ErrorHandler ' Restore main error handler for the sub
+    Else
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: La requête de préchauffage '" & WARMUP_QUERY_NAME & "' n'existe pas initialement.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    End If
+    Set existingQuery = Nothing
+    Set qry = Nothing ' Ensure qry is reset before attempting to Add
+
+    ' Create the query
+    SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Création de la requête de préchauffage '" & WARMUP_QUERY_NAME & "'.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    On Error Resume Next ' Temporarily handle error specifically for Add operation
+    Set qry = ThisWorkbook.Queries.Add(WARMUP_QUERY_NAME, formula)
+    
+    If Err.Number <> 0 Or qry Is Nothing Then
+        SYS_Logger.Log "pq_warmup_error", "WarmUpPowerQueryEngine: Échec de l'ajout de la requête '" & WARMUP_QUERY_NAME & "'. Erreur: " & Err.Description & " (Num: " & Err.Number & ")", ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+        Err.Clear
+        On Error GoTo ErrorHandler ' Restore main error handler
+        GoTo Cleanup ' Skip refresh if query add failed
+    Else
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Requête '" & WARMUP_QUERY_NAME & "' ajoutée avec succès.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    End If
+    On Error GoTo ErrorHandler ' Restore main error handler for the sub
+
+    ' Refresh the connection
+    Dim connectionName As String
+    connectionName = "Query - " & WARMUP_QUERY_NAME
+    SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Tentative de rafraîchissement de la connexion '" & connectionName & "'.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    
+    On Error Resume Next ' Specific error handling for Refresh operation
+    ThisWorkbook.Connections(connectionName).Refresh
+    If Err.Number <> 0 Then
+        SYS_Logger.Log "pq_warmup_error", "WarmUpPowerQueryEngine: Erreur lors du rafraîchissement de la connexion '" & connectionName & "'. Erreur: " & Err.Description & " (Num: " & Err.Number & ")", ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+        Err.Clear
+        On Error GoTo ErrorHandler ' Restore main error handler
+        GoTo Cleanup ' Error occurred during refresh
+    Else
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Connexion '" & connectionName & "' rafraîchie avec succès.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+        bQueryRefreshedSuccessfully = True
+    End If
+    On Error GoTo ErrorHandler ' Restore main error handler for the sub
+    
+Cleanup:
+    SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Entrée dans la section Cleanup.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    On Error Resume Next ' Ensure cleanup attempts to run fully, errors here are logged but don't stop cleanup
+    
+    Dim queryToDeleteByName As Object
+    Set queryToDeleteByName = ThisWorkbook.Queries(WARMUP_QUERY_NAME) ' Try to get the query by name for deletion
+    
+    If Not queryToDeleteByName Is Nothing Then
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Suppression de la requête '" & WARMUP_QUERY_NAME & "' depuis Cleanup.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+        queryToDeleteByName.Delete
+        If Err.Number <> 0 Then
+             SYS_Logger.Log "pq_warmup_warn", "WarmUpPowerQueryEngine: Échec de la suppression de la requête '" & WARMUP_QUERY_NAME & "' pendant le Cleanup. Erreur: " & Err.Description, WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
+             Err.Clear
+        Else
+            SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Requête '" & WARMUP_QUERY_NAME & "' supprimée avec succès depuis Cleanup.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+        End If
+    Else
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Requête '" & WARMUP_QUERY_NAME & "' non trouvée pour suppression dans Cleanup (peut-être échec de l'ajout ou déjà supprimée).", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    End If
+    Set queryToDeleteByName = Nothing
+    Set qry = Nothing ' Clear the qry object variable as well
+    
+    On Error GoTo 0 ' Clear any specific error handling within Cleanup
+
+    If bQueryRefreshedSuccessfully Then
+        SYS_Logger.Log "pq_warmup", "WarmUpPowerQueryEngine: Préchauffage du moteur Power Query terminé avec succès.", INFO_LEVEL, PROC_NAME, MODULE_NAME_STR
+    Else
+        SYS_Logger.Log "pq_warmup_warn", "WarmUpPowerQueryEngine: Préchauffage du moteur Power Query terminé avec des erreurs ou n'a pas pu rafraîchir complètement.", WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
+    End If
+    Exit Sub
+
+ErrorHandler:
+    SYS_Logger.Log "pq_warmup_error", "WarmUpPowerQueryEngine: Erreur VBA non gérée - Num: " & CStr(Err.Number) & ", Desc: " & Err.Description & ", Src: " & Err.Source, ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+    Resume Cleanup ' Aller au nettoyage même en cas d'erreur
+End Sub
+
+
+' --- FONCTIONS EXISTANTES ---
+
+Public Sub InitializePQData()
     On Error Resume Next
     Set wsPQData = ActiveWorkbook.Worksheets("PQ_DATA")
     On Error GoTo 0

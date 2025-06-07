@@ -110,6 +110,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
         Exit Function
     End If
 
+
     ' Coller les données avec la méthode optimisée
     Diagnostics.LogTime "Avant appel à PasteData (Optimisé)"
     If Not PasteData(loadInfo) Then
@@ -569,7 +570,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
 
     Dim destCell As Range
     Dim cellInfo As FormattedCellOutput
-    Dim colDetail As Object ' Scripting.Dictionary
+    
 
     If loadInfo.ModeTransposed Then
         Log "PasteData", "Mode TRANSPOSE", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
@@ -609,6 +610,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                 End If
             Next j
 
+            Dim originalSourceColIdx as Long
             If sourceRowIndex > 0 Then
                 For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
                     Set colDetail = columnProcessingDetails(i)
@@ -705,7 +707,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                             .Pattern = xlNone
                         End With
                     Else
-                        Dim originalValue As Variant
+                        
                         originalValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, originalSourceColIdx).Value
                         
                         cellInfo = DataFormatter.GetCellProcessingInfo(originalValue, "", sourceHeaderName, loadInfo.Category.SheetName)

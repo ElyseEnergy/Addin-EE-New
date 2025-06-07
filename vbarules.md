@@ -84,7 +84,128 @@ End Function
 
 ---
 
-## 3. Bonnes Pratiques Générales du Code VBA
+## 3. Interaction avec les Données Externes et API
+
+### Variables d'Environnement (`env.bas`)
+Le module `env.bas` centralise toutes les constantes liées à l'environnement externe. Ne jamais coder en dur une URL ou une clé API ailleurs.
+- **`RAGIC_BASE_URL`**: URL de base pour toutes les requêtes vers l'API Ragic.
+- **`RAGIC_API_KEY`**: Clé d'API unique pour l'authentification.
+- **`RAGIC_API_PARAMS`**: Paramètres standards à ajouter à la fin des URLs de lecture (`GET`), incluant la clé API.
+
+### Bonne Pratique : Lire des Données depuis une URL CSV
+Pour lire des données, le pattern standard est d'utiliser le système Power Query intégré pour bénéficier de la mise en cache, de la performance et de la cohérence.
+
+1.  **Définir une `CategoryInfo`** : Créer ou utiliser une catégorie existante qui définit l'URL de la ressource.
+2.  **Assurer l'existence de la requête** : Appeler `PQQueryManager.EnsurePQQueryExists(maCategorie)`. Cette fonction crée ou met à jour la requête Power Query en mémoire sans la rafraîchir.
+3.  **Charger les données** : Appeler `LoadQueries.LoadQuery(maCategorie.PowerQueryName, ...)`. Cette fonction exécute la requête et charge les données dans une table d'une feuille de cache (`PQ_DATA`).
+4.  **Manipuler les données locales** : Votre code doit ensuite lire les données depuis la table locale, et non directement depuis le web.
+
+### Bonne Pratique : Créer une Entrée dans Ragic (POST)
+Pour envoyer des données à Ragic (créer une entrée), il faut forger une requête `POST` avec un corps en JSON.
+
+**Exemple de la fonction de log (`SYS_Logger.bas`) :**
+```vba
+Private Sub LogToRagic(ByVal logMessage As String)
+    Dim http As Object
+    Set http = CreateObject("MSXML2.XMLHTTP.6.0") ' Ou une version fallback
+    
+    ' 1. Construire le JSON
+    Dim jsonPayload As String
+    jsonPayload = "{" & _
+        """" & RAGIC_FIELD_ID_EMAIL & """: """ & JsonEscape(userEmail) & """, " & _
+        """" & RAGIC_FIELD_ID_LOG & """: """ & JsonEscape(logMessage) & """" & _
+    "}"
+
+    ' 2. Préparer la requête POST
+    Dim ragicUrl As String
+    ragicUrl = RAGIC_LOG_URL & "?APIKey=" & env.RAGIC_API_KEY
+    http.Open "POST", ragicUrl, True ' True = Asynchrone
+
+    ' 3. Définir le header
+    http.SetRequestHeader "Content-Type", "application/json; charset=utf-8"
+    
+    ' 4. Envoyer (de manière asynchrone)
+    http.send jsonPayload
+End Sub
+```
+**Structure du JSON pour les cas avancés :**
+- **Sélection multiple** : Utiliser un tableau de chaînes.
+  `"field_id": ["valeur1", "valeur2"]`
+- **Sous-table** : Utiliser un objet dont le nom est `_subtable_FIELD_ID` et qui contient des objets pour chaque ligne, identifiés par un ID négatif unique.
+  ```json
+  {
+      "2000123": "Dunder Mifflin",
+      "_subtable_2000154": {
+          "-1": { "2000147": "Bill", "2000148": "Manager" },
+          "-2": { "2000147": "Satya", "2000148": "VP" }
+      }
+  }
+  ```
+
+---
+
+## 4. Bonnes Pratiques Générales du Code VBA
+
+### Structure d'un Module
+Chaque module doit **obligatoirement** respecter la structure suivante pour la cohérence et la fiabilité, notamment pour l'import/export via des outils externes comme Git.
+
+```vba
+Attribute VB_Name = "NomDuModule"
+Option Explicit
+
+' --- Constantes et Enums du module ---
+' --- Variables privées du module ---
+
+' --- Procédures publiques ---
+' --- Procédures privées ---
+```
+
+1.  **`Attribute VB_Name = "NomDuModule"`** : Toujours en **première ligne**. Ne jamais l'oublier, sinon l'import peut échouer ou créer un module au nom incorrect (ex: `Module1`).
+2.  **`Option Explicit`** : Toujours en **deuxième ligne**. Force la déclaration de toutes les variables.
+
+### Déclaration des Variables et Constantes
+- **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
+- **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.
+
+**Pattern correct pour les valeurs dynamiques :**
+Pour une valeur qui nécessite un calcul, utilisez une fonction publique qui retourne la valeur.
+
+**Exemple :**
+```vba
+' Interdit dans une déclaration Const :
+Private Const FORBIDDEN_COLOR As Long = RGB(128, 128, 128)
+
+' --- PATTERNS CORRECTS ---
+
+' 1. Utiliser la valeur littérale si elle est connue et fixe :
+Public Const CORRECT_COLOR As Long = 8421504 ' La valeur de RGB(128, 128, 128)
+
+' 2. Ou, pour garder la lisibilité, utiliser une fonction :
+Public Function GetMediumGrayColor() As Long
+    GetMediumGrayColor = RGB(128, 128, 128)
+End Function
+```
+
+### Conventions de Nommage
+- **Procédures (`Sub`, `Function`)** : `PascalCase` (ex: `ProcessCategory`, `GetLastColumn`).
+- **Variables locales** : `camelCase` (ex: `nextRow`, `sanitizedName`).
+- **Variables de niveau module (privées)** : `m_camelCase` (ex: `m_currentProfile`).
+- **Constantes** : `ALL_CAPS_WITH_UNDERSCORES` (ex: `PROC_NAME`, `LOG_SHEET_NAME`).
+- **Enums et Types** : `PascalCase` (ex: `LogLevel`, `CategoryInfo`).
+
+### Utilisation des `Enum`
+Pour des ensembles de constantes liées, utilisez une `Enum` pour améliorer la lisibilité et bénéficier de l'IntelliSense.
+
+**Exemple (`SYS_Logger.bas`) :**
+```vba
+Public Enum LogLevel
+    DEBUG_LEVEL = 0
+    INFO_LEVEL = 1
+    WARNING_LEVEL = 2
+    ERROR_LEVEL = 3
+End Enum
+```
+Utilisez `LogLevel.INFO_LEVEL` plutôt que le chiffre `1`.
 
 ### Structure d'un Module
 Chaque module doit **obligatoirement** respecter la structure suivante pour la cohérence et la fiabilité, notamment pour l'import/export via des outils externes comme Git.
@@ -149,7 +270,7 @@ Utilisez `LogLevel.INFO_LEVEL` plutôt que le chiffre `1`.
 
 ---
 
-## 4. Gestion des Erreurs et des Logs
+## 5. Gestion des Erreurs et des Logs
 
 ### Pattern de Gestion d'Erreur
 Chaque fonction ou sub susceptible de planter doit implémenter le pattern suivant pour une gestion centralisée et robuste.
@@ -185,7 +306,7 @@ Log "ribbon_load", "Le ruban a été chargé.", INFO_LEVEL, PROC_NAME, MODULE_NA
 
 ---
 
-## 5. Callbacks du Ruban (customUI)
+## 6. Callbacks du Ruban (customUI)
 
 La logique des callbacks est séparée en deux catégories :
 
@@ -228,35 +349,70 @@ La logique des callbacks est séparée en deux catégories :
 
 ---
 
-## 6. Normalisation des Requêtes PowerQuery
+## 7. Normalisation des Requêtes PowerQuery
 
 La création et la gestion des requêtes PQ sont entièrement automatisées et normalisées via `PQQueryManager.bas` pour garantir la cohérence.
 
-- **Nommage** : Le nom de la requête et de la table associée est généré via `Utilities.SanitizeTableName`.
+### Convention de Nommage
+La cohérence des noms est essentielle pour que les automatisations fonctionnent correctement.
+
+- **Requêtes Power Query** :
+  - **Préfixe** : Toutes les requêtes gérées par l'addin commencent par `PQ_`.
+  - **Nom de base** : Le nom est dérivé du `PowerQueryName` de la `CategoryInfo`, qui est lui-même basé sur le `CategoryName`.
+  - **Nettoyage** : Le nom de base est "nettoyé" par la fonction `Utilities.SanitizeTableName` qui :
+    - Remplace les espaces et caractères spéciaux (`-`, `.`, `/`, etc.) par des underscores `_`.
+    - Supprime tous les accents (diacritiques).
+    - Ne conserve que les caractères alphanumériques et les underscores.
+  - **Exemple** : Une catégorie nommée "Coûts (détails)" aura une requête nommée `PQ_Couts_details`.
+
+- **Tables Excel** :
+  - **Préfixe** : Chaque table créée à partir d'une requête Power Query est préfixée par `Table_`.
+  - **Nom** : Le reste du nom est le nom complet de la requête qui la génère.
+  - **Exemple** : La requête `PQ_Couts_details` chargera ses données dans une table nommée `Table_PQ_Couts_details`.
+
+### Processus de gestion
 - **Création/Mise à jour** : `PQQueryManager.EnsurePQQueryExists` vérifie si une requête existe, si sa formule (URL) a changé, et la crée ou la met à jour au besoin.
 - **Template de Requête** : `GeneratePQQueryTemplate` crée le code M standard, qui inclut le typage de la colonne ID et sa mise en première position.
 - **Chargement** : `LoadQueries.LoadQuery` est la seule fonction à utiliser pour charger une requête dans une feuille.
 
 ---
 
-## 7. Le Dictionnaire de Données (Ragic Dictionary)
+## 8. Le Dictionnaire de Données (Ragic Dictionary)
 
 Le "Ragic Dictionary" est un mécanisme clé de l'addin. Il s'agit d'une table de correspondance qui fournit des **méta-informations sur les champs de données Ragic**, comme leur type de données réel ("DATE", "NUMBER", etc.) ou si un champ doit être masqué dans l'interface.
 
 ### Rôle et Utilité
 Il permet de décorréler la logique de l'addin des données brutes. Par exemple, au lieu de coder en dur qu'un champ nommé "Date de début" doit être formaté comme une date, on consulte le dictionnaire pour connaître son type.
 
+### Structure Détaillée du Dictionnaire
+
+Le dictionnaire en mémoire (`RagicFieldDict`) est un objet `Scripting.Dictionary` dont la structure clé/valeur est très spécifique.
+
+- **La Clé** :
+  - C'est une chaîne de caractères composite qui identifie un champ de manière unique dans tout l'addin.
+  - **Format** : `NomDeFeuilleNormalisé & "|" & NomDuChamp`
+  - **`NomDeFeuilleNormalisé`** : Le nom de la feuille de la catégorie (ex: "Synthèse Coûts") est "normalisé" par la fonction `NormalizeSheetName` en ne gardant que les lettres et les chiffres (`SyntheseCouts`).
+  - **`NomDuChamp`** : Le nom de la colonne tel qu'il apparaît dans les données (ex: "Date de validation").
+  - **Exemple de clé** : `SyntheseCouts|Date de validation`
+
+- **La Valeur** :
+  - C'est une chaîne de caractères simple lue depuis la colonne **"Field Type"** du fichier CSV source du dictionnaire.
+  - Cette chaîne définit le **type de donnée sémantique** du champ et peut contenir des **indicateurs (flags)**.
+  - **Exemples de valeurs** :
+    - `"DATE"` : Indique que le champ doit être traité comme une date.
+    - `"NUMBER"` : Doit être traité comme un nombre.
+    - `"TEXT"`
+    - `"PERCENT"`
+    - `"Hidden"` : Un indicateur spécial qui signale que ce champ doit être masqué ou ignoré dans certaines interfaces ou traitements. La fonction `IsFieldHidden` vérifie la présence de cette sous-chaîne.
+
+Ce système permet une grande flexibilité : pour changer la manière dont un champ est formaté ou pour le masquer, il suffit de modifier la valeur dans le CSV central sans toucher au code de l'addin.
+
 ### Source et Mise en Cache
 - **Source** : Les données proviennent d'un fichier CSV centralisé sur Ragic (`matching-matrix/6.csv`).
-- **Chargement** : Au démarrage ou sur demande, une requête PowerQuery charge ces données dans une feuille de cache masquée (`PQ_DICT`).
-- **Mise en cache** : Le dictionnaire en mémoire (`RagicFieldDict`) est peuplé à partir de cette feuille. Le rechargement depuis le réseau n'a lieu qu'une fois par jour ou si le cache est inexistant, mais peut être forcé via le bouton "Update Data Dictionary" du ruban.
+- **Chargement** : Au démarrage ou sur demande, une requête PowerQuery (`PQ_RagicDictionary`) charge ces données dans une table (`Table_PQ_RagicDictionary`) sur une feuille de cache masquée (`PQ_DICT`).
+- **Mise en cache** : Le dictionnaire en mémoire (`RagicFieldDict`) est peuplé à partir de cette table locale. Le rechargement depuis le réseau n'a lieu qu'une fois par jour ou si le cache est inexistant, mais peut être forcé via le bouton "Update Data Dictionary" du ruban.
 
-### Structure et Utilisation
-Le dictionnaire est un `Scripting.Dictionary` où :
-- La **clé** est une chaîne composite : `NomFeuilleNormalisé & "|" & NomDuChamp`.
-- La **valeur** contient les méta-informations.
-
-**Exemple d'utilisation (`DataFormatter.bas`) :**
+### Utilisation (Exemple)
 Le code interroge le dictionnaire pour savoir comment traiter une cellule en fonction du nom de sa colonne (le champ) et de sa feuille (la catégorie).
 
 ```vba
@@ -292,7 +448,7 @@ Ce mécanisme rend l'addin beaucoup plus flexible, car une modification dans le 
 
 ---
 
-## 8. Guide de Contribution
+## 9. Guide de Contribution
 
 ### Comment ajouter une nouvelle fonctionnalité (ex: un nouveau bouton) ?
 

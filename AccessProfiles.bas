@@ -17,11 +17,13 @@ End Enum
 Private mCurrentProfile As DemoProfile
 Dim Profiles() As AccessProfile
 Dim ProfilesCount As Long
+Private mProfilesInitialized As Boolean ' Added module-level flag
 
 ' Initialisation des profils de démonstration
 Public Sub InitializeDemoProfiles()
     On Error GoTo ErrorHandler
     
+    mProfilesInitialized = False ' Initialize to false at the start
     ProfilesCount = 0
     Erase Profiles
     ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dès le début
@@ -52,9 +54,11 @@ Public Sub InitializeDemoProfiles()
                
     ' Par défaut, on commence avec le profil Technical Director
     mCurrentProfile = Technical_Director
+    mProfilesInitialized = True ' Set to true on successful completion
     Exit Sub
     
 ErrorHandler:
+    mProfilesInitialized = False ' Ensure it's false if an error occurs
     HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de démonstration"
 End Sub
 
@@ -102,17 +106,45 @@ End Sub
 ' Récupère le profil par ID (suppose que l'ID correspond à l'index)
 Private Function GetProfileById(id As DemoProfile) As AccessProfile
     On Error GoTo ErrorHandler
+    Const PROC_NAME As String = "GetProfileById"
+    Const MODULE_NAME_STR As String = "AccessProfiles"
     
-    If id < Engineer_Basic Or id > Full_Admin Then
-        HandleError "AccessProfiles", "GetProfileById", "ID de profil invalide: " & id
+    If Not mProfilesInitialized Then
+        SYS_Logger.Log "profile_error", "Tentative d'accès au profil ID " & id & " mais les profils ne sont pas initialisés (mProfilesInitialized=False).", WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
+        Exit Function ' Or handle error appropriately, e.g., return an empty/default profile
+    End If
+    
+    ' Combined and clarified boundary checks
+    If id < LBound(Profiles) Or id > UBound(Profiles) Then ' Added UBound check
+        SYS_Logger.Log "profile_error", "ID de profil " & id & " hors limites (LBound: " & LBound(Profiles) & ", UBound: " & UBound(Profiles) & ").", ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+        ' Consider returning a default/empty profile or raising a more specific error
         Exit Function
     End If
     
+    ' Check if Profiles array has been initialized (basic check)
+    ' This check is now largely covered by mProfilesInitialized and the LBound/UBound check above.
+    ' The IsEmpty/Name="" check below is still valuable for individual profile validity.
+    ' If ProfilesCount = 0 And id <> ProfilesCount Then ' ProfilesCount is last assigned ID, so if 0, only Profiles(0) might be valid if ever assigned directly.
+                                                ' More robustly, check if Profiles(id).Name is empty if not all profiles are guaranteed to be filled.
+    If IsEmpty(Profiles(id).Name) Or Profiles(id).Name = "" Then
+        SYS_Logger.Log "profile_error", "Profil ID " & id & " est dans les limites mais non rempli (nom vide).", WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
+        Exit Function
+    End If
+    ' End If
+
     GetProfileById = Profiles(id)
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la récupération du profil"
+    ' Log the specific error from Err object BEFORE calling HandleError, which might reset it.
+    SYS_Logger.Log "profile_error", "Erreur VBA dans " & MODULE_NAME_STR & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description & ", Source: " & Err.Source, ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+    HandleError MODULE_NAME_STR, PROC_NAME, "Erreur lors de la récupération du profil ID: " & id ' HandleError might be a more generic handler
+    ' To prevent returning an uninitialized AccessProfile object, which can cause further errors:
+    ' One option is to clear the return object or set it to a known safe state if possible,
+    ' but since it's a UDT, direct clearing is tricky. The Exit Function above is safer.
+    ' If absolutely necessary, and if AccessProfile had an 'IsValid' flag or similar:
+    ' Dim emptyProfile as AccessProfile
+    ' GetProfileById = emptyProfile ' Or set a flag within it
 End Function
 
 ' Vérifie si le profil actuel a accès à une fonctionnalité
