@@ -23,15 +23,19 @@ End Enum
 Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     On Error GoTo ErrorHandler
     Diagnostics.LogTime "Début de ProcessDataLoad pour la catégorie: " & loadInfo.Category.DisplayName
+    Log "dataloader", "Début ProcessDataLoad | Catégorie: " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     ' Initialiser la feuille PQ_DATA si besoin
     If wsPQData Is Nothing Then Utilities.InitializePQData
     Diagnostics.LogTime "Avant EnsurePQQueryExists"
+    Log "dataloader", "Avant EnsurePQQueryExists | Catégorie: " & loadInfo.Category.DisplayName, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
         MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
+        Log "dataloader", "ERREUR: EnsurePQQueryExists a échoué pour " & loadInfo.Category.DisplayName, ERROR_LEVEL, "ProcessDataLoad", "DataLoaderManager"
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
     Diagnostics.LogTime "Après EnsurePQQueryExists"
+    Log "dataloader", "Après EnsurePQQueryExists | Catégorie: " & loadInfo.Category.DisplayName, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     ' --- RETOUR VISUEL PENDANT LE CHARGEMENT ---
     Application.Cursor = xlWait
     Application.StatusBar = "Téléchargement des données pour '" & loadInfo.Category.DisplayName & "' en cours..."
@@ -39,8 +43,10 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     Dim lastCol As Long
     lastCol = Utilities.GetLastColumn(wsPQData)
     Diagnostics.LogTime "Avant LoadQuery (téléchargement des données)"
+    Log "dataloader", "Avant LoadQuery | Catégorie: " & loadInfo.Category.DisplayName & " | PowerQuery: " & loadInfo.Category.PowerQueryName, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
     Diagnostics.LogTime "Après LoadQuery (téléchargement des données)"
+    Log "dataloader", "Après LoadQuery | Catégorie: " & loadInfo.Category.DisplayName, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     ' Restaurer le curseur et la barre de statut
     Application.Cursor = xlDefault
     Application.StatusBar = False
@@ -56,7 +62,7 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     ' --- SÉLECTION DU MODE (NORMAL/TRANSPOSE) SANS PREVIEW ---
     Diagnostics.LogTime "Avant sélection du mode d'affichage (MsgBox)"
     Dim modeChoice As VbMsgBoxResult
-    modeChoice = MsgBox("Coller les fiches en mode NORMAL (lignes) ?\nCliquez sur Non pour TRANSPOSE (colonnes).", vbYesNoCancel + vbQuestion, "Mode de collage")
+    modeChoice = MsgBox("Coller les fiches en mode NORMAL (lignes) ?" & VbCrLf & "Cliquez sur Non pour TRANSPOSE (colonnes).", vbYesNoCancel + vbQuestion, "Mode de collage")
     If modeChoice = vbCancel Then
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
@@ -368,8 +374,7 @@ Private Function GetDestination(loadInfo As DataLoadInfo) As Range
         nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
         nbCols = lo.ListColumns.Count
     End If
-      ' Informer l'utilisateur
-    MsgBox "La plage nécessaire sera de " & nbRows & " lignes x " & nbCols & " colonnes.", vbInformation      ' Demander la cellule de destination et vérifier la place
+    
     Do
         Dim selectedRange As Range
         
@@ -676,13 +681,14 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
     
     Const PROC_NAME As String = "ProcessCategory"
     Const MODULE_NAME As String = "DataLoaderManager"
-    
+    Log "dataloader", "Début ProcessCategory | Catégorie demandée: " & CategoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     If CategoriesCount = 0 Then InitCategories
-    
     Dim loadInfo As DataLoadInfo
     loadInfo.Category = GetCategoryByName(CategoryName)
+    Log "dataloader", "Catégorie trouvée: " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     If loadInfo.Category.DisplayName = "" Then
         MsgBox "Catégorie '" & CategoryName & "' non trouvée", vbExclamation
+        Log "dataloader", "ERREUR: Catégorie non trouvée: " & CategoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
         ProcessCategory = DataLoadResult.Error
         Exit Function
     End If

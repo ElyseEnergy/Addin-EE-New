@@ -1,4 +1,5 @@
 Attribute VB_Name = "RagicDictionary"
+
 Option Explicit
 
 Public RagicFieldDict As Object
@@ -50,6 +51,11 @@ End Sub
 
 ' Charge le dictionnaire Ragic, depuis le cache si possible
 Public Sub LoadRagicDictionary()
+    ' S'assurer que la liste des catégories est initialisée
+    If CategoryManager.CategoriesCount = 0 Then
+        CategoryManager.InitCategories
+    End If
+    
     Dim lastRefresh As Date
     lastRefresh = GetLastRefreshDate()
 
@@ -72,10 +78,13 @@ Public Sub LoadRagicDictionary()
     On Error Resume Next
     tableExists = (wsPQDict.ListObjects(tableName).Name <> "")
     On Error GoTo 0
-
+    Log "load_dict", "Table " & tableName & " existe: " & tableExists, DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    
     ' Décider s'il faut rafraîchir depuis le réseau
     Dim needsRefresh As Boolean
     needsRefresh = Not tableExists Or (VBA.Date - lastRefresh >= 1)
+    Log "load_dict", "Dernière MàJ: " & lastRefresh & ", Âge: " & (VBA.Date - lastRefresh) & " jours", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    Log "load_dict", "Rafraîchissement nécessaire: " & needsRefresh & " (table existe: " & tableExists & ")", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
     If needsRefresh Then
         Application.StatusBar = "Chargement du dictionnaire Ragic depuis le réseau..."
@@ -90,6 +99,8 @@ Public Sub LoadRagicDictionary()
             .PowerQueryName = pqName
             .SheetName = BASE_NAME
         End With
+
+        Log "load_dict", "URL de requête dictionnaire : " & dictCategory.URL, INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
         ' Créer ou mettre à jour la requête
         If QueryExists(pqName) Then
@@ -123,7 +134,19 @@ Public Sub LoadRagicDictionary()
         On Error GoTo 0
 
         ' Charger les données dans la feuille PQ_DICT
-        LoadQueries.LoadQuery pqName, wsPQDict, wsPQDict.Range("A1")
+        ' Si la table existe déjà, forcer un refresh de la requête associée
+        If QueryExists(pqName) Then
+            On Error Resume Next
+            ThisWorkbook.Queries(pqName).Refresh
+            If Err.Number <> 0 Then
+                Log "ragic_dict_err", "Erreur Refresh requête existante " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+                Application.StatusBar = False
+                Exit Sub
+            End If
+            On Error GoTo 0
+        Else
+            LoadQueries.LoadQuery pqName, wsPQDict, wsPQDict.Range("A1")
+        End If
 
         ' Mettre à jour la date du rafraîchissement dans les propriétés du classeur
         SetLastRefreshDate VBA.Date
@@ -158,6 +181,19 @@ Public Sub LoadRagicDictionary()
     End If
 
     LoadDictionaryData tableName
+
+    ' Log des 10 premières clés du dictionnaire pour debug
+    Dim debugKeys As String, debugCount As Long
+    debugKeys = ""
+    For debugCount = 0 To Application.Min(9, RagicFieldDict.Count - 1)
+        debugKeys = debugKeys & RagicFieldDict.Keys()(debugCount) & "; "
+    Next debugCount
+    Log "load_dict", "Premières clés du dictionnaire : " & debugKeys, DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+
+    ' Forcer la visibilité de la feuille PQ_DICT
+    If Not wsPQDict Is Nothing Then
+        wsPQDict.Visible = xlSheetVisible
+    End If
 
     ' Réinitialiser la barre de statut
     Application.StatusBar = False
@@ -227,15 +263,56 @@ End Sub
 
 ' Génère la requête PowerQuery spécifique pour le dictionnaire
 Private Function GenerateDictionaryQuery(ByVal URL As String) As String
-    Dim q As String
-    q = Chr(34) ' guillemet double
-    GenerateDictionaryQuery = _
-        "let" & vbCrLf & _
-        "    Source = Csv.Document(Web.Contents(" & q & URL & q & "),[Delimiter=" & q & "," & q & ", Encoding=65001])," & vbCrLf & _
-        "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & vbCrLf & _
-        "    FilteredRows = Table.SelectRows(PromotedHeaders, each [SheetName] <> null and [Field Name] <> null)" & vbCrLf & _
-        "in" & vbCrLf & _
-        "    FilteredRows"
+
+        Dim q As String: q = Chr(34) ' guillemet double
+    Dim lines As Collection: Set lines = New Collection
+
+    ' Récupérer les URLs de toutes les catégories actives
+    Dim nbUrls As Long
+    Dim urlsList As String
+    nbUrls = CategoryManager.CategoriesCount
+
+    ' Construire la liste des paths comme une expression M
+    urlsList = "{"
+    Dim cat As CategoryInfo
+    Dim i As Long
+    For i = 1 To nbUrls
+        cat = CategoryManager.categories(i)
+        ' On prend le path relatif (ex: costing/2.csv)
+        Dim pathOnly As String
+        pathOnly = Mid(cat.URL, InStr(cat.URL, ".energy/") + 8)
+        If InStr(pathOnly, "?") > 0 Then
+            pathOnly = Left(pathOnly, InStr(pathOnly, "?") - 1)
+        End If
+        ' Supprimer l'extension .csv pour le matching
+        If Right(pathOnly, 4) = ".csv" Then
+            pathOnly = Left(pathOnly, Len(pathOnly) - 4)
+        End If
+        urlsList = urlsList & q & pathOnly & q
+        If i < nbUrls Then urlsList = urlsList & ", "
+    Next i
+    urlsList = urlsList & "}"
+    Log "load_dict", "ValidPaths utilisés pour filtrage PowerQuery (Contains, sans .csv): " & urlsList, DEBUG_LEVEL, "GenerateDictionaryQuery", "RagicDictionary"
+    
+    ' Construction ligne par ligne
+    Dim dq As String
+    ' Correction: déclaration et affectation séparées pour compatibilité VBA
+     dq = Chr(34)
+    lines.Add "let"
+    lines.Add "    Source = Csv.Document(Web.Contents(" & dq & URL & dq & "),[Delimiter=" & dq & "," & dq & ", Encoding=65001]),"
+    lines.Add "    PromotedHeaders = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),"
+    lines.Add "    ValidPaths = " & urlsList & ","
+    lines.Add "    FilteredByURL = Table.SelectRows(PromotedHeaders, each List.AnyTrue(List.Transform(ValidPaths, (p) => Text.Contains([URL], p)))), "
+    lines.Add "    RemovedCols = Table.RemoveColumns(FilteredByURL, {" & dq & "URL" & dq & ", " & dq & "API URL" & dq & "}),"
+    lines.Add "    FilteredRows = Table.SelectRows(RemovedCols, each [SheetName] <> null and [Field Name] <> null)"
+    lines.Add "in"
+    lines.Add "    FilteredRows"
+    Dim result As String: result = ""
+    Dim l As Variant
+    For Each l In lines
+        result = result & l & vbCrLf
+    Next l
+    GenerateDictionaryQuery = result
 End Function
 
 ' Vérifie si une requête PowerQuery existe
@@ -251,14 +328,23 @@ Private Function GetOrCreatePQDictSheet() As Worksheet
     On Error Resume Next
     Set GetOrCreatePQDictSheet = ThisWorkbook.Worksheets("PQ_DICT")
     On Error GoTo 0
-
+    
     If GetOrCreatePQDictSheet Is Nothing Then
         ' Créer la feuille si elle n'existe pas
+        Log "load_dict", "Création de la feuille PQ_DICT...", INFO_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
         Set GetOrCreatePQDictSheet = ThisWorkbook.Worksheets.Add
         GetOrCreatePQDictSheet.Name = "PQ_DICT"
-        ' Masquer la feuille
-        GetOrCreatePQDictSheet.visible = xlSheetVeryHidden
     End If
+    
+    ' Force la visibilité de la feuille dans tous les cas
+    If GetOrCreatePQDictSheet.Visible <> xlSheetVisible Then
+        Log "load_dict", "Rendre la feuille PQ_DICT visible...", INFO_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
+        GetOrCreatePQDictSheet.Visible = xlSheetVisible
+    End If
+    
+    Exit Function
+ErrorHandler:
+    Log "load_dict", "Erreur lors de la création/récupération de PQ_DICT : " & Err.Description, ERROR_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
 End Function
 
 Private Sub LoadDictionaryData(ByVal tableName As String)
@@ -292,14 +378,22 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     memoIdx = lo.ListColumns("Memo").Index
     On Error GoTo 0
     
+    ' Suppression des colonnes URL et API URL : on ne les utilise plus du tout dans le code.
+    ' Si elles étaient utilisées ailleurs, il faudrait aussi les retirer.
+    
     If sheetIdx = 0 Or fieldIdx = 0 Or memoIdx = 0 Then
         Log "load_dict", "Colonnes non trouvées dans la table du dictionnaire. Le chargement va échouer.", WARNING_LEVEL, "LoadDictionaryData", "RagicDictionary"
         Exit Sub
     End If
 
+    If lo.DataBodyRange Is Nothing Then
+        Log "load_dict", "La table '" & tableName & "' ne contient aucune donnée (DataBodyRange is Nothing).", WARNING_LEVEL, "LoadDictionaryData", "RagicDictionary"
+        Exit Sub
+    End If
+    
     Dim i As Long
     Dim nbLignes As Long
-    nbLignes = lo.DataBodyRange.Rows.Count
+    nbLignes = lo.DataBodyRange.Rows.count
     Log "load_dict", "Nombre de lignes dans le dictionnaire : " & nbLignes, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 
     Dim key As Variant
@@ -311,7 +405,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
         End If
     Next i
 
-    Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.Count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
+    Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 End Sub
 
 Private Function ListAllTableNames(ws As Worksheet) As String
@@ -331,7 +425,3 @@ Public Sub TestIsFieldHidden_BudgetGroupes()
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Montant Total' => " & IsFieldHidden("? Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Année' => " & IsFieldHidden("? Budget Groupes", "Année"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
-
-
-
-

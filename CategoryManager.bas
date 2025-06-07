@@ -23,7 +23,6 @@ Public Sub InitCategories()
     
     CategoriesCount = 0
     ReDim Categories(1 To 1)
-    LoadRagicDictionary
     
     ' # Engineering
     ' ## Technologies
@@ -70,6 +69,9 @@ Public Sub InitCategories()
     AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
     AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"    'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
     'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
+    
+    ' Maintenant que toutes les catégories sont initialisées, on peut charger le dictionnaire
+    LoadRagicDictionary
     
     Exit Sub
     
