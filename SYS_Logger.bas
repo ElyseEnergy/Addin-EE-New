@@ -18,6 +18,13 @@ Public Enum LogLevel
     CRITICAL_LEVEL = 4
 End Enum
 
+' --- NOUVEAU : Paramètres pour le logging vers Ragic ---
+Private Const ENABLE_RAGIC_LOGGING As Boolean = True
+Private Const RAGIC_LOG_URL As String = "https://ragic.elyse.energy/default/excel-addin/1"
+Private Const RAGIC_FIELD_ID_EMAIL As String = "1005232"
+Private Const RAGIC_FIELD_ID_LOG As String = "1005233"
+' ---------------------------------------------------------
+
 ' Variables du module
 Private mCurrentLogLevel As LogLevel
 
@@ -126,6 +133,56 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     
     ' Écrire dans le fichier de log
     WriteToLogFile logMessage
+    
+    ' === NOUVEAU: Logging vers Ragic pour les avertissements et erreurs ===
+    If ENABLE_RAGIC_LOGGING And level >= WARNING_LEVEL Then
+        On Error Resume Next ' "Fire and forget" pour ne pas bloquer l'utilisateur
+        LogToRagic logMessage
+        On Error GoTo 0
+    End If
+End Sub
+
+' ============================================================================
+' NOUVEAU : FONCTIONS POUR LE LOGGING VERS RAGIC
+' ============================================================================
+
+' Échappe une chaîne de caractères pour être valide dans un JSON.
+Private Function JsonEscape(ByVal text As String) As String
+    text = Replace(text, "\", "\\")
+    text = Replace(text, """", "\""")
+    JsonEscape = text
+End Function
+
+' Envoie le message de log formaté à la base de données Ragic.
+Private Sub LogToRagic(ByVal logMessage As String)
+    Dim http As Object
+    Dim ragicUrl As String
+    Dim jsonPayload As String
+    Dim userEmail As String
+    
+    ' Créer l'objet HTTP. Tente la version 6.0, puis une version de base.
+    On Error Resume Next
+    Set http = CreateObject("MSXML2.XMLHTTP.6.0")
+    If http Is Nothing Then Set http = CreateObject("MSXML2.XMLHTTP")
+    If http Is Nothing Then Exit Sub ' Ne pas continuer si l'objet HTTP ne peut être créé
+    On Error GoTo 0
+
+    ' Récupérer l'email de l'utilisateur depuis le module Utilities
+    userEmail = Utilities.GetUserEmail()
+
+    ' Construire le payload JSON
+    jsonPayload = "{" & _
+        """" & RAGIC_FIELD_ID_EMAIL & """: """ & JsonEscape(userEmail) & """, " & _
+        """" & RAGIC_FIELD_ID_LOG & """: """ & JsonEscape(logMessage) & """" & _
+    "}"
+
+    ' Construire l'URL avec la clé API du module env
+    ragicUrl = RAGIC_LOG_URL & "?APIKey=" & env.RAGIC_API_KEY
+    
+    ' Envoyer la requête POST de manière asynchrone pour ne pas attendre la réponse
+    http.Open "POST", ragicUrl, True ' True = Asynchrone
+    http.SetRequestHeader "Content-Type", "application/json; charset=utf-8"
+    http.send jsonPayload
 End Sub
 
 ' ============================================================================
