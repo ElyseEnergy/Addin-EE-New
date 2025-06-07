@@ -82,8 +82,8 @@ Public Sub LoadRagicDictionary()
     
     ' Décider s'il faut rafraîchir depuis le réseau
     Dim needsRefresh As Boolean
-    needsRefresh = Not tableExists Or (VBA.Date - lastRefresh >= 1)
-    Log "load_dict", "Dernière MàJ: " & lastRefresh & ", Âge: " & (VBA.Date - lastRefresh) & " jours", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    needsRefresh = Not tableExists Or ((Now - lastRefresh) * 24 >= 24)
+    Log "load_dict", "Dernière MàJ: " & lastRefresh & ", Âge (heures): " & ((Now - lastRefresh) * 24) & "h", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
     Log "load_dict", "Rafraîchissement nécessaire: " & needsRefresh & " (table existe: " & tableExists & ")", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
     If needsRefresh Then
@@ -316,7 +316,7 @@ Private Function GenerateDictionaryQuery(ByVal URL As String) As String
 End Function
 
 ' Vérifie si une requête PowerQuery existe
-Private Function QueryExists(queryName As String) As Boolean
+Public Function QueryExists(queryName As String) As Boolean
     On Error Resume Next
     Dim q As Object
     Set q = ThisWorkbook.Queries(queryName)
@@ -408,7 +408,7 @@ Private Sub LoadDictionaryData(ByVal tableName As String)
     Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 End Sub
 
-Private Function ListAllTableNames(ws As Worksheet) As String
+Public Function ListAllTableNames(ws As Worksheet) As String
     Dim tbl As ListObject, names As String
     For Each tbl In ws.ListObjects
         names = names & tbl.Name & ", "

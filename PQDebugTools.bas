@@ -25,9 +25,9 @@ Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optiona
     Dim Category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
         Category = categories(i)
-          Log "process_category", "=== Traitement de " & Category.DisplayName & " ===", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
-        Log "process_category", "URL: " & Category.URL, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
-        Log "process_category", "Nom de la requête: " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+            Log "process_category", "=== Traitement de " & Category.DisplayName & " ===", DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+            Log "process_category", "URL: " & Category.URL, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
+            Log "process_category", "Nom de la requête: " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessInjectAllPowerQueries", "PQDebugTools"
         
         ' Créer/Mettre à jour la requête PowerQuery dans l'éditeur
         If Not PQQueryManager.EnsurePQQueryExists(Category) Then
@@ -65,9 +65,26 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     Dim Category As CategoryInfo
     For i = 1 To CategoryManager.CategoriesCount
         Category = categories(i)
-        
         Log "cleanup_pq", "Nettoyage de " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessCleanupAllPowerQueries", "PQDebugTools"
         DataLoaderManager.CleanupPowerQuery Category.PowerQueryName
+        ' Nettoyage avancé : supprimer la connexion et les QueryTables orphelins
+        Dim conn As WorkbookConnection
+        On Error Resume Next
+        For Each conn In ThisWorkbook.Connections
+            If conn.Name = Category.PowerQueryName Then
+                conn.Delete
+                Exit For
+            End If
+        Next conn
+        On Error GoTo 0
+        Dim ws As Worksheet, qt As QueryTable
+        For Each ws In ThisWorkbook.Worksheets
+            For Each qt In ws.QueryTables
+                If qt.CommandText Like "*" & Category.PowerQueryName & "*" Then
+                    qt.Delete
+                End If
+            Next qt
+        Next ws
     Next i
     
     MsgBox "Nettoyage terminé", vbInformation

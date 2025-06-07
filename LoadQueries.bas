@@ -19,9 +19,10 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
     
     Dim lo As ListObject
     Dim sanitizedName As String
-    
-    ' Nettoyer le nom de la requête pour le nom de tableau
     sanitizedName = "Table_" & Utilities.SanitizeTableName(queryName)
+    
+    ' Log state before
+    Log "loadquery", "Avant création: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
     
     ' Vérifier si la table existe déjà
     For Each lo In ws.ListObjects
@@ -53,9 +54,13 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
     If Not lo Is Nothing Then
         lo.Name = sanitizedName
     End If
+    ' Log state after
+    Log "loadquery", "Après création: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
     Exit Sub
     
 ErrorHandler:
+    Log "loadquery", "ERREUR: " & Err.Description, ERROR_LEVEL, "LoadQuery", "LoadQueries"
+    Log "loadquery", "Diagnostics: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), ERROR_LEVEL, "LoadQuery", "LoadQueries"
     HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requête: " & queryName
 End Sub
 
@@ -173,6 +178,13 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
     
 ErrorHandler:
     HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sélection des valeurs"
+End Function
+
+' Helper function for table existence
+Private Function TableExists(ws As Worksheet, tableName As String) As Boolean
+    On Error Resume Next
+    TableExists = Not ws.ListObjects(tableName) Is Nothing
+    On Error GoTo 0
 End Function
 
 

@@ -56,7 +56,7 @@ ErrorHandler:
 End Function
 
 ' Vérifie si une requête PowerQuery existe
-Private Function QueryExists(queryName As String) As Boolean
+Public Function QueryExists(queryName As String) As Boolean
     On Error Resume Next
     Dim query As Object
     Set query = ThisWorkbook.Queries(queryName)
@@ -65,7 +65,7 @@ Private Function QueryExists(queryName As String) As Boolean
 End Function
 
 ' Ajoute une requête PowerQuery
-Private Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
+Public Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
     On Error Resume Next
     ThisWorkbook.Queries.Add queryName, query
     Dim errNum As Long

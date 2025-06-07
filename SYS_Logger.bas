@@ -25,12 +25,20 @@ Private mCurrentLogLevel As LogLevel
 ' INITIALISATION
 ' ============================================================================
 
+' Nettoyer le log au lancement, puis append pour chaque message
 Public Sub InitializeLogger()
     ' Initialisation du niveau de log par défaut
     mCurrentLogLevel = INFO_LEVEL
     
     ' S'assurer que le dossier de logs existe
     EnsureLogFolderExists
+    
+    ' Nettoyer le fichier de log au lancement
+    Dim fso As Object, logFilePath As String, logFile As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    logFilePath = LOG_FOLDER_PATH & "\" & LOG_FILE_NAME
+    Set logFile = fso.OpenTextFile(logFilePath, 2, True, -1) ' 2 = ForWriting, efface tout
+    logFile.Close
     
     ' Log d'initialisation
     Log "sys_init", "Système de logging initialisé", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
@@ -50,7 +58,7 @@ Private Sub EnsureLogFolderExists()
     End If
 End Sub
 
-' Écrit dans le fichier de log
+' Écrit dans le fichier de log (append)
 Private Sub WriteToLogFile(logMessage As String)
     Dim fso As Object
     Dim logFile As Object
@@ -65,7 +73,7 @@ Private Sub WriteToLogFile(logMessage As String)
     ' Ouvrir le fichier en mode append (8 = ForAppending, -1 = TristateMixed pour Unicode)
     Set logFile = fso.OpenTextFile(logFilePath, 8, True, -1)
     
-    ' Écrire le message
+    ' Écrire le message (ajoute à la fin du fichier)
     logFile.WriteLine logMessage
     
     ' Fermer le fichier

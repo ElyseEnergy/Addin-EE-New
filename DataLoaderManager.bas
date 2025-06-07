@@ -24,8 +24,39 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     On Error GoTo ErrorHandler
     Diagnostics.LogTime "Début de ProcessDataLoad pour la catégorie: " & loadInfo.Category.DisplayName
     Log "dataloader", "Début ProcessDataLoad | Catégorie: " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
-    ' Initialiser la feuille PQ_DATA si besoin
-    If wsPQData Is Nothing Then Utilities.InitializePQData
+    ' Initialiser la feuille PQ_DATA de façon robuste
+    Set wsPQData = GetOrCreatePQDataSheet()
+    If wsPQData Is Nothing Then
+        MsgBox "Erreur lors de l'initialisation de la feuille PQ_DATA", vbExclamation
+        ProcessDataLoad = DataLoadResult.Error
+        Exit Function
+    End If
+    ' S'assurer que la requête PowerQuery existe (réinjection si besoin)
+    If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
+        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
+        Log "dataloader", "ERREUR: EnsurePQQueryExists a échoué pour " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, ERROR_LEVEL, "ProcessDataLoad", "DataLoaderManager"
+        ProcessDataLoad = DataLoadResult.Error
+        Exit Function
+    End If
+    ' S'assurer que la table PowerQuery existe dans la feuille (chargement si besoin)
+    Dim lo As ListObject
+    Set lo = Nothing
+    On Error Resume Next
+    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
+    On Error GoTo 0
+    If lo Is Nothing Then
+        Log "dataloader", "Table PowerQuery manquante pour " & loadInfo.Category.DisplayName & ". Tentative de (re)chargement via LoadQueries.LoadQuery.", WARNING_LEVEL, "ProcessDataLoad", "DataLoaderManager"
+        LoadQueries.LoadQuery loadInfo.Category.PowerQueryName, wsPQData, wsPQData.Cells(1, Utilities.GetLastColumn(wsPQData))
+        Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
+        If lo Is Nothing Then
+            Log "dataloader", "ECHEC: Table PowerQuery toujours absente après LoadQuery. Diagnostics:", ERROR_LEVEL, "ProcessDataLoad", "DataLoaderManager"
+            Log "dataloader", "  - QueryExists: " & PQQueryManager.QueryExists(loadInfo.Category.PowerQueryName), ERROR_LEVEL, "ProcessDataLoad", "DataLoaderManager"
+            Log "dataloader", "  - Tables PQ_DATA: " & ListAllTableNames(wsPQData), ERROR_LEVEL, "ProcessDataLoad", "DataLoaderManager"
+            MsgBox "Impossible de charger la table PowerQuery '" & loadInfo.Category.PowerQueryName & "' dans PQ_DATA. Voir logs pour diagnostic.", vbExclamation
+            ProcessDataLoad = DataLoadResult.Error
+            Exit Function
+        End If
+    End If
     Diagnostics.LogTime "Avant EnsurePQQueryExists"
     Log "dataloader", "Avant EnsurePQQueryExists | Catégorie: " & loadInfo.Category.DisplayName, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
     If Not PQQueryManager.EnsurePQQueryExists(loadInfo.Category) Then
@@ -99,6 +130,18 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     Exit Function
 ErrorHandler:
     ProcessDataLoad = DataLoadResult.Error
+End Function
+
+' Fonction utilitaire pour garantir l'existence de la feuille PQ_DATA et la variable globale
+Public Function GetOrCreatePQDataSheet() As Worksheet
+    On Error Resume Next
+    Set GetOrCreatePQDataSheet = Worksheets("PQ_DATA")
+    On Error GoTo 0
+    If GetOrCreatePQDataSheet Is Nothing Then
+        Utilities.InitializePQData
+        Set GetOrCreatePQDataSheet = Worksheets("PQ_DATA")
+    End If
+    Set wsPQData = GetOrCreatePQDataSheet
 End Function
 
 ' Nettoie la requête PowerQuery en supprimant son tableau associé et la requête elle-même.
@@ -697,11 +740,13 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
     
     Dim result As DataLoadResult
     result = ProcessDataLoad(loadInfo)
-    
     If result = DataLoadResult.Cancelled Then
         ProcessCategory = DataLoadResult.Cancelled
         Exit Function
     ElseIf result = DataLoadResult.Error Then
+        Log "dataloader", "ECHEC: ProcessDataLoad a échoué pour " & CategoryName, ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
+        Log "dataloader", "  - QueryExists: " & PQQueryManager.QueryExists(loadInfo.Category.PowerQueryName), ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
+        Log "dataloader", "  - Tables PQ_DATA: " & ListAllTableNames(wsPQData), ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
         If errorMessage <> "" Then
             MsgBox errorMessage, vbExclamation
         End If
