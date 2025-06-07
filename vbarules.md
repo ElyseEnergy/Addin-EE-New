@@ -71,22 +71,85 @@ End Function
 
 ## 2. Structure et Conventions des Modules
 
-1.  **Attribut `VB_Name`** : Chaque module exporté (`.bas`, `.cls`) doit **obligatoirement** commencer par la ligne `Attribute VB_Name = "NomDuModule"`. Cela garantit un import/export fiable.
-
-2.  **Modularité** : La logique est séparée par domaine fonctionnel.
+1.  **Modularité** : La logique est séparée par domaine fonctionnel.
     *   `CategoryManager` : Gère la définition et l'accès aux catégories.
     *   `DataLoaderManager` : Orchestre le processus de chargement des données.
     *   `PQQueryManager` : Gère la création et la maintenance des requêtes PowerQuery.
     *   `RibbonVisibility` : Gère l'état et la visibilité du ruban.
     *   `SYS_Logger` / `SYS_ErrorHandler` : Modules système pour le logging et les erreurs.
 
-3.  **Constantes** : Les constantes partagées sont définies en haut du module le plus pertinent.
+2.  **Constantes** : Les constantes partagées sont définies en haut du module le plus pertinent.
     *   Les variables d'environnement (clés API, URLs) sont dans `env.bas`.
     *   La version de l'addin est dans `Utilities.bas`.
 
 ---
 
-## 3. Gestion des Erreurs et des Logs
+## 3. Bonnes Pratiques Générales du Code VBA
+
+### Structure d'un Module
+Chaque module doit **obligatoirement** respecter la structure suivante pour la cohérence et la fiabilité, notamment pour l'import/export via des outils externes comme Git.
+
+```vba
+Attribute VB_Name = "NomDuModule"
+Option Explicit
+
+' --- Constantes et Enums du module ---
+' --- Variables privées du module ---
+
+' --- Procédures publiques ---
+' --- Procédures privées ---
+```
+
+1.  **`Attribute VB_Name = "NomDuModule"`** : Toujours en **première ligne**. Ne jamais l'oublier, sinon l'import peut échouer ou créer un module au nom incorrect (ex: `Module1`).
+2.  **`Option Explicit`** : Toujours en **deuxième ligne**. Force la déclaration de toutes les variables.
+
+### Déclaration des Variables et Constantes
+- **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
+- **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.
+
+**Pattern correct pour les valeurs dynamiques :**
+Pour une valeur qui nécessite un calcul, utilisez une fonction publique qui retourne la valeur.
+
+**Exemple :**
+```vba
+' Interdit dans une déclaration Const :
+Private Const FORBIDDEN_COLOR As Long = RGB(128, 128, 128)
+
+' --- PATTERNS CORRECTS ---
+
+' 1. Utiliser la valeur littérale si elle est connue et fixe :
+Public Const CORRECT_COLOR As Long = 8421504 ' La valeur de RGB(128, 128, 128)
+
+' 2. Ou, pour garder la lisibilité, utiliser une fonction :
+Public Function GetMediumGrayColor() As Long
+    GetMediumGrayColor = RGB(128, 128, 128)
+End Function
+```
+
+### Conventions de Nommage
+- **Procédures (`Sub`, `Function`)** : `PascalCase` (ex: `ProcessCategory`, `GetLastColumn`).
+- **Variables locales** : `camelCase` (ex: `nextRow`, `sanitizedName`).
+- **Variables de niveau module (privées)** : `m_camelCase` (ex: `m_currentProfile`).
+- **Constantes** : `ALL_CAPS_WITH_UNDERSCORES` (ex: `PROC_NAME`, `LOG_SHEET_NAME`).
+- **Enums et Types** : `PascalCase` (ex: `LogLevel`, `CategoryInfo`).
+
+### Utilisation des `Enum`
+Pour des ensembles de constantes liées, utilisez une `Enum` pour améliorer la lisibilité et bénéficier de l'IntelliSense.
+
+**Exemple (`SYS_Logger.bas`) :**
+```vba
+Public Enum LogLevel
+    DEBUG_LEVEL = 0
+    INFO_LEVEL = 1
+    WARNING_LEVEL = 2
+    ERROR_LEVEL = 3
+End Enum
+```
+Utilisez `LogLevel.INFO_LEVEL` plutôt que le chiffre `1`.
+
+---
+
+## 4. Gestion des Erreurs et des Logs
 
 ### Pattern de Gestion d'Erreur
 Chaque fonction ou sub susceptible de planter doit implémenter le pattern suivant pour une gestion centralisée et robuste.
@@ -122,7 +185,7 @@ Log "ribbon_load", "Le ruban a été chargé.", INFO_LEVEL, PROC_NAME, MODULE_NA
 
 ---
 
-## 4. Callbacks du Ruban (customUI)
+## 5. Callbacks du Ruban (customUI)
 
 La logique des callbacks est séparée en deux catégories :
 
@@ -165,7 +228,7 @@ La logique des callbacks est séparée en deux catégories :
 
 ---
 
-## 5. Normalisation des Requêtes PowerQuery
+## 6. Normalisation des Requêtes PowerQuery
 
 La création et la gestion des requêtes PQ sont entièrement automatisées et normalisées via `PQQueryManager.bas` pour garantir la cohérence.
 
@@ -176,7 +239,7 @@ La création et la gestion des requêtes PQ sont entièrement automatisées et n
 
 ---
 
-## 6. Guide de Contribution
+## 7. Guide de Contribution
 
 ### Comment ajouter une nouvelle fonctionnalité (ex: un nouveau bouton) ?
 
