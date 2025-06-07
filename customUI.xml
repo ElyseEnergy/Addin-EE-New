@@ -4,7 +4,7 @@
         <ns0:tabs>
             <ns0:tab id="tabElyse" label="Elyse Energy">
                 <ns0:group id="grpUserInfo" label="Informations">
-                    <ns0:button id="btnVersionInfo" imageMso="Info" label="À propos..." getSupertip="GetAddinVersionSupertip" enabled="false" />
+                    <ns0:button id="btnVersionInfo" imageMso="Info" label="À propos..." getSupertip="GetAddinVersionSupertip" size="large" />
                 </ns0:group>
                 <ns0:group id="grpAccess" label="Demo Access">                    
                     <ns0:menu id="menuAccess" label="Demo Profiles" imageMso="TableListPermissions" size="large">

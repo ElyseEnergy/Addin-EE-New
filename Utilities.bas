@@ -107,8 +107,9 @@ Function GetAddinVersion() As String
     GetAddinVersion = ADDIN_VERSION_MAJOR & "." & ADDIN_VERSION_MINOR & "." & ADDIN_VERSION_PATCH
 End Function
 
-Public Function GetAddinVersionSupertip(control As IRibbonControl) As String
-    GetAddinVersionSupertip = "Utilisateur : " & GetUserEmail() & Chr(10) & _
+' Correction du callback pour getSupertip : doit être une Sub avec ByRef supertip
+Public Sub GetAddinVersionSupertip(control As IRibbonControl, ByRef supertip)
+    supertip = "Utilisateur : " & GetUserEmail() & Chr(10) & _
         "Version addin : " & GetAddinVersion()
-End Function
+End Sub
 

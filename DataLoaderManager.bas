@@ -53,14 +53,18 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
         Exit Function
     End If
 
-    Diagnostics.LogTime "Avant sélection du mode d'affichage (InputBox)"
-    Dim modeResult As Variant
-    modeResult = GetDisplayMode(loadInfo)
-    If modeResult = -999 Then
+    ' --- SÉLECTION DU MODE (NORMAL/TRANSPOSE) SANS PREVIEW ---
+    Diagnostics.LogTime "Avant sélection du mode d'affichage (MsgBox)"
+    Dim modeChoice As VbMsgBoxResult
+    modeChoice = MsgBox("Coller les fiches en mode NORMAL (lignes) ?\nCliquez sur Non pour TRANSPOSE (colonnes).", vbYesNoCancel + vbQuestion, "Mode de collage")
+    If modeChoice = vbCancel Then
         ProcessDataLoad = DataLoadResult.Cancelled
         Exit Function
+    ElseIf modeChoice = vbNo Then
+        loadInfo.ModeTransposed = True
+    Else
+        loadInfo.ModeTransposed = False
     End If
-    loadInfo.ModeTransposed = (modeResult = True)
 
     Diagnostics.LogTime "Avant sélection de la destination (InputBox)"
     Set loadInfo.FinalDestination = GetDestination(loadInfo)
@@ -337,178 +341,6 @@ ErrorHandler:
     End If
     Exit Function
 End Function
-
-' Gère le mode d'affichage (normal ou transposé) pour le collage des données.
-' Paramètres :
-'   loadInfo (DataLoadInfo) : Informations de chargement
-' Retour :
-'   Variant (True si transposé, False sinon, -999 si annulé)
-Private Function GetDisplayMode(loadInfo As DataLoadInfo) As Variant
-    On Error GoTo ErrorHandler
-    
-    Const PROC_NAME As String = "GetDisplayMode"
-    Const MODULE_NAME As String = "DataLoaderManager"
-    
-    Dim lo As ListObject
-    Dim nbFiches As Long, nbChamps As Long
-    Dim previewNormal As String, previewTransposed As String
-    Dim userChoice As Double
-    Dim i As Long, j As Long, idx As Long
-    Dim colWidths() As Integer, rowWidths() As Integer
-    Dim v As Variant
-    
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-    nbFiches = loadInfo.SelectedValues.Count
-    nbChamps = lo.ListColumns.Count
-    
-    ' Préparer les exemples pour l'inputbox de mode
-    previewNormal = "Mode NORMAL (tableau classique) :" & vbCrLf
-    previewTransposed = "Mode TRANSPOSE (fiches en colonnes) :" & vbCrLf
-      ' Générer les prévisualisations
-    GeneratePreviews lo, loadInfo, previewNormal, previewTransposed
-    
-    ' Afficher d'abord les prévisualisations dans une MsgBox
-    MsgBox "Prévisualisations des modes disponibles :" & vbCrLf & vbCrLf & _
-           previewNormal & vbCrLf & previewTransposed, _
-           vbInformation, "Aperçu des modes"
-           
-    ' Puis demander le choix avec une InputBox simple
-    Dim modePrompt As String
-    modePrompt = "Comment souhaitez-vous coller les fiches ?" & vbCrLf & vbCrLf & _
-                 "1 pour NORMAL" & vbCrLf & _
-                 "2 pour TRANSPOSE"
-    userChoice = Application.InputBox(modePrompt, "Choix du mode de collage", "1", Type:=2)
-      ' Si l'utilisateur a cliqué sur Annuler (Type:=2 retourne False pour Annuler)
-    If userChoice = 0 Then
-        MsgBox "Opération annulée", vbInformation
-        GetDisplayMode = -999 ' Code d'erreur spécifique
-        Exit Function
-    End If
-    
-    ' Vérifier la validité de la réponse
-    If userChoice = 2 Then
-        GetDisplayMode = True
-    ElseIf userChoice = 1 Then
-        GetDisplayMode = False
-    Else        MsgBox "Veuillez entrer 1 ou 2", vbExclamation
-        GetDisplayMode = -999 ' Code d'erreur spécifique
-    End If
-    Exit Function
-
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la sélection du mode d'affichage"
-    GetDisplayMode = -999 ' Code d'erreur spécifique
-End Function
-
-' Génère les prévisualisations pour les deux modes d'affichage (normal et transposé).
-' Paramètres :
-'   lo (ListObject) : Tableau source
-'   loadInfo (DataLoadInfo) : Informations de chargement
-'   previewNormal (ByRef String) : Aperçu mode normal
-'   previewTransposed (ByRef String) : Aperçu mode transposé
-Private Sub GeneratePreviews(lo As ListObject, loadInfo As DataLoadInfo, _
-                           ByRef previewNormal As String, ByRef previewTransposed As String)
-    On Error GoTo ErrorHandler
-    
-    Const PROC_NAME As String = "GeneratePreviews"
-    Const MODULE_NAME As String = "DataLoaderManager"
-    
-    Dim i As Long, j As Long, idx As Long
-    Dim colWidths() As Integer, rowWidths() As Integer
-    Dim v As Variant
-    Dim nbChamps As Long: nbChamps = lo.ListColumns.Count
-    
-    ' --- Aligned NORMAL preview generation ---
-    ReDim colWidths(1 To WorksheetFunction.Min(4, nbChamps))
-    For i = 1 To WorksheetFunction.Min(4, nbChamps)
-        colWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
-    Next i
-    
-    idx = 1
-    For Each v In loadInfo.SelectedValues
-        If idx > loadInfo.PreviewRows Then Exit For
-        For j = 1 To lo.DataBodyRange.Rows.Count
-            If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                For i = 1 To WorksheetFunction.Min(4, nbChamps)
-                    Dim val As String
-                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
-                    If Len(val) > colWidths(i) Then colWidths(i) = Len(val)
-                Next i
-                Exit For
-            End If
-        Next j
-        idx = idx + 1
-    Next v
-    
-    ' Générer la prévisualisation normale
-    previewNormal = previewNormal & "| "
-    For i = 1 To WorksheetFunction.Min(4, nbChamps)
-        Dim head As String
-        head = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
-        previewNormal = previewNormal & head & Space(colWidths(i) - Len(head)) & " | "
-    Next i
-    previewNormal = previewNormal & vbCrLf
-    
-    idx = 1
-    For Each v In loadInfo.SelectedValues
-        If idx > loadInfo.PreviewRows Then Exit For
-        For j = 1 To lo.DataBodyRange.Rows.Count
-            If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                previewNormal = previewNormal & "| "
-                For i = 1 To WorksheetFunction.Min(4, nbChamps)
-                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
-                    previewNormal = previewNormal & val & Space(colWidths(i) - Len(val)) & " | "
-                Next i
-                previewNormal = previewNormal & vbCrLf
-                Exit For
-            End If
-        Next j
-        idx = idx + 1
-    Next v
-    
-    ' --- Aligned TRANSPOSED preview generation ---
-    ReDim rowWidths(1 To WorksheetFunction.Min(4, nbChamps))
-    For i = 1 To WorksheetFunction.Min(4, nbChamps)
-        rowWidths(i) = Len(TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10))
-        idx = 1
-        For Each v In loadInfo.SelectedValues
-            If idx > loadInfo.PreviewRows Then Exit For
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    val = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
-                    If Len(val) > rowWidths(i) Then rowWidths(i) = Len(val)
-                    Exit For
-                End If
-            Next j
-            idx = idx + 1
-        Next v
-    Next i
-    
-    previewTransposed = previewTransposed & "(headers in row, sheets in columns)" & vbCrLf
-    For i = 1 To WorksheetFunction.Min(4, nbChamps)
-        Dim headT As String
-        headT = TruncateWithEllipsis(lo.HeaderRowRange.Cells(1, i).Value, 10)
-        previewTransposed = previewTransposed & headT & Space(rowWidths(i) - Len(headT)) & ": "
-        idx = 1
-        For Each v In loadInfo.SelectedValues
-            If idx > loadInfo.PreviewRows Then Exit For
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Dim valT As String
-                    valT = TruncateWithEllipsis(lo.DataBodyRange.Rows(j).Cells(1, i).Value, 10)
-                    previewTransposed = previewTransposed & valT & Space(rowWidths(i) - Len(valT)) & ", "
-                    Exit For
-                End If
-            Next j
-            idx = idx + 1
-        Next v
-        previewTransposed = previewTransposed & vbCrLf
-    Next i
-    Exit Sub
-
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération des prévisualisations"
-End Sub
 
 ' Gère la sélection de la destination de collage des données.
 ' Paramètres :
