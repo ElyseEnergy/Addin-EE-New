@@ -495,145 +495,247 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Const MODULE_NAME As String = "DataLoaderManager"
     
     Dim lo As ListObject
-    Dim tblRange As Range
-    Dim i As Long, j As Long
+    Dim sourceTable As ListObject ' Renamed from tblRange for clarity with PQ source table
+    Dim i As Long, j As Long, k As Long ' k for iterating through selected values
     Dim v As Variant
-    Dim currentCol As Long, currentRow As Long
-    
-    Set lo = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
-    
-    ' Déprotéger la feuille de destination avant tout collage
-    Dim ws As Worksheet
-    Set ws = loadInfo.FinalDestination.Worksheet
-    ws.Unprotect
-      Log "paste_data", "=== DÉBUT PASTEDATA ===" & vbCrLf & _
-                "Mode Transposé: " & loadInfo.ModeTransposed & vbCrLf & _
-                "Catégorie: " & loadInfo.Category.DisplayName & vbCrLf & _
-                "Nombre de colonnes: " & lo.ListColumns.Count & vbCrLf & _
-                "Nombre de valeurs sélectionnées: " & loadInfo.SelectedValues.Count, _
-                DEBUG_LEVEL, "PasteData", "DataLoaderManager"
+    Dim destCol As Long, destRow As Long ' Renamed from currentCol, currentRow
+    Dim sourceColIndex As Long
+    Dim sourceRowIndex As Long
 
-    ' Déterminer les colonnes visibles en fonction du dictionnaire Ragic
-    Dim visibleCols As Collection
-    Set visibleCols = New Collection
-    Dim header As String
-    For i = 1 To lo.ListColumns.Count
-        header = lo.HeaderRowRange.Cells(1, i).Value
-        If Not IsFieldHidden(loadInfo.Category.SheetName, header) Then
-            visibleCols.Add i
+    Dim destSheet As Worksheet
+    Set destSheet = loadInfo.FinalDestination.Parent
+
+    ' Performance optimizations
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+
+    Log "PasteData", "Début collage. Mode transposé: " & loadInfo.ModeTransposed, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
+    Set sourceTable = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
+    If sourceTable Is Nothing Then
+        HandleError MODULE_NAME, PROC_NAME, "Table source '" & loadInfo.Category.PowerQueryName & "' non trouvée dans PQ_DATA."
+        PasteData = False
+        GoTo CleanupAndExit
+    End If
+
+    ' --- Pre-computation of column processing details ---
+    Dim columnProcessingDetails As Object ' Scripting.Dictionary
+    Set columnProcessingDetails = CreateObject("Scripting.Dictionary")
+    Dim sourceHeaderName As String
+    Dim ragicType As String
+    Dim visibleSourceColIndices As Collection
+    Set visibleSourceColIndices = New Collection
+
+    Log "PasteData", "Début pré-calcul des détails de colonnes.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    For sourceColIndex = 1 To sourceTable.ListColumns.Count
+        sourceHeaderName = CStr(sourceTable.HeaderRowRange.Cells(1, sourceColIndex).Value)
+        
+        If RagicDictionary.IsFieldHidden(loadInfo.Category.SheetName, sourceHeaderName) Then
+            Log "PasteData", "Colonne '" & sourceHeaderName & "' (index " & sourceColIndex & ") est cachée, elle sera ignorée.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+            ' Store a marker for hidden columns if needed, or just skip
+        Else
+            ragicType = RagicDictionary.GetFieldRagicType(loadInfo.Category.SheetName, sourceHeaderName)
+            Dim colDetail As Object ' Scripting.Dictionary
+            Set colDetail = CreateObject("Scripting.Dictionary")
+            colDetail("ragicType") = ragicType
+            colDetail("headerName") = sourceHeaderName
+            colDetail("sourceIndex") = sourceColIndex ' Store original source index
+            
+            columnProcessingDetails(visibleSourceColIndices.Count + 1) = colDetail ' Keyed by visible column order
+            visibleSourceColIndices.Add sourceColIndex ' Keep track of the original source index for visible columns
+            Log "PasteData", "Colonne visible: '" & sourceHeaderName & "' (source idx " & sourceColIndex & ", visible idx " & visibleSourceColIndices.Count & "), Type: " & ragicType, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         End If
-    Next i
-      If loadInfo.ModeTransposed Then
-        Log "paste_data", "--- Début collage transposé ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-        ' Coller en transposé
-        For i = 1 To visibleCols.Count
-            Log "paste_data", "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-            loadInfo.FinalDestination.Offset(i - 1, 0).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(i - 1, 0).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
+    Next sourceColIndex
+
+    If visibleSourceColIndices.Count = 0 Then
+        HandleError MODULE_NAME, PROC_NAME, "Aucune colonne visible à coller pour la catégorie '" & loadInfo.Category.DisplayName & "'."
+        PasteData = False
+        GoTo CleanupAndExit
+    End If
+    Log "PasteData", "Pré-calcul terminé. Nombre de colonnes visibles: " & visibleSourceColIndices.Count, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
+    ' --- Determine base font for section header size calculation ---
+    Dim baseFontSize As Single
+    Dim baseFontName As String
+    With loadInfo.FinalDestination.Font
+        baseFontSize = .Size
+        baseFontName = .Name
+    End With
+
+    ' --- Start pasting ---
+    destRow = loadInfo.FinalDestination.Row
+    destCol = loadInfo.FinalDestination.Column
+
+    Dim destCell As Range
+    Dim cellInfo As FormattedCellOutput
+    Dim colDetail As Object ' Scripting.Dictionary
+
+    If loadInfo.ModeTransposed Then
+        Log "PasteData", "Mode TRANSPOSE", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        ' Paste Headers (now as row headers)
+        For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
+            Set colDetail = columnProcessingDetails(i)
+            sourceHeaderName = colDetail("headerName")
+            ragicType = colDetail("ragicType")
+            
+            Set destCell = destSheet.Cells(destRow + i - 1, destCol)
+            
+            If ragicType = "Section" Then
+                destCell.Value = sourceHeaderName
+                destCell.NumberFormat = "@"
+                With destCell.Font
+                    .Bold = True
+                    .Size = baseFontSize + 3
+                    .Color = DataFormatter.SECTION_HEADER_DEFAULT_FONT_COLOR ' Use the constant from DataFormatter
+                End With
+            Else
+                destCell.Value = sourceHeaderName
+                destCell.NumberFormat = "@"
+                ' Apply standard header font if different, or leave as is
+            End If
         Next i
-        
-        currentCol = 1
-        For Each v In loadInfo.SelectedValues
-            Log "paste_data", "Traitement colonne " & currentCol & ", valeur=" & v, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Log "paste_data", "  Trouvé à la ligne " & j, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-                    For i = 1 To visibleCols.Count
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
-                        loadInfo.FinalDestination.Offset(i - 1, currentCol).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
-                    Next i
+
+        ' Paste Data
+        destCol = destCol + 1 ' Move to the first data column
+        k = 0 ' Index for selected values
+        For Each v In loadInfo.SelectedValues ' v is the ID of the selected record
+            k = k + 1
+            sourceRowIndex = 0
+            For j = 1 To sourceTable.DataBodyRange.Rows.Count ' Find the row in source table by ID
+                If CStr(sourceTable.DataBodyRange.Cells(j, 1).Value) = CStr(v) Then
+                    sourceRowIndex = j
                     Exit For
                 End If
             Next j
-            currentCol = currentCol + 1
-        Next v        
-        Set tblRange = loadInfo.FinalDestination.Resize(visibleCols.Count, loadInfo.SelectedValues.Count + 1)
-        Log "paste_data", "Plage transposée définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Else
-        Log "paste_data", "--- Début collage normal ---", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-        ' Coller en normal
-        For i = 1 To visibleCols.Count
-            Debug.Print "Colonne " & visibleCols(i) & ": " & lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).Value = lo.HeaderRowRange.Cells(1, visibleCols(i)).Value
-            loadInfo.FinalDestination.Offset(0, i - 1).NumberFormat = lo.DataBodyRange.Columns(visibleCols(i)).Cells(1, 1).NumberFormat
-        Next i
-        
-        currentRow = 1
-        For Each v In loadInfo.SelectedValues
-            Debug.Print "Traitement ligne " & currentRow & ", valeur=" & v
-            For j = 1 To lo.DataBodyRange.Rows.Count
-                If lo.DataBodyRange.Rows(j).Columns(1).Value = v Then
-                    Debug.Print "  Trouvé à la ligne " & j
-                    For i = 1 To visibleCols.Count
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).Value = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).Value
-                        loadInfo.FinalDestination.Offset(currentRow, i - 1).NumberFormat = lo.DataBodyRange.Rows(j).Cells(1, visibleCols(i)).NumberFormat
-                    Next i
-                    Exit For
-                End If
-            Next j
-            currentRow = currentRow + 1
+
+            If sourceRowIndex > 0 Then
+                For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
+                    Set colDetail = columnProcessingDetails(i)
+                    sourceHeaderName = colDetail("headerName") ' Field name for GetCellProcessingInfo
+                    ragicType = colDetail("ragicType")
+                    originalSourceColIdx = colDetail("sourceIndex") ' Get the original source column index
+
+                    Set destCell = destSheet.Cells(destRow + i - 1, destCol + k - 1)
+                    
+                    If ragicType = "Section" Then
+                        destCell.Value = "" ' Blank for section data cells
+                        destCell.NumberFormat = "@"
+                        ' Ensure default background/no special font for data part of section
+                        With destCell.Font
+                            .Bold = False
+                            .Size = baseFontSize
+                            .Color = vbBlack ' Or whatever the default data font color is
+                        End With
+                        With destCell.Interior
+                            .Pattern = xlNone
+                        End With
+                    Else
+                        Dim originalValue As Variant
+                        originalValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, originalSourceColIdx).Value
+                        
+                        cellInfo = DataFormatter.GetCellProcessingInfo(originalValue, "", sourceHeaderName, loadInfo.Category.SheetName)
+                        
+                        destCell.Value = cellInfo.FinalValue
+                        destCell.NumberFormat = cellInfo.NumberFormatString
+                    End If
+                Next i
+            Else
+                 Log "PasteData", "ID non trouvé dans la table source: " & CStr(v), WARNING_LEVEL, PROC_NAME, MODULE_NAME
+            End If
         Next v
 
-        Set tblRange = loadInfo.FinalDestination.Resize(loadInfo.SelectedValues.Count + 1, visibleCols.Count)
-        Debug.Print "Plage normale définie: " & tblRange.Address & " (" & tblRange.Rows.Count & " lignes x " & tblRange.Columns.Count & " colonnes)"
-    End If
-      ' Vérification de la validité de la plage
-    Log "paste_data", "=== VÉRIFICATIONS ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Dimensions de la plage: " & tblRange.Rows.Count & " x " & tblRange.Columns.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Cellules fusionnées: " & tblRange.MergeCells, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    Log "paste_data", "Nombre de tableaux existants: " & tblRange.Worksheet.ListObjects.Count, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-      If tblRange.Rows.Count < 2 Or tblRange.Columns.Count < 2 Then
-        Log "paste_data", "ERREUR: Plage trop petite", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de créer un tableau : la plage sélectionnée est trop petite (" & tblRange.Rows.Count & " x " & tblRange.Columns.Count & ").", vbExclamation
-        PasteData = False
-        Exit Function
-    End If
-    If tblRange.MergeCells Then
-        Log "paste_data", "ERREUR: Cellules fusionnées détectées", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        MsgBox "Impossible de créer un tableau : la plage contient des cellules fusionnées.", vbExclamation
-        PasteData = False
-        Exit Function
-    End If
-    If tblRange.Worksheet.ListObjects.Count > 0 Then
-        Dim tbl As ListObject
-        For Each tbl In tblRange.Worksheet.ListObjects
-            If Not Intersect(tblRange, tbl.Range) Is Nothing Then
-                Log "paste_data", "ERREUR: Intersection avec tableau existant - " & tbl.Name, ERROR_LEVEL, "PasteData", "DataLoaderManager"
-                MsgBox "Impossible de créer un tableau : la plage contient déjà un tableau Excel.", vbExclamation
-                PasteData = False
-                Exit Function
+    Else ' Mode NORMAL (not transposed)
+        Log "PasteData", "Mode NORMAL", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        ' Paste Headers
+        For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
+            Set colDetail = columnProcessingDetails(i)
+            sourceHeaderName = colDetail("headerName")
+            ragicType = colDetail("ragicType")
+            
+            Set destCell = destSheet.Cells(destRow, destCol + i - 1)
+
+            If ragicType = "Section" Then
+                destCell.Value = sourceHeaderName
+                destCell.NumberFormat = "@"
+                With destCell.Font
+                    .Bold = True
+                    .Size = baseFontSize + 3 
+                    .Color = DataFormatter.SECTION_HEADER_DEFAULT_FONT_COLOR ' Use the constant from DataFormatter
+                End With
+            Else
+                destCell.Value = sourceHeaderName
+                destCell.NumberFormat = "@"
+                 ' Apply standard header font if different, or leave as is
             End If
-        Next tbl
+        Next i
+
+        ' Paste Data
+        destRow = destRow + 1 ' Move to the first data row
+        k = 0 ' Index for selected values
+        For Each v In loadInfo.SelectedValues ' v is the ID of the selected record
+            k = k + 1
+            sourceRowIndex = 0
+            For j = 1 To sourceTable.DataBodyRange.Rows.Count ' Find the row in source table by ID
+                If CStr(sourceTable.DataBodyRange.Cells(j, 1).Value) = CStr(v) Then
+                    sourceRowIndex = j
+                    Exit For
+                End If
+            Next j
+
+            If sourceRowIndex > 0 Then
+                For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
+                    Set colDetail = columnProcessingDetails(i)
+                    sourceHeaderName = colDetail("headerName") ' Field name for GetCellProcessingInfo
+                    ragicType = colDetail("ragicType")
+                    originalSourceColIdx = colDetail("sourceIndex") ' Get the original source column index
+                    
+                    Set destCell = destSheet.Cells(destRow + k - 1, destCol + i - 1)
+
+                    If ragicType = "Section" Then
+                        destCell.Value = "" ' Blank for section data cells
+                        destCell.NumberFormat = "@"
+                        ' Ensure default background/no special font for data part of section
+                        With destCell.Font
+                            .Bold = False
+                            .Size = baseFontSize
+                            .Color = vbBlack ' Or whatever the default data font color is
+                        End With
+                        With destCell.Interior
+                            .Pattern = xlNone
+                        End With
+                    Else
+                        Dim originalValue As Variant
+                        originalValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, originalSourceColIdx).Value
+                        
+                        cellInfo = DataFormatter.GetCellProcessingInfo(originalValue, "", sourceHeaderName, loadInfo.Category.SheetName)
+                        
+                        destCell.Value = cellInfo.FinalValue
+                        destCell.NumberFormat = cellInfo.NumberFormatString
+                    End If
+                Next i
+            Else
+                Log "PasteData", "ID non trouvé dans la table source: " & CStr(v), WARNING_LEVEL, PROC_NAME, MODULE_NAME
+            End If
+        Next v
     End If
-    
-    Log "paste_data", "=== CRÉATION DU TABLEAU ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-    ' Mettre en forme le tableau final    On Error Resume Next
-    Set tbl = loadInfo.FinalDestination.Worksheet.ListObjects.Add(xlSrcRange, tblRange, , xlYes)
-    If Err.Number <> 0 Then
-        Log "paste_data", "ERREUR lors de la création du tableau: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, "PasteData", "DataLoaderManager"
-        On Error GoTo 0
-        PasteData = False
-        Exit Function
-    End If
-    On Error GoTo 0
-    
-    tbl.Name = GetUniqueTableName(loadInfo.Category.DisplayName)
-    tbl.TableStyle = "TableStyleMedium9"
-    Log "paste_data", "Tableau créé avec succès: " & tbl.Name, DEBUG_LEVEL, "PasteData", "DataLoaderManager"
-      ' Protéger finement la feuille : seules les valeurs des tableaux EE_ sont protégées
-    ProtectSheetWithTable tblRange.Worksheet
-    Log "paste_data", "=== FIN PASTEDATA ===", DEBUG_LEVEL, "PasteData", "DataLoaderManager"    
+
+    ' AutoFit columns for the pasted range (optional, can be slow for large datasets)
+    ' loadInfo.FinalDestination.Resize(numRowsPasted, numColsPasted).Columns.AutoFit
+
     PasteData = True
+
+CleanupAndExit:
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+    Log "PasteData", "Fin collage. Statut: " & PasteData, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     Exit Function
 
 ErrorHandler:
     HandleError MODULE_NAME, PROC_NAME, "Erreur lors du collage des données: " & Err.Description
-    
-    ' Cleanup en cas d'erreur
-    On Error Resume Next
-    ws.Unprotect
     PasteData = False
-    Exit Function
+    GoTo CleanupAndExit
 End Function
 
 ' Protège uniquement les tableaux EE_ dans la feuille spécifiée.

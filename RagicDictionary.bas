@@ -206,25 +206,33 @@ Public Function IsFieldHidden(SheetName As String, fieldName As String) As Boole
     End If
     Dim key As String
     key = NormalizeSheetName(SheetName) & "|" & fieldName
+    
+    Dim memoValue As String
     If RagicFieldDict.Exists(key) Then
-        IsFieldHidden = InStr(1, RagicFieldDict(key), "Hidden", vbTextCompare) > 0
+        memoValue = RagicFieldDict(key)
+        IsFieldHidden = InStr(1, memoValue, "Hidden", vbTextCompare) > 0
+        Log "IsFieldHidden_Check", "Key: '" & key & "' | Memo: '" & memoValue & "' | Hidden: " & IsFieldHidden, DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
     Else
         IsFieldHidden = False
+        Log "IsFieldHidden_Check", "Key: '" & key & "' | Key NOT FOUND in RagicFieldDict. Defaulting to Not Hidden.", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
     End If
 End Function
 
 ' Normalise le nom de la feuille pour la clé dictionnaire
 Public Function NormalizeSheetName(SheetName As String) As String
-    Dim i As Long, c As String
-    ' Supprime tous les caractères non alphanumériques au début
+    Dim i As Long
+    Dim c As String
+    Dim result As String
+    result = ""
     For i = 1 To Len(SheetName)
         c = Mid(SheetName, i, 1)
-        If (c >= "A" And c <= "Z") Or (c >= "a" And c <= "z") Or (c >= "0" And c <= "9") Then
-            NormalizeSheetName = Mid(SheetName, i)
-            Exit Function
+        If (c >= "A" And c <= "Z") Or _
+           (c >= "a" And c <= "z") Or _
+           (c >= "0" And c <= "9") Then
+            result = result & c
         End If
     Next i
-    NormalizeSheetName = SheetName ' fallback
+    NormalizeSheetName = result
 End Function
 
 '==================================================================================================
@@ -425,3 +433,107 @@ Public Sub TestIsFieldHidden_BudgetGroupes()
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Montant Total' => " & IsFieldHidden("? Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Année' => " & IsFieldHidden("? Budget Groupes", "Année"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
+
+Public Function GetFieldRagicType(categorySheetName As String, fieldName As String) As String
+    ' Ensure dictionary is loaded and wsPQDict is available
+    If RagicFieldDict Is Nothing Or RagicFieldDict.Count = 0 Then
+        Log "GetFieldRagicType", "RagicFieldDict is not initialized or empty, calling LoadRagicDictionary.", INFO_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        LoadRagicDictionary
+    End If
+    
+    If wsPQDict Is Nothing Then
+        Log "GetFieldRagicType", "wsPQDict (Ragic Dictionary sheet) is not initialized.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        GetFieldRagicType = "Text" ' Default on critical error
+        Exit Function
+    End If
+
+    Dim dictTable As ListObject
+    Dim tableName As String
+    tableName = "Table_" & Utilities.SanitizeTableName(BASE_NAME) ' BASE_NAME is "RagicDictionary"
+
+    On Error Resume Next
+    Set dictTable = wsPQDict.ListObjects(tableName)
+    On Error GoTo 0
+
+    If dictTable Is Nothing Then
+        Log "GetFieldRagicType", "Ragic Dictionary table '" & tableName & "' not found on sheet '" & wsPQDict.Name & "'.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        GetFieldRagicType = "Text" ' Default if table not found
+        Exit Function
+    End If
+
+    Dim normalizedCategoryKey As String
+    normalizedCategoryKey = NormalizeSheetName(categorySheetName)
+
+    ' Define column names in the Ragic Dictionary table
+    Const COL_CATEGORY_IDENTIFIER_IN_TABLE As String = "SheetName"   ' Column storing the category identifier (e.g., "module/1" or sheet name)
+    Const COL_FIELD_NAME_IN_TABLE As String = "Field Label"     ' Column storing the field's name/label
+    Const COL_FIELD_TYPE_IN_TABLE As String = "Field Type"      ' Column storing the field's type (e.g., "DATE", "NUMBER")
+
+    Dim categoryCol As ListColumn, fieldNameCol As ListColumn, fieldTypeCol As ListColumn
+    Dim r As Long
+    Dim currentDictFieldName As String, currentDictFieldType As String, currentDictCategoryValue As String
+
+    On Error Resume Next
+    Set categoryCol = dictTable.ListColumns(COL_CATEGORY_IDENTIFIER_IN_TABLE)
+    Set fieldNameCol = dictTable.ListColumns(COL_FIELD_NAME_IN_TABLE)
+    Set fieldTypeCol = dictTable.ListColumns(COL_FIELD_TYPE_IN_TABLE)
+    On Error GoTo 0
+
+    If categoryCol Is Nothing Then
+        Log "GetFieldRagicType", "Category column '" & COL_CATEGORY_IDENTIFIER_IN_TABLE & "' not found in table '" & tableName & "'.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+    If fieldNameCol Is Nothing Then
+        Log "GetFieldRagicType", "Field Name column '" & COL_FIELD_NAME_IN_TABLE & "' not found in table '" & tableName & "'.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+    If fieldTypeCol Is Nothing Then
+        Log "GetFieldRagicType", "Field Type column '" & COL_FIELD_TYPE_IN_TABLE & "' not found in table '" & tableName & "'.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+
+    ' Default return type
+    GetFieldRagicType = "Text"
+
+    If dictTable.DataBodyRange Is Nothing Then
+        Log "GetFieldRagicType", "Ragic Dictionary table '" & tableName & "' is empty.", WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        Exit Function ' No data to iterate
+    End If
+
+    For r = 1 To dictTable.ListRows.Count
+        currentDictCategoryValue = NormalizeSheetName(CStr(dictTable.DataBodyRange.Cells(r, categoryCol.Index).Value))
+        currentDictFieldName = CStr(dictTable.DataBodyRange.Cells(r, fieldNameCol.Index).Value)
+
+        ' Match category (normalized) and field name (exact)
+        If normalizedCategoryKey = currentDictCategoryValue And fieldName = currentDictFieldName Then
+            ' Field found. Now determine its type.
+            ' Check if the field name from the dictionary matches the "Section" pattern.
+            If currentDictFieldName Like "__*__" And Right(currentDictFieldName, 2) = "__" Then
+                GetFieldRagicType = "Section"
+                Exit Function
+            End If
+
+            ' If not a section, check its "Field Type" column.
+            currentDictFieldType = UCase(CStr(dictTable.DataBodyRange.Cells(r, fieldTypeCol.Index).Value))
+
+            Select Case currentDictFieldType
+                Case "DATE" ' Adapt if Ragic uses a different string e.g. "DATE_INPUT"
+                    GetFieldRagicType = "Date"
+                Case "NUMBER", "NUMERIC", "INTEGER", "FLOAT" ' Adapt for various numeric types from Ragic
+                    GetFieldRagicType = "Number"
+                Case Else
+                    ' Includes "FREETEXT", "SELECT", "MULTISELECT", "TEXTAREA", etc.
+                    GetFieldRagicType = "Text"
+            End Select
+            Exit Function ' Found and processed, no need to loop further
+        End If
+    Next r
+
+    ' If loop completes, the specific field was not found in the dictionary for the given category,
+    ' or its type didn't match "Date" or "Number" explicitly.
+    Log "GetFieldRagicType", "Field '" & fieldName & "' for category '" & categorySheetName & "' (normalized key: '" & normalizedCategoryKey & "') not found in dictionary or type not specifically handled. Defaulting to '" & GetFieldRagicType & "'.", INFO_LEVEL, "GetFieldRagicType", "RagicDictionary"
+
+End Function

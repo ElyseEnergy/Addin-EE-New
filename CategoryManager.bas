@@ -26,7 +26,7 @@ Public Sub InitCategories()
     
     ' # Engineering
     ' ## Technologies
-    AddCategory "Compression", "Pas de filtrage", "Compression", "fiches-techniques/16/3.csv", "Technologies"
+    AddCategory "Compression", "Pas de filtrage", "Compression", "fiches-techniques/16.csv", "Technologies"
     AddCategory "CO2 general parameters", "Pas de filtrage", "CO2 general parameters", "fiches-techniques/25.csv", "Technologies"
     AddCategory "H2 general parameters", "Pas de filtrage", "H2 general parameters", "fiches-techniques/24.csv", "Technologies"
     AddCategory "CO2 Capture", "Brand", "CO2 Capture", "fiches-techniques/18.csv", "Technologies"
