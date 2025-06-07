@@ -1,6 +1,15 @@
 Attribute VB_Name = "Utilities"
 
+
+Private Declare PtrSafe Function GetUserNameEx Lib "secur32.dll" Alias "GetUserNameExA" _
+    (ByVal NameFormat As Long, ByVal lpNameBuffer As String, ByRef nSize As Long) As Long
+
+Private Const NameUserPrincipal As Long = 8
+
 Public wsPQData As Worksheet
+Public Const ADDIN_VERSION_MAJOR As Integer = 1
+Public Const ADDIN_VERSION_MINOR As Integer = 0
+Public Const ADDIN_VERSION_PATCH As Integer = 0
 
 Sub InitializePQData()
     On Error Resume Next
@@ -80,5 +89,26 @@ Private Function RemoveDiacritics(ByVal text As String) As String
     Next i
     
     RemoveDiacritics = text
+End Function
+
+
+Function GetUserEmail() As String
+    Dim buffer As String * 255
+    Dim bufferSize As Long
+    bufferSize = 255
+    If GetUserNameEx(NameUserPrincipal, buffer, bufferSize) <> 0 Then
+        GetUserEmail = Left$(buffer, InStr(buffer, Chr$(0)) - 1)
+    Else
+        GetUserEmail = "Non disponible"
+    End If
+End Function
+
+Function GetAddinVersion() As String
+    GetAddinVersion = ADDIN_VERSION_MAJOR & "." & ADDIN_VERSION_MINOR & "." & ADDIN_VERSION_PATCH
+End Function
+
+Public Function GetAddinVersionSupertip(control As IRibbonControl) As String
+    GetAddinVersionSupertip = "Utilisateur : " & GetUserEmail() & Chr(10) & _
+        "Version addin : " & GetAddinVersion()
 End Function
 

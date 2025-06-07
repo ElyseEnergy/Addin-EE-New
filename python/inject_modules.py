@@ -156,6 +156,21 @@ def remove_all_bas_modules(vba_project):
     
     logging.info(f"Total des modules .bas supprimés: {len(modules_to_remove)}")
 
+def remove_all_vba_modules(vba_project):
+    """Supprime tous les modules VBA (StdModule, ClassModule, Form) sauf les modules Document (type 100)."""
+    modules_to_remove = []
+    for comp in vba_project.VBComponents:
+        # Type 1 = StdModule (.bas), 2 = ClassModule (.cls), 3 = MSForm (.frm)
+        if comp.Type in (1, 2, 3):
+            modules_to_remove.append(comp.Name)
+    for module_name in modules_to_remove:
+        try:
+            vba_project.VBComponents.Remove(vba_project.VBComponents(module_name))
+            logging.info(f"Module VBA supprimé: {module_name}")
+        except Exception as e:
+            logging.error(f"Erreur lors de la suppression du module {module_name}: {str(e)}")
+    logging.info(f"Total des modules VBA supprimés: {len(modules_to_remove)}")
+
 def clean_document_code(code):
     """Nettoie le code d'un module Document en enlevant les attributs VB"""
     lines = code.split('\n')
@@ -214,6 +229,9 @@ def inject_modules():
                     raise
         
         vba_project = workbook.VBProject
+        
+        # Nettoyage complet : supprimer tous les modules VBA (sauf Document)
+        remove_all_vba_modules(vba_project)
         
         # Dictionnaire des composants existants pour des recherches rapides
         all_components = {comp.Name: comp.Type for comp in vba_project.VBComponents}
