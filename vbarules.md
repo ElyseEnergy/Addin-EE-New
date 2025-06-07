@@ -239,7 +239,60 @@ La création et la gestion des requêtes PQ sont entièrement automatisées et n
 
 ---
 
-## 7. Guide de Contribution
+## 7. Le Dictionnaire de Données (Ragic Dictionary)
+
+Le "Ragic Dictionary" est un mécanisme clé de l'addin. Il s'agit d'une table de correspondance qui fournit des **méta-informations sur les champs de données Ragic**, comme leur type de données réel ("DATE", "NUMBER", etc.) ou si un champ doit être masqué dans l'interface.
+
+### Rôle et Utilité
+Il permet de décorréler la logique de l'addin des données brutes. Par exemple, au lieu de coder en dur qu'un champ nommé "Date de début" doit être formaté comme une date, on consulte le dictionnaire pour connaître son type.
+
+### Source et Mise en Cache
+- **Source** : Les données proviennent d'un fichier CSV centralisé sur Ragic (`matching-matrix/6.csv`).
+- **Chargement** : Au démarrage ou sur demande, une requête PowerQuery charge ces données dans une feuille de cache masquée (`PQ_DICT`).
+- **Mise en cache** : Le dictionnaire en mémoire (`RagicFieldDict`) est peuplé à partir de cette feuille. Le rechargement depuis le réseau n'a lieu qu'une fois par jour ou si le cache est inexistant, mais peut être forcé via le bouton "Update Data Dictionary" du ruban.
+
+### Structure et Utilisation
+Le dictionnaire est un `Scripting.Dictionary` où :
+- La **clé** est une chaîne composite : `NomFeuilleNormalisé & "|" & NomDuChamp`.
+- La **valeur** contient les méta-informations.
+
+**Exemple d'utilisation (`DataFormatter.bas`) :**
+Le code interroge le dictionnaire pour savoir comment traiter une cellule en fonction du nom de sa colonne (le champ) et de sa feuille (la catégorie).
+
+```vba
+' Dans DataFormatter.bas
+Public Function GetCellProcessingInfo(...) As FormattedCellOutput
+    ' ...
+    ' Récupère le type de champ depuis le dictionnaire
+    ragicType = RagicDictionary.GetFieldRagicType(categorySheetName, fieldName)
+    
+    ' Applique une logique en fonction du type retourné
+    Select Case ragicType
+        Case "DATE":
+            ' ... formater comme une date
+        Case "NUMBER":
+            ' ... formater comme un nombre
+        ' ...
+    End Select
+    ' ...
+End Function
+
+' Dans RagicDictionary.bas
+Public Function GetFieldRagicType(categorySheetName As String, fieldName As String) As String
+    ' Construit la clé et recherche dans le dictionnaire
+    Dim key As String
+    key = NormalizeSheetName(categorySheetName) & "|" & fieldName
+    
+    If RagicFieldDict.Exists(key) Then
+        ' Extrait l'info de la valeur...
+    End If
+End Function
+```
+Ce mécanisme rend l'addin beaucoup plus flexible, car une modification dans le fichier CSV de Ragic suffit à changer le comportement de l'addin sans redéploiement.
+
+---
+
+## 8. Guide de Contribution
 
 ### Comment ajouter une nouvelle fonctionnalité (ex: un nouveau bouton) ?
 
