@@ -815,8 +815,35 @@ NextColumn:
     ' Appliquer le style par défaut
     newListObject.TableStyle = "TableStyleMedium2"
     
-    ' Protéger le tableau
-    ProtectSheetWithTable destSheet
+    ' Verrouiller directement le nouveau tableau
+    newListObject.Range.Locked = True
+    
+    ' Protéger le tableau et la feuille
+    destSheet.Unprotect
+    destSheet.Cells.Locked = False
+    
+    ' Verrouiller tous les tableaux EE_
+    Dim tbl As ListObject
+    For Each tbl In destSheet.ListObjects
+        If Left(tbl.Name, 3) = "EE_" Then
+            Log "dataloader", "Verrouillage du tableau: " & tbl.Name, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+            tbl.Range.Locked = True
+        End If
+    Next tbl
+    
+    ' Protéger la feuille avec les permissions standard
+    destSheet.Protect UserInterfaceOnly:=True, _
+        AllowFormattingCells:=True, _
+        AllowFormattingColumns:=True, _
+        AllowFormattingRows:=True, _
+        AllowInsertingColumns:=True, _
+        AllowInsertingRows:=True, _
+        AllowInsertingHyperlinks:=True, _
+        AllowDeletingColumns:=True, _
+        AllowDeletingRows:=True, _
+        AllowSorting:=True, _
+        AllowFiltering:=True, _
+        AllowUsingPivotTables:=True
 
     PasteData = True
 
