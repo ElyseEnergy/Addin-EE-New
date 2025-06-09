@@ -35,7 +35,7 @@ Private mCurrentLogLevel As LogLevel
 ' Nettoyer le log au lancement, puis append pour chaque message
 Public Sub InitializeLogger()
     ' Initialisation du niveau de log par défaut
-    mCurrentLogLevel = INFO_LEVEL
+    mCurrentLogLevel = DEBUG_LEVEL
     
     ' S'assurer que le dossier de logs existe
     EnsureLogFolderExists
@@ -48,7 +48,7 @@ Public Sub InitializeLogger()
     logFile.Close
     
     ' Log d'initialisation
-    Log "sys_init", "Système de logging initialisé", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
+    Log "sys_init", "Système de logging initialisé (niveau DEBUG)", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
 End Sub
 
 ' ============================================================================

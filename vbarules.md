@@ -183,9 +183,72 @@ For i = 1 To 10
 Next i
 ```
 
+### Règle : Join ne fonctionne qu'avec des Arrays
+- **Important :** La fonction `Join` ne fonctionne qu'avec des tableaux (arrays), pas avec des Collections. Pour utiliser `Join` avec une Collection, il faut d'abord convertir la Collection en array.
+- **Exemple incorrect :**
+```vba
+Dim maCollection As Collection
+Set maCollection = New Collection
+maCollection.Add "A"
+maCollection.Add "B"
+Debug.Print Join(maCollection, ", ") ' <-- Erreur !
+```
+- **Exemple correct :**
+```vba
+Dim maCollection As Collection
+Set maCollection = New Collection
+maCollection.Add "A"
+maCollection.Add "B"
+
+' Convertir en array avant d'utiliser Join
+Dim monArray() As String
+ReDim monArray(1 To maCollection.Count)
+Dim i As Long
+For i = 1 To maCollection.Count
+    monArray(i) = CStr(maCollection(i))
+Next i
+Debug.Print Join(monArray, ", ") ' OK : affiche "A, B"
+```
+
 ### Déclaration des Variables et Constantes
 - **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
 - **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.
+- **Éviter les doubles déclarations** : Toujours vérifier qu'une variable n'est pas déjà déclarée dans la même portée, que ce soit :
+  - Dans la même procédure
+  - Dans une boucle `For` (ex : ne pas redéclarer l'index `i` dans une boucle imbriquée)
+  - Dans les paramètres de la fonction
+  - En tant que variable de module
+
+**Exemple de ce qu'il ne faut PAS faire :**
+```vba
+Public Sub ProcessData(ByVal i As Long)  ' i est déjà un paramètre
+    Dim result As String
+    Dim i As Long  ' ERREUR : i est déjà déclaré comme paramètre !
+    
+    For i = 1 To 10
+        Dim j As Long
+        For j = 1 To 5
+            Dim i As Long  ' ERREUR : i est déjà l'index de la boucle externe !
+            ' ...
+        Next j
+    Next i
+End Sub
+```
+
+**Pattern correct :**
+```vba
+Public Sub ProcessData(ByVal inputIndex As Long)  ' Nom clair et unique
+    Dim result As String
+    Dim outerIndex As Long, innerIndex As Long  ' Indices distincts pour les boucles
+    
+    For outerIndex = 1 To 10
+        For innerIndex = 1 To 5
+            ' Utilisation des variables avec des noms uniques et explicites
+            result = result & outerIndex & "," & innerIndex
+        Next innerIndex
+    Next outerIndex
+End Sub
+```
 
 **Pattern correct pour les valeurs dynamiques :**
 Pour une valeur qui nécessite un calcul, utilisez une fonction publique qui retourne la valeur.
@@ -247,6 +310,42 @@ Option Explicit
 ### Déclaration des Variables et Constantes
 - **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
 - **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.
+- **Éviter les doubles déclarations** : Toujours vérifier qu'une variable n'est pas déjà déclarée dans la même portée, que ce soit :
+  - Dans la même procédure
+  - Dans une boucle `For` (ex : ne pas redéclarer l'index `i` dans une boucle imbriquée)
+  - Dans les paramètres de la fonction
+  - En tant que variable de module
+
+**Exemple de ce qu'il ne faut PAS faire :**
+```vba
+Public Sub ProcessData(ByVal i As Long)  ' i est déjà un paramètre
+    Dim result As String
+    Dim i As Long  ' ERREUR : i est déjà déclaré comme paramètre !
+    
+    For i = 1 To 10
+        Dim j As Long
+        For j = 1 To 5
+            Dim i As Long  ' ERREUR : i est déjà l'index de la boucle externe !
+            ' ...
+        Next j
+    Next i
+End Sub
+```
+
+**Pattern correct :**
+```vba
+Public Sub ProcessData(ByVal inputIndex As Long)  ' Nom clair et unique
+    Dim result As String
+    Dim outerIndex As Long, innerIndex As Long  ' Indices distincts pour les boucles
+    
+    For outerIndex = 1 To 10
+        For innerIndex = 1 To 5
+            ' Utilisation des variables avec des noms uniques et explicites
+            result = result & outerIndex & "," & innerIndex
+        Next innerIndex
+    Next outerIndex
+End Sub
+```
 
 **Pattern correct pour les valeurs dynamiques :**
 Pour une valeur qui nécessite un calcul, utilisez une fonction publique qui retourne la valeur.

@@ -495,10 +495,25 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Const PROC_NAME As String = "PasteData"
     Const MODULE_NAME As String = "DataLoaderManager"
     
+    ' Log des paramètres d'entrée
+    Log "PasteData", "DÉBUT PASTEDATA =====================", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "PasteData", "Catégorie: " & loadInfo.Category.DisplayName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    
+    ' Convertir la Collection en array pour Join
+    Dim selectedValuesArray() As String
+    Dim idx As Long, v As Variant
+    ReDim selectedValuesArray(1 To loadInfo.SelectedValues.Count)
+    idx = 1
+    For Each v In loadInfo.SelectedValues
+        selectedValuesArray(idx) = CStr(v)
+        idx = idx + 1
+    Next v
+    Log "PasteData", "Valeurs sélectionnées: " & Join(selectedValuesArray, ", "), DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    
     Dim lo As ListObject
     Dim sourceTable As ListObject ' Renamed from tblRange for clarity with PQ source table
     Dim i As Long, j As Long, k As Long ' k for iterating through selected values
-    Dim v As Variant
+    
     Dim destCol As Long, destRow As Long ' Renamed from currentCol, currentRow
     Dim sourceColIndex As Long
     Dim sourceRowIndex As Long
@@ -512,6 +527,10 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Application.EnableEvents = False
 
     Log "PasteData", "Début collage. Mode transposé: " & loadInfo.ModeTransposed, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "PasteData", "Destination: Feuille=" & destSheet.Name & ", Cellule=" & loadInfo.FinalDestination.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
+    ' Log de l'état de la feuille PQ_DATA
+    Log "PasteData", "État PQ_DATA: Visible=" & wsPQData.Visible & ", Protected=" & wsPQData.ProtectContents, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
     Set sourceTable = wsPQData.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     If sourceTable Is Nothing Then
@@ -519,8 +538,18 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         PasteData = False
         GoTo CleanupAndExit
     End If
+    Log "PasteData", "Table source trouvée: " & sourceTable.Name & " (" & sourceTable.ListColumns.Count & " colonnes, " & sourceTable.ListRows.Count & " lignes)", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
+    ' Log des en-têtes de colonnes
+    Dim headerNames As String
+    headerNames = ""
+    For i = 1 To sourceTable.ListColumns.Count
+        headerNames = headerNames & sourceTable.HeaderRowRange.Cells(1, i).Value & ", "
+    Next i
+    Log "PasteData", "En-têtes des colonnes: " & headerNames, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
     ' --- Pre-computation of column processing details ---
+    On Error Resume Next ' Pour capturer les erreurs potentielles dans le pré-calcul
     Dim columnProcessingDetails As Object ' Scripting.Dictionary
     Set columnProcessingDetails = CreateObject("Scripting.Dictionary")
     Dim sourceHeaderName As String
@@ -531,23 +560,38 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
     Log "PasteData", "Début pré-calcul des détails de colonnes.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     For sourceColIndex = 1 To sourceTable.ListColumns.Count
         sourceHeaderName = CStr(sourceTable.HeaderRowRange.Cells(1, sourceColIndex).Value)
+        Log "PasteData", "Analyse colonne " & sourceColIndex & ": '" & sourceHeaderName & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        
+        If Err.Number <> 0 Then
+            Log "PasteData", "ERREUR lecture en-tête colonne " & sourceColIndex & ": " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+            Err.Clear
+            GoTo NextColumn
+        End If
         
         If RagicDictionary.IsFieldHidden(loadInfo.Category.SheetName, sourceHeaderName) Then
             Log "PasteData", "Colonne '" & sourceHeaderName & "' (index " & sourceColIndex & ") est cachée, elle sera ignorée.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-            ' Store a marker for hidden columns if needed, or just skip
         Else
             ragicType = RagicDictionary.GetFieldRagicType(loadInfo.Category.SheetName, sourceHeaderName)
+            If Err.Number <> 0 Then
+                Log "PasteData", "ERREUR GetFieldRagicType pour " & sourceHeaderName & ": " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+                Err.Clear
+                GoTo NextColumn
+            End If
+            
             Dim colDetail As Object ' Scripting.Dictionary
             Set colDetail = CreateObject("Scripting.Dictionary")
             colDetail("ragicType") = ragicType
             colDetail("headerName") = sourceHeaderName
             colDetail("sourceIndex") = sourceColIndex ' Store original source index
             
-            columnProcessingDetails(visibleSourceColIndices.Count + 1) = colDetail ' Keyed by visible column order
+            ' Convertir l'index en string pour la clé du dictionnaire
+            Set columnProcessingDetails(CStr(visibleSourceColIndices.Count + 1)) = colDetail ' Keyed by visible column order
             visibleSourceColIndices.Add sourceColIndex ' Keep track of the original source index for visible columns
             Log "PasteData", "Colonne visible: '" & sourceHeaderName & "' (source idx " & sourceColIndex & ", visible idx " & visibleSourceColIndices.Count & "), Type: " & ragicType, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         End If
+NextColumn:
     Next sourceColIndex
+    On Error GoTo ErrorHandler ' Retour au handling d'erreur normal
 
     If visibleSourceColIndices.Count = 0 Then
         HandleError MODULE_NAME, PROC_NAME, "Aucune colonne visible à coller pour la catégorie '" & loadInfo.Category.DisplayName & "'."
@@ -563,20 +607,21 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         baseFontSize = .Size
         baseFontName = .Name
     End With
+    Log "PasteData", "Police de base: " & baseFontName & ", Taille: " & baseFontSize, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
     ' --- Start pasting ---
     destRow = loadInfo.FinalDestination.Row
     destCol = loadInfo.FinalDestination.Column
+    Log "PasteData", "Début collage à: Ligne=" & destRow & ", Colonne=" & destCol, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
     Dim destCell As Range
     Dim cellInfo As FormattedCellOutput
     
-
     If loadInfo.ModeTransposed Then
         Log "PasteData", "Mode TRANSPOSE", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         ' Paste Headers (now as row headers)
         For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
-            Set colDetail = columnProcessingDetails(i)
+            Set colDetail = columnProcessingDetails.Item(CStr(i))
             sourceHeaderName = colDetail("headerName")
             ragicType = colDetail("ragicType")
             
@@ -603,6 +648,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         For Each v In loadInfo.SelectedValues ' v is the ID of the selected record
             k = k + 1
             sourceRowIndex = 0
+            Log "PasteData", "Recherche ID " & CStr(v) & " dans la table source...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
             For j = 1 To sourceTable.DataBodyRange.Rows.Count ' Find the row in source table by ID
                 If CStr(sourceTable.DataBodyRange.Cells(j, 1).Value) = CStr(v) Then
                     sourceRowIndex = j
@@ -612,13 +658,15 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
 
             Dim originalSourceColIdx as Long
             If sourceRowIndex > 0 Then
+                Log "PasteData", "ID " & CStr(v) & " trouvé à la ligne " & sourceRowIndex, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                 For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
-                    Set colDetail = columnProcessingDetails(i)
+                    Set colDetail = columnProcessingDetails.Item(CStr(i))
                     sourceHeaderName = colDetail("headerName") ' Field name for GetCellProcessingInfo
                     ragicType = colDetail("ragicType")
                     originalSourceColIdx = colDetail("sourceIndex") ' Get the original source column index
 
                     Set destCell = destSheet.Cells(destRow + i - 1, destCol + k - 1)
+                    Log "PasteData", "Collage cellule: " & destCell.Address & ", Champ: " & sourceHeaderName & ", Type: " & ragicType, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                     
                     If ragicType = "Section" Then
                         destCell.Value = "" ' Blank for section data cells
@@ -635,11 +683,19 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                     Else
                         Dim originalValue As Variant
                         originalValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, originalSourceColIdx).Value
+                        Log "PasteData", "Valeur originale pour " & sourceHeaderName & ": " & CStr(originalValue), DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                         
+                        On Error Resume Next
                         cellInfo = DataFormatter.GetCellProcessingInfo(originalValue, "", sourceHeaderName, loadInfo.Category.SheetName)
+                        If Err.Number <> 0 Then
+                            Log "PasteData", "ERREUR GetCellProcessingInfo pour " & sourceHeaderName & ": " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+                            Err.Clear
+                        End If
+                        On Error GoTo ErrorHandler
                         
                         destCell.Value = cellInfo.FinalValue
                         destCell.NumberFormat = cellInfo.NumberFormatString
+                        Log "PasteData", "Valeur finale pour " & sourceHeaderName & ": " & CStr(cellInfo.FinalValue) & ", Format: " & cellInfo.NumberFormatString, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                     End If
                 Next i
             Else
@@ -651,7 +707,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         Log "PasteData", "Mode NORMAL", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         ' Paste Headers
         For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
-            Set colDetail = columnProcessingDetails(i)
+            Set colDetail = columnProcessingDetails.Item(CStr(i))
             sourceHeaderName = colDetail("headerName")
             ragicType = colDetail("ragicType")
             
@@ -678,6 +734,7 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
         For Each v In loadInfo.SelectedValues ' v is the ID of the selected record
             k = k + 1
             sourceRowIndex = 0
+            Log "PasteData", "Recherche ID " & CStr(v) & " dans la table source...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
             For j = 1 To sourceTable.DataBodyRange.Rows.Count ' Find the row in source table by ID
                 If CStr(sourceTable.DataBodyRange.Cells(j, 1).Value) = CStr(v) Then
                     sourceRowIndex = j
@@ -686,8 +743,9 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
             Next j
 
             If sourceRowIndex > 0 Then
+                Log "PasteData", "ID " & CStr(v) & " trouvé à la ligne " & sourceRowIndex, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                 For i = 1 To visibleSourceColIndices.Count ' Iterate through VISIBLE columns
-                    Set colDetail = columnProcessingDetails(i)
+                    Set colDetail = columnProcessingDetails.Item(CStr(i))
                     sourceHeaderName = colDetail("headerName") ' Field name for GetCellProcessingInfo
                     ragicType = colDetail("ragicType")
                     originalSourceColIdx = colDetail("sourceIndex") ' Get the original source column index
@@ -709,11 +767,19 @@ Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
                     Else
                         
                         originalValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, originalSourceColIdx).Value
+                        Log "PasteData", "Valeur originale pour " & sourceHeaderName & ": " & CStr(originalValue), DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                         
+                        On Error Resume Next
                         cellInfo = DataFormatter.GetCellProcessingInfo(originalValue, "", sourceHeaderName, loadInfo.Category.SheetName)
+                        If Err.Number <> 0 Then
+                            Log "PasteData", "ERREUR GetCellProcessingInfo pour " & sourceHeaderName & ": " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+                            Err.Clear
+                        End If
+                        On Error GoTo ErrorHandler
                         
                         destCell.Value = cellInfo.FinalValue
                         destCell.NumberFormat = cellInfo.NumberFormatString
+                        Log "PasteData", "Valeur finale pour " & sourceHeaderName & ": " & CStr(cellInfo.FinalValue) & ", Format: " & cellInfo.NumberFormatString, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                     End If
                 Next i
             Else
