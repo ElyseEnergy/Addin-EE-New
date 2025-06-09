@@ -616,7 +616,7 @@ NextColumn:
 
     Dim destCell As Range
     Dim cellInfo As FormattedCellOutput
-    
+
     If loadInfo.ModeTransposed Then
         Log "PasteData", "Mode TRANSPOSE", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         ' Paste Headers (now as row headers)
@@ -788,8 +788,35 @@ NextColumn:
         Next v
     End If
 
-    ' AutoFit columns for the pasted range (optional, can be slow for large datasets)
-    ' loadInfo.FinalDestination.Resize(numRowsPasted, numColsPasted).Columns.AutoFit
+    ' --- CRÉATION DU LISTOBJECT ---
+    ' Calculer la taille nécessaire
+    Dim nbRows As Long, nbCols As Long
+    If loadInfo.ModeTransposed Then
+        nbRows = sourceTable.ListColumns.Count
+        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+    Else
+        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbCols = sourceTable.ListColumns.Count
+    End If
+
+    ' Créer la plage pour le nouveau ListObject
+    Dim pastedRange As Range
+    Set pastedRange = loadInfo.FinalDestination.Resize(nbRows, nbCols)
+    
+    ' Créer le ListObject avec un nom unique
+    Dim uniqueTableName As String
+    uniqueTableName = GetUniqueTableName(loadInfo.Category.CategoryName)
+    Log "dataloader", "Création du ListObject '" & uniqueTableName & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    
+    Dim newListObject As ListObject
+    Set newListObject = destSheet.ListObjects.Add(xlSrcRange, pastedRange, , xlYes)
+    newListObject.Name = uniqueTableName
+    
+    ' Appliquer le style par défaut
+    newListObject.TableStyle = "TableStyleMedium2"
+    
+    ' Protéger le tableau
+    ProtectSheetWithTable destSheet
 
     PasteData = True
 
@@ -902,7 +929,7 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
     If loadInfo.Category.DisplayName = "" Then
         MsgBox "Catégorie '" & CategoryName & "' non trouvée", vbExclamation
         Log "dataloader", "ERREUR: Catégorie non trouvée: " & CategoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
-        ProcessCategory = DataLoadResult.Error
+        ProcessCategory = Error ' Utilisation directe de l'énumération
         Exit Function
     End If
     
@@ -910,20 +937,20 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
     
     Dim result As DataLoadResult
     result = ProcessDataLoad(loadInfo)
-    If result = DataLoadResult.Cancelled Then
-        ProcessCategory = DataLoadResult.Cancelled
+    If result = Cancelled Then ' Utilisation directe de l'énumération
+        ProcessCategory = Cancelled ' Utilisation directe de l'énumération
         Exit Function
-    ElseIf result = DataLoadResult.Error Then
+    ElseIf result = Error Then ' Utilisation directe de l'énumération
         Log "dataloader", "ECHEC: ProcessDataLoad a échoué pour " & CategoryName, ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
         Log "dataloader", "  - QueryExists: " & PQQueryManager.QueryExists(loadInfo.Category.PowerQueryName), ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
         Log "dataloader", "  - Tables PQ_DATA: " & ListAllTableNames(wsPQData), ERROR_LEVEL, "ProcessCategory", "DataLoaderManager"
         If errorMessage <> "" Then
             MsgBox errorMessage, vbExclamation
         End If
-        ProcessCategory = DataLoadResult.Error
+        ProcessCategory = Error ' Utilisation directe de l'énumération
         Exit Function
     End If
-      ProcessCategory = DataLoadResult.Success
+      ProcessCategory = Success ' Utilisation directe de l'énumération
     Exit Function
 
 ErrorHandler:
@@ -931,7 +958,7 @@ ErrorHandler:
     If errorMessage <> "" Then
         MsgBox errorMessage, vbExclamation
     End If
-    ProcessCategory = DataLoadResult.Error
+    ProcessCategory = Error ' Utilisation directe de l'énumération
 End Function
 
 
