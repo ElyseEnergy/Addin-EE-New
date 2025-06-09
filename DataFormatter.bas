@@ -66,11 +66,14 @@ Public Function GetCellProcessingInfo(originalValue As Variant, sourceNumberForm
             ' For example: If IsDate(originalValue) Then out.FinalValue = CDate(originalValue) Else out.FinalValue = originalValue
 
         Case "Number"
-            out.FinalValue = originalValue ' Assume originalValue is numeric or can be coerced by Excel
-            out.NumberFormatString = "General" ' Allows local settings for separators
-            ' To ensure it's treated as a number if it's text:
-            ' If IsNumeric(originalValue) Then out.FinalValue = CDbl(originalValue) Else out.FinalValue = originalValue
-            ' However, PowerQuery usually delivers numbers as numeric types.
+            ' Convertir explicitement en nombre en gérant le séparateur décimal
+            If IsNumeric(Replace(CStr(originalValue), ".", Application.DecimalSeparator)) Then
+                out.FinalValue = CDbl(Replace(CStr(originalValue), ".", Application.DecimalSeparator))
+            Else
+                out.FinalValue = originalValue
+            End If
+            out.NumberFormatString = "General" ' Permet d'utiliser les paramètres locaux pour les séparateurs
+            Log "GetCellProcessingInfo", "Conversion numérique: Original='" & CStr(originalValue) & "' -> Final='" & CStr(out.FinalValue) & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
 
         Case "Text"
             ' Default is already Text format ("@") and original value
