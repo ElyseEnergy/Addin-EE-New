@@ -163,6 +163,26 @@ Option Explicit
 1.  **`Attribute VB_Name = "NomDuModule"`** : Toujours en **première ligne**. Ne jamais l'oublier, sinon l'import peut échouer ou créer un module au nom incorrect (ex: `Module1`).
 2.  **`Option Explicit`** : Toujours en **deuxième ligne**. Force la déclaration de toutes les variables.
 
+### Règle : Pas de `Continue For` en VBA
+- **Important :** L'instruction `Continue For` n'existe pas en VBA. Pour passer à l'itération suivante d'une boucle, il faut utiliser une structure `If...Then...Else` et placer le code à exécuter uniquement en l'absence d'erreur dans le bloc `Else`.
+- **Exemple incorrect :**
+```vba
+For i = 1 To 10
+    If erreur Then Continue For ' <-- Syntaxe invalide en VBA
+    ' ...
+Next i
+```
+- **Exemple correct :**
+```vba
+For i = 1 To 10
+    If erreur Then
+        ' Gérer l'erreur ou logger
+    Else
+        ' ... code normal ...
+    End If
+Next i
+```
+
 ### Déclaration des Variables et Constantes
 - **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
 - **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.

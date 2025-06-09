@@ -201,27 +201,93 @@ End Sub
 
 ' Recherche à deux étages dans la table PQ_DICT pour la visibilité d'un champ
 Public Function IsFieldHidden(SheetName As String, fieldName As String) As Boolean
+    IsFieldHidden = False ' Default to False
+
     If wsPQDict Is Nothing Then
+        Log "IsFieldHidden", "wsPQDict is Nothing. Attempting to GetOrCreatePQDictSheet.", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
         Set wsPQDict = GetOrCreatePQDictSheet()
+        If wsPQDict Is Nothing Then
+            Log "IsFieldHidden", "Failed to GetOrCreatePQDictSheet. Exiting.", ERROR_LEVEL, "IsFieldHidden", "RagicDictionary"
+            Exit Function
+        End If
     End If
+
     Dim lo As ListObject
-    Set lo = wsPQDict.ListObjects("Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME))
+    Dim tableName As String
+    tableName = "Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME)
+    
+    On Error Resume Next
+    Set lo = wsPQDict.ListObjects(tableName)
+    If Err.Number <> 0 Then
+        Log "IsFieldHidden", "Error accessing ListObject '" & tableName & "': " & Err.Description & ". ListObjects available: " & ListAllTableNames(wsPQDict), ERROR_LEVEL, "IsFieldHidden", "RagicDictionary"
+        Set lo = Nothing ' Ensure lo is Nothing if error occurred
+        Err.Clear
+    End If
+    On Error GoTo 0
+
     If lo Is Nothing Then
-        Log "IsFieldHidden", "Table PQ_DICT absente.", ERROR_LEVEL, "IsFieldHidden", "RagicDictionary"
-        IsFieldHidden = False
+        Log "IsFieldHidden", "ListObject '" & tableName & "' not found in wsPQDict. Sheet visible: " & wsPQDict.Visible & ", Sheet name: " & wsPQDict.Name, WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
         Exit Function
     End If
+
+    If lo.ListRows.Count = 0 Then
+        Log "IsFieldHidden", "ListObject '" & tableName & "' is empty.", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
+        Exit Function
+    End If
+
     Dim r As Long
+    Dim currentSheetName As String
+    Dim currentFieldName As String
+    Dim currentMemo As String
+    Dim sheetNameCol As ListColumn, fieldNameCol As ListColumn, memoCol As ListColumn
+
+    On Error Resume Next
+    Set sheetNameCol = lo.ListColumns("SheetName")
+    Set fieldNameCol = lo.ListColumns("Field Name")
+    Set memoCol = lo.ListColumns("Memo")
+    If Err.Number <> 0 Then
+        Log "IsFieldHidden", "Error getting one or more critical columns (SheetName, Field Name, Memo) from table '" & tableName & "'. Error: " & Err.Description, ERROR_LEVEL, "IsFieldHidden", "RagicDictionary"
+        Err.Clear
+        Exit Function ' Cannot proceed without these columns
+    End If
+    On Error GoTo 0
+    
+    Dim lSheetName As String, lFieldName As String
+    lSheetName = LCase(Trim(SheetName))
+    lFieldName = LCase(Trim(fieldName))
+
     For r = 1 To lo.ListRows.Count
-        If Trim(lo.DataBodyRange(r, lo.ListColumns("SheetName").Index).Value) = Trim(SheetName) Then
-            If Trim(lo.DataBodyRange(r, lo.ListColumns("Field Name").Index).Value) = Trim(fieldName) Then
-                IsFieldHidden = InStr(1, lo.DataBodyRange(r, lo.ListColumns("Memo").Index).Value, "Hidden", vbTextCompare) > 0
-                Exit Function
+        currentSheetName = ""
+        currentFieldName = ""
+        currentMemo = ""
+
+        On Error Resume Next ' Handle potential errors when reading cell values
+        currentSheetName = CStr(lo.DataBodyRange(r, sheetNameCol.Index))
+        currentFieldName = CStr(lo.DataBodyRange(r, fieldNameCol.Index))
+        currentMemo = CStr(lo.DataBodyRange(r, memoCol.Index))
+        If Err.Number <> 0 Then
+            Log "IsFieldHidden", "Row " & r & ": Error reading cell value. Sheet: '" & currentSheetName & "', Field: '" & currentFieldName & "'. Error: " & Err.Description, WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
+            Err.Clear
+            ' The loop will continue to the next r automatically
+        Else
+            ' Only process if no error occurred reading values
+            ' Log "IsFieldHidden", "Row " & r & ": Comparing Input ('" & lSheetName & "' / '" & lFieldName & "') with Table ('" & LCase(Trim(currentSheetName)) & "' / '" & LCase(Trim(currentFieldName)) & "'). Memo: '" & currentMemo & "'", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
+
+            If LCase(Trim(currentSheetName)) = lSheetName And LCase(Trim(currentFieldName)) = lFieldName Then
+                Log "IsFieldHidden", "Match found for '" & SheetName & "' / '" & fieldName & "' at row " & r & ". Memo content: '" & currentMemo & "'", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
+                If InStr(1, Trim(currentMemo), "Hidden", vbTextCompare) > 0 Then
+                    IsFieldHidden = True
+                    Log "IsFieldHidden", "Field '" & SheetName & "' / '" & fieldName & "' is Hidden.", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
+                Else
+                    Log "IsFieldHidden", "Field '" & SheetName & "' / '" & fieldName & "' is NOT Hidden (Memo does not contain 'Hidden').", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
+                End If
+                Exit Function ' Exit once found
             End If
         End If
+        On Error GoTo 0 ' Reset error handling for the next iteration's reads
     Next r
-    Log "IsFieldHidden", "Aucune ligne trouvée pour '" & SheetName & "' / '" & fieldName & "' dans PQ_DICT.", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
-    IsFieldHidden = False
+    Log "IsFieldHidden", "No exact match found for '" & SheetName & "' / '" & fieldName & "' in PQ_DICT after checking " & lo.ListRows.Count & " rows.", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
+    ' IsFieldHidden remains False if no match or not hidden
 End Function
 
 ' Normalise le nom de la feuille pour la clé dictionnaire
@@ -408,31 +474,91 @@ End Sub
 
 ' Recherche à deux étages pour le type de champ
 Public Function GetFieldRagicType(categorySheetName As String, fieldName As String) As String
+    GetFieldRagicType = "Text" ' Default value
+
     If wsPQDict Is Nothing Then
+        Log "GetFieldRagicType", "wsPQDict is Nothing. Attempting to GetOrCreatePQDictSheet.", WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
         Set wsPQDict = GetOrCreatePQDictSheet()
+        If wsPQDict Is Nothing Then
+            Log "GetFieldRagicType", "Failed to GetOrCreatePQDictSheet. Exiting.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+            Exit Function
+        End If
     End If
+
     Dim lo As ListObject
-    Set lo = wsPQDict.ListObjects("Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME))
+    Dim tableName As String
+    tableName = "Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME)
+
+    On Error Resume Next
+    Set lo = wsPQDict.ListObjects(tableName)
+    If Err.Number <> 0 Then
+        Log "GetFieldRagicType", "Error accessing ListObject '" & tableName & "': " & Err.Description & ". ListObjects available: " & ListAllTableNames(wsPQDict), ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        Set lo = Nothing
+        Err.Clear
+    End If
+    On Error GoTo 0
+    
     If lo Is Nothing Then
-        Log "GetFieldRagicType", "Table PQ_DICT absente.", ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
-        GetFieldRagicType = "Text"
+        Log "GetFieldRagicType", "ListObject '" & tableName & "' not found in wsPQDict. Sheet visible: " & wsPQDict.Visible & ", Sheet name: " & wsPQDict.Name, WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
         Exit Function
     End If
+
+    If lo.ListRows.Count = 0 Then
+        Log "GetFieldRagicType", "ListObject '" & tableName & "' is empty.", WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        Exit Function
+    End If
+
     Dim r As Long
+    Dim currentSheetName As String
+    Dim currentFieldName As String
+    Dim currentFieldType As String
+    Dim sheetNameCol As ListColumn, fieldNameCol As ListColumn, fieldTypeCol As ListColumn
+
+    On Error Resume Next
+    Set sheetNameCol = lo.ListColumns("SheetName")
+    Set fieldNameCol = lo.ListColumns("Field Name")
+    Set fieldTypeCol = lo.ListColumns("Field Type") ' Assuming this is the correct column name
+    If Err.Number <> 0 Then
+        Log "GetFieldRagicType", "Error getting one or more critical columns (SheetName, Field Name, Field Type) from table '" & tableName & "'. Error: " & Err.Description, ERROR_LEVEL, "GetFieldRagicType", "RagicDictionary"
+        Err.Clear
+        Exit Function ' Cannot proceed without these columns
+    End If
+    On Error GoTo 0
+
+    Dim lCategorySheetName As String, lFieldName As String
+    lCategorySheetName = LCase(Trim(categorySheetName))
+    lFieldName = LCase(Trim(fieldName))
+
     For r = 1 To lo.ListRows.Count
-        If Trim(lo.DataBodyRange(r, lo.ListColumns("SheetName").Index).Value) = Trim(categorySheetName) Then
-            If Trim(lo.DataBodyRange(r, lo.ListColumns("Field Name").Index).Value) = Trim(fieldName) Then
-                Dim fieldType As String
-                fieldType = UCase(CStr(lo.DataBodyRange(r, lo.ListColumns("Field Type").Index).Value))
-                Select Case fieldType
-                    Case "DATE": GetFieldRagicType = "Date"
-                    Case "NUMBER", "NUMERIC", "INTEGER", "FLOAT": GetFieldRagicType = "Number"
-                    Case Else: GetFieldRagicType = "Text"
-                End Select
-                Exit Function
+        currentSheetName = ""
+        currentFieldName = ""
+        currentFieldType = ""
+
+        On Error Resume Next ' Handle potential errors when reading cell values
+        currentSheetName = CStr(lo.DataBodyRange(r, sheetNameCol.Index))
+        currentFieldName = CStr(lo.DataBodyRange(r, fieldNameCol.Index))
+        currentFieldType = CStr(lo.DataBodyRange(r, fieldTypeCol.Index))
+        If Err.Number <> 0 Then
+            Log "GetFieldRagicType", "Row " & r & ": Error reading cell value. Sheet: '" & currentSheetName & "', Field: '" & currentFieldName & "'. Error: " & Err.Description, WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
+            Err.Clear
+            ' The loop will continue to the next r automatically
+        Else
+            ' Only process if no error occurred reading values
+            ' Log "GetFieldRagicType", "Row " & r & ": Comparing Input ('" & lCategorySheetName & "' / '" & lFieldName & "') with Table ('" & LCase(Trim(currentSheetName)) & "' / '" & LCase(Trim(currentFieldName)) & "'). Field Type: '" & currentFieldType & "'", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
+
+            If LCase(Trim(currentSheetName)) = lCategorySheetName And LCase(Trim(currentFieldName)) = lFieldName Then
+                GetFieldRagicType = Trim(currentFieldType)
+                If GetFieldRagicType = "" Then ' Handle case where field type might be blank
+                    GetFieldRagicType = "Text" ' Fallback to default if blank
+                    Log "GetFieldRagicType", "Match found for '" & categorySheetName & "' / '" & fieldName & "' at row " & r & ". Field Type was blank, defaulted to 'Text'.", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
+                Else
+                    Log "GetFieldRagicType", "Match found for '" & categorySheetName & "' / '" & fieldName & "' at row " & r & ". Field Type: '" & GetFieldRagicType & "'", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
+                End If
+                Exit Function ' Exit once found
             End If
         End If
+        On Error GoTo 0 ' Reset error handling for the next iteration's reads
     Next r
-    Log "GetFieldRagicType", "Aucune ligne trouvée pour '" & categorySheetName & "' / '" & fieldName & "' dans PQ_DICT.", WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
-    GetFieldRagicType = "Text"
+    Log "GetFieldRagicType", "No exact match found for '" & categorySheetName & "' / '" & fieldName & "' in PQ_DICT after checking " & lo.ListRows.Count & " rows. Defaulting to 'Text'.", WARNING_LEVEL, "GetFieldRagicType", "RagicDictionary"
+    ' GetFieldRagicType remains "Text" (default) if no match
 End Function
