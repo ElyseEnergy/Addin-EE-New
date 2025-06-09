@@ -115,6 +115,12 @@ Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible A
     visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.id)
 End Sub
 
+' Callback pour la visibilité du bouton d'upload
+Public Sub GetUploadButtonVisibility(control As IRibbonControl, ByRef visible As Variant)
+    ' Visible uniquement si l'utilisateur a accès aux fichiers serveur
+    visible = HasAccess("Files")
+End Sub
+
 ' Fonction pour forcer le rafraîchissement du ruban
 Public Sub InvalidateRibbon()
     Log "ribbon", "InvalidateRibbon appelé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"

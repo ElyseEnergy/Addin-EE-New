@@ -50,6 +50,12 @@
                     </ns0:menu>
                 </ns0:group>
                 <ns0:group id="grpFiles" label="Files">
+                    <ns0:button id="btnUploadCurrentFile" 
+                              label="Upload fichier courant" 
+                              onAction="FileManager.ProcessFileUpload" 
+                              getVisible="GetUploadButtonVisibility"
+                              image="uploader"
+                              size="large"/>
                     <ns0:menu id="menuServerFiles" label="Available files on server" image="files" size="large" getVisible="GetServerFilesVisibility">
                         <ns0:button id="btnServerFiles" label="Browse server files" onAction="OnServerFiles" image="files" enabled="false"/>
                     </ns0:menu>

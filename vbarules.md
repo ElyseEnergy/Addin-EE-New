@@ -405,10 +405,15 @@ Public Sub MaFonctionCritique()
     
     Exit Sub
 ErrorHandler:
+    ' IMPORTANT : Ne jamais utiliser "On Error Resume Next" dans un ErrorHandler
+    ' car cela masquerait les erreurs suivantes et empêcherait leur gestion correcte
+    
     ' Appel au gestionnaire centralisé
     HandleError MODULE_NAME, PROC_NAME, "Une erreur spécifique est survenue ici."
 End Sub
 ```
+
+**⚠️ AVERTISSEMENT :** Ne jamais utiliser `On Error Resume Next` dans un bloc `ErrorHandler`. Cette instruction masquerait toutes les erreurs suivantes et empêcherait leur gestion correcte. Si vous avez besoin de gérer des erreurs spécifiques dans le bloc `ErrorHandler`, utilisez des conditions sur `Err.Number` à la place.
 La fonction `HandleError` (de `SYS_ErrorHandler.bas`) se charge de logger l'erreur et d'informer l'utilisateur si nécessaire.
 
 ### Système de Logging
