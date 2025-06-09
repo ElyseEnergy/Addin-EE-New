@@ -799,6 +799,9 @@ NextColumn:
         nbCols = sourceTable.ListColumns.Count
     End If
 
+    Log "dataloader", "Dimensions calculées - Lignes: " & nbRows & ", Colonnes: " & nbCols, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "dataloader", "Position destination - Ligne: " & loadInfo.FinalDestination.Row & ", Colonne: " & loadInfo.FinalDestination.Column, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
     ' Créer la plage pour le nouveau ListObject
     Dim pastedRange As Range
     Set pastedRange = loadInfo.FinalDestination.Resize(nbRows, nbCols)
@@ -806,32 +809,43 @@ NextColumn:
     ' Créer le ListObject avec un nom unique
     Dim uniqueTableName As String
     uniqueTableName = GetUniqueTableName(loadInfo.Category.CategoryName)
-    Log "dataloader", "Création du ListObject '" & uniqueTableName & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "dataloader", "Création du ListObject '" & uniqueTableName & "' sur la plage " & pastedRange.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    
+    ' Déprotéger temporairement la feuille
+    destSheet.Unprotect
+    
+    ' Attendre que les données soient bien collées
+    DoEvents
     
     Dim newListObject As ListObject
+    On Error Resume Next
     Set newListObject = destSheet.ListObjects.Add(xlSrcRange, pastedRange, , xlYes)
+    If Err.Number <> 0 Then
+        Log "dataloader", "ERREUR création ListObject: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        Err.Clear
+        ' Essayer une autre approche en mode normal
+        If Not loadInfo.ModeTransposed Then
+            Log "dataloader", "Tentative alternative de création du ListObject en mode normal", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+            Set newListObject = destSheet.ListObjects.Add(xlSrcRange, pastedRange.Cells(1, 1).Resize(nbRows, nbCols), , xlYes)
+        End If
+    End If
+    On Error GoTo ErrorHandler
+    
+    If newListObject Is Nothing Then
+        Log "dataloader", "ÉCHEC: Impossible de créer le ListObject", ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        PasteData = False
+        GoTo CleanupAndExit
+    End If
+    
     newListObject.Name = uniqueTableName
     
     ' Appliquer le style par défaut
     newListObject.TableStyle = "TableStyleMedium2"
     
-    ' Verrouiller directement le nouveau tableau
+    ' Verrouiller le nouveau tableau
     newListObject.Range.Locked = True
     
-    ' Protéger le tableau et la feuille
-    destSheet.Unprotect
-    destSheet.Cells.Locked = False
-    
-    ' Verrouiller tous les tableaux EE_
-    Dim tbl As ListObject
-    For Each tbl In destSheet.ListObjects
-        If Left(tbl.Name, 3) = "EE_" Then
-            Log "dataloader", "Verrouillage du tableau: " & tbl.Name, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-            tbl.Range.Locked = True
-        End If
-    Next tbl
-    
-    ' Protéger la feuille avec les permissions standard
+    ' Protéger la feuille avec les paramètres standard
     destSheet.Protect UserInterfaceOnly:=True, _
         AllowFormattingCells:=True, _
         AllowFormattingColumns:=True, _
