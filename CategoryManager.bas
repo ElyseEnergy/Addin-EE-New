@@ -163,16 +163,24 @@ Public Function GetCategoryByName(displayName As String) As CategoryInfo
     
     Const PROC_NAME As String = "GetCategoryByName"
     Const MODULE_NAME As String = "CategoryManager"
-      If displayName = "" Then
+    
+    If displayName = "" Then
         HandleError MODULE_NAME, PROC_NAME, "Nom d'affichage vide"
         Exit Function
     End If
     
-    Dim idx As Long
-    idx = GetCategoryIndexByName(displayName)
-    If idx > 0 Then
-        GetCategoryByName = Categories(idx)
-    End If
+    ' Assurer l'initialisation
+    If CategoriesCount = 0 Then InitCategories
+    
+    Dim i As Long
+    For i = 1 To CategoriesCount
+        If LCase(Categories(i).displayName) = LCase(displayName) Then
+            GetCategoryByName = Categories(i)
+            Exit Function
+        End If
+    Next i
+    
+    ' Non trouvé, sortir proprement.
     Exit Function
     
 ErrorHandler:
@@ -217,4 +225,38 @@ Public Function GetAllCategories() As CategoryInfo()
 
 ErrorHandler:
     HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de toutes les catégories"
+End Function
+
+' Retourne une catégorie par son nom interne (CategoryName).
+' Paramètres :
+'   name (String) : Nom interne de la catégorie
+' Retour :
+'   CategoryInfo (structure de la catégorie)
+Public Function GetCategoryByCategoryName(name As String) As CategoryInfo
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "GetCategoryByCategoryName"
+    Const MODULE_NAME As String = "CategoryManager"
+    
+    If name = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Nom de catégorie vide"
+        Exit Function
+    End If
+    
+    ' Assurer l'initialisation
+    If CategoriesCount = 0 Then InitCategories
+    
+    Dim i As Long
+    For i = 1 To CategoriesCount
+        If LCase(Categories(i).categoryName) = LCase(name) Then
+            GetCategoryByCategoryName = Categories(i)
+            Exit Function
+        End If
+    Next i
+    
+    ' Non trouvé, sortir proprement.
+    Exit Function
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de la catégorie par nom: " & name
 End Function

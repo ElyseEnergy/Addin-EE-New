@@ -123,6 +123,16 @@
                         getVisible="GetReloadButtonsVisible"
                         screentip="Recharge tous les tableaux du classeur"
                         supertip="Met à jour les données de tous les tableaux EE_ présents dans le classeur en rechargeant depuis Ragic." />
+                    <ns0:button 
+                        id="btnDeleteCurrentTable" 
+                        label="Supprimer le tableau courant" 
+                        imageMso="DeleteTable"
+                        size="large"
+                        onAction="DeleteCurrentTable_Click"
+                        getEnabled="GetReloadCurrentEnabled"
+                        getVisible="GetReloadButtonsVisible"
+                        screentip="Supprime le tableau actuellement sélectionné"
+                        supertip="Supprime le tableau EE_ actuellement sélectionné et ses métadonnées." />
                 </ns0:group>
             </ns0:tab>
         </ns0:tabs>

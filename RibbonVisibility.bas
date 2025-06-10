@@ -14,30 +14,47 @@ Public gRibbon As IRibbonUI
 
 ' Callback appelé lors du chargement du ruban
 Public Sub Ribbon_Load(ByVal ribbon As IRibbonUI)
+    Const PROC_NAME As String = "Ribbon_Load"
+    On Error GoTo ErrorHandler
+    
     Set gRibbon = ribbon
     
     ' Planifie l'initialisation pour s'exécuter dans 1 seconde
     ' Cela permet à l'interface utilisateur de répondre immédiatement.
     Application.OnTime Now + TimeValue("00:00:01"), "DelayedInitialization"
+    
+    Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Tâches d'initialisation exécutées après le chargement du ruban
 Public Sub DelayedInitialization()
+    Const PROC_NAME As String = "DelayedInitialization"
+    On Error GoTo ErrorHandler
+    
     ' Initialiser le système de logging
     SYS_Logger.InitializeLogger
     
-    Log "ribbon", "Ribbon_Load (Delayed) appelé", DEBUG_LEVEL, "DelayedInitialization", "RibbonVisibility"
+    Log "ribbon", "Ribbon_Load (Delayed) appelé", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' Initialiser les profils de démo
     InitializeDemoProfiles
-    Log "ribbon", "gRibbon (Delayed) initialisé", DEBUG_LEVEL, "DelayedInitialization", "RibbonVisibility"
+    Log "ribbon", "gRibbon (Delayed) initialisé", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' Optionnel : rafraîchir le ruban si des états ont changé
     InvalidateRibbon
+    
+    Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour le sélecteur de profil
 Public Sub OnSelectDemoProfile(control As IRibbonControl)
+    Const PROC_NAME As String = "OnSelectDemoProfile"
+    On Error GoTo ErrorHandler
+    
     Select Case control.id
         Case "btnEngineerBasic": SetCurrentProfile AccessProfiles.Engineer_Basic
         Case "btnProjectManager": SetCurrentProfile AccessProfiles.Project_Manager
@@ -48,40 +65,95 @@ Public Sub OnSelectDemoProfile(control As IRibbonControl)
     End Select
     
     InvalidateRibbon
+    
+    Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour l'affichage du profil actuel
 Public Sub GetCurrentProfileLabel(control As IRibbonControl, ByRef label)
+    Const PROC_NAME As String = "GetCurrentProfileLabel"
+    On Error GoTo ErrorHandler
+    
     label = "Current Profile: " & GetCurrentProfileName()
+    
+    Exit Sub
+ErrorHandler:
+    label = "Error"
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Technologies
 Public Sub GetTechnologiesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetTechnologiesVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Engineering")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Utilities
 Public Sub GetUtilitiesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetUtilitiesVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Engineering")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Files
 Public Sub GetServerFilesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetServerFilesVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Tools")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Outils
 Public Sub GetAnalysisToolsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetAnalysisToolsVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Tools")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Finances
 Public Sub GetFinancesVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetFinancesVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Finance")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité des menus de projets
 Public Function GetProjectMenuVisibility(projectMenu As String) As Boolean
+    Const PROC_NAME As String = "GetProjectMenuVisibility"
+    On Error GoTo ErrorHandler
+    
     ' Extrait le nom du projet du menu (par exemple "Echo" de "summaryEcho")
     Dim projectName As String
     If InStr(1, projectMenu, "GENERIC") > 0 Then
@@ -95,57 +167,140 @@ Public Function GetProjectMenuVisibility(projectMenu As String) As Boolean
         projectName = Replace(projectName, "tech", "")
         GetProjectMenuVisibility = HasAccess(projectName)
     End If
+    
+    Exit Function
+ErrorHandler:
+    GetProjectMenuVisibility = False
+    HandleError MODULE_NAME, PROC_NAME
 End Function
 
 Public Sub GetSummarySheetsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetSummarySheetsVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Sub GetPlanningsVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetPlanningsVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Sub GetDevexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetDevexVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Sub GetCapexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetCapexVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Sub GetOpexVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetOpexVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Finance") Or GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 Public Sub GetTechScenariosVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetTechScenariosVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Engineering") Or GetProjectMenuVisibility(control.id)
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du bouton d'upload
 Public Sub GetUploadButtonVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetUploadButtonVisibility"
+    On Error GoTo ErrorHandler
+    
     ' Visible uniquement si l'utilisateur a accès aux fichiers serveur
     visible = HasAccess("Files")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Fonction pour forcer le rafraîchissement du ruban
 Public Sub InvalidateRibbon()
-    Log "ribbon", "InvalidateRibbon appelé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
+    Const PROC_NAME As String = "InvalidateRibbon"
+    On Error GoTo ErrorHandler
+    
+    Log "ribbon", "InvalidateRibbon appelé", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     If Not gRibbon Is Nothing Then
         gRibbon.Invalidate
-        Log "ribbon", "Ribbon invalidé", DEBUG_LEVEL, "InvalidateRibbon", "RibbonVisibility"
+        Log "ribbon", "Ribbon invalidé", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     Else
-        Log "ribbon", "gRibbon est Nothing", WARNING_LEVEL, "InvalidateRibbon", "RibbonVisibility"
+        Log "ribbon", "gRibbon est Nothing", WARNING_LEVEL, PROC_NAME, MODULE_NAME
     End If
+    
+    Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Simple test button callback
 Public Sub OnTestButton(control As IRibbonControl)
+    Const PROC_NAME As String = "OnTestButton"
+    On Error GoTo ErrorHandler
+    
     MsgBox "Test button clicked!"
+    
+    Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité du menu Debug (admin only)
 Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetAdminVisibility"
+    On Error GoTo ErrorHandler
+    
     visible = HasAccess("Admin")
+    
+    Exit Sub
+ErrorHandler:
+    visible = False
+    HandleError MODULE_NAME, PROC_NAME
 End Sub
 
 ' Callback pour la visibilité des boutons de rechargement.
@@ -228,23 +383,18 @@ Private Function CountManagedTables(ByVal wb As Workbook) As Long
     Dim commentText As String
     count = 0
 
-    Debug.Print "--- Début de la vérification des tableaux managés ---"
+    Log "dataloader", "--- Début de la vérification des tableaux managés ---", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
     For Each ws In wb.Worksheets
         For Each tbl In ws.ListObjects
             hasComment = False
             commentText = ""
             On Error Resume Next
-            ' Essayer de lire le texte du commentaire sur la cellule en haut à gauche du tableau
             commentText = tbl.Range.Cells(1, 1).Comment.Text
             hasComment = (Len(commentText) > 0)
-            On Error GoTo 0 ' Réinitialiser la gestion d'erreur
+            On Error GoTo 0
 
-            ' Afficher les informations de diagnostic pour chaque tableau
-            Debug.Print "Tableau: '" & tbl.Name & "' sur la feuille '" & ws.Name & "'. " & _
-                        "Préfixe OK: " & (tbl.Name Like TABLE_PREFIX & "*") & ". " & _
-                        "Commentaire OK: " & hasComment & ". " & _
-                        "Longueur du commentaire: " & Len(commentText)
+            Log "dataloader", "Tableau: '" & tbl.Name & "' sur la feuille '" & ws.Name & "'. Préfixe OK: " & (tbl.Name Like TABLE_PREFIX & "*") & ". Commentaire OK: " & hasComment & ". Longueur du commentaire: " & Len(commentText), DEBUG_LEVEL, PROC_NAME, MODULE_NAME
 
             If tbl.Name Like TABLE_PREFIX & "*" And hasComment Then
                 count = count + 1
@@ -252,8 +402,8 @@ Private Function CountManagedTables(ByVal wb As Workbook) As Long
         Next tbl
     Next ws
 
+    Log "dataloader", "--- Fin de la vérification. Total des tableaux managés: " & count & " ---", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     CountManagedTables = count
-    Debug.Print "--- Fin de la vérification. Total des tableaux managés: " & count & " ---"
 
 Exit Function
 ErrorHandler:

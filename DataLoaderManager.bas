@@ -801,77 +801,55 @@ NextColumn:
         Next v
     End If
 
-    ' --- CRÉATION DU LISTOBJECT ---
-    ' Calculer la taille nécessaire
+    ' --- CRÉATION OU MISE À JOUR DU LISTOBJECT ---
+    Dim targetRange As Range
     Dim nbRows As Long, nbCols As Long
+
+    ' Recalculer la taille finale en fonction des colonnes visibles
     If loadInfo.ModeTransposed Then
-        nbRows = sourceTable.ListColumns.Count
-        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
+        nbRows = visibleSourceColIndices.Count + 1 ' +1 for headers
+        nbCols = loadInfo.SelectedValues.Count + 1 ' +1 for headers
     Else
-        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 pour les en-têtes
-        nbCols = sourceTable.ListColumns.Count
+        nbRows = loadInfo.SelectedValues.Count + 1 ' +1 for headers
+        nbCols = visibleSourceColIndices.Count
     End If
-
-    Log "dataloader", "Dimensions calculées - Lignes: " & nbRows & ", Colonnes: " & nbCols, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-    Log "dataloader", "Position destination - Ligne: " & loadInfo.FinalDestination.Row & ", Colonne: " & loadInfo.FinalDestination.Column, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-
-    ' Créer la plage pour le nouveau ListObject
-    Dim pastedRange As Range
-    Set pastedRange = loadInfo.FinalDestination.Resize(nbRows, nbCols)
     
-    ' Créer le ListObject avec un nom unique
-    Dim uniqueTableName As String
+    Set targetRange = destSheet.Range(loadInfo.FinalDestination, loadInfo.FinalDestination.Offset(nbRows - 1, nbCols - 1))
+
+    Dim existingTable As ListObject
+    Set existingTable = Nothing
+    On Error Resume Next
     If TargetTableName <> "" Then
-        uniqueTableName = TargetTableName
+        Set existingTable = destSheet.ListObjects(TargetTableName)
+    End If
+    On Error GoTo ErrorHandler
+
+    If Not existingTable Is Nothing Then
+        ' --- MISE À JOUR NON-DESTRUCTIVE ---
+        Set lo = existingTable
+        ' 1. Vider les anciennes données et en-têtes sans supprimer le ListObject
+        lo.DataBodyRange.ClearContents
+        lo.HeaderRowRange.ClearContents
+        ' 2. Redimensionner le tableau pour les nouvelles données
+        lo.Resize targetRange
     Else
-        uniqueTableName = GetUniqueTableName(loadInfo.Category.CategoryName)
-    End If
-    Log "dataloader", "Création du ListObject '" & uniqueTableName & "' sur la plage " & pastedRange.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-    
-    ' Déprotéger temporairement la feuille
-    destSheet.Unprotect
-    
-    ' Attendre que les données soient bien collées
-    DoEvents
-    
-    Dim newListObject As ListObject
-    On Error Resume Next
-    Set newListObject = destSheet.ListObjects.Add(xlSrcRange, pastedRange, , xlYes)
-    If Err.Number <> 0 Then
-        Log "dataloader", "ERREUR création ListObject: " & Err.Description & " (Code: " & Err.Number & ")", ERROR_LEVEL, PROC_NAME, MODULE_NAME
-        Err.Clear
-        ' Essayer une autre approche en mode normal
-        If Not loadInfo.ModeTransposed Then
-            Log "dataloader", "Tentative alternative de création du ListObject en mode normal", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-            Set newListObject = destSheet.ListObjects.Add(xlSrcRange, pastedRange.Cells(1, 1).Resize(nbRows, nbCols), , xlYes)
-        End If
-    End If
-    On Error GoTo ErrorHandler
-    
-    If newListObject Is Nothing Then
-        Log "dataloader", "ÉCHEC: Impossible de créer le ListObject", ERROR_LEVEL, PROC_NAME, MODULE_NAME
-        PasteData = False
-        GoTo CleanupAndExit
-    End If
-    
-    newListObject.Name = uniqueTableName
-    
-    ' Stocker les métadonnées pour le rechargement
-    On Error Resume Next
-    With newListObject.Range.Cells(1, 1)
-        If .Comment Is Nothing Then
-            .AddComment SerializeLoadInfo(loadInfo)
+        ' --- CRÉATION CLASSIQUE ---
+        Set lo = destSheet.ListObjects.Add(xlSrcRange, targetRange, , xlYes)
+        If TargetTableName <> "" Then
+            lo.Name = TargetTableName
         Else
-            .Comment.Text SerializeLoadInfo(loadInfo)
+            lo.Name = GetUniqueTableName(loadInfo.Category.CategoryName)
         End If
-    End With
-    On Error GoTo ErrorHandler
+    End If
     
-    ' Appliquer le style par défaut
-    newListObject.TableStyle = "TableStyleMedium2"
+    ' Le reste du collage des données (qui se fait sur la feuille) est déjà fait avant.
+    ' Ici on s'assure juste que le ListObject est bien défini.
+
+    ' Appliquer le style de tableau par défaut
+    lo.TableStyle = "TableStyleMedium2"
     
     ' Verrouiller le nouveau tableau
-    newListObject.Range.Locked = True
+    lo.Range.Locked = True
     
     ' Protéger la feuille avec les paramètres standard
     destSheet.Protect UserInterfaceOnly:=True, _
@@ -993,7 +971,7 @@ Public Function ProcessCategory(CategoryName As String, Optional errorMessage As
     Log "dataloader", "Début ProcessCategory | Catégorie demandée: " & CategoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     If CategoriesCount = 0 Then InitCategories
     Dim loadInfo As DataLoadInfo
-    loadInfo.Category = GetCategoryByName(CategoryName)
+    loadInfo.Category = GetCategoryByCategoryName(CategoryName)
     Log "dataloader", "Catégorie trouvée: " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     If loadInfo.Category.DisplayName = "" Then
         MsgBox "Catégorie '" & CategoryName & "' non trouvée", vbExclamation
@@ -1117,108 +1095,49 @@ End Sub
 
 ' Met à jour tous les tableaux de données EE_ dans le classeur actif.
 Public Sub ReloadAllTables()
+    Const PROC_NAME As String = "ReloadAllTables"
+    Const MODULE_NAME As String = "DataLoaderManager"
     On Error GoTo ErrorHandler
     
-    Const PROC_NAME As String = "ReloadAllTables"
-    Const MODULE_NAME As String = "UpdateManager"
+    ' S'assurer que les catégories sont initialisées avant de lister les tableaux.
+    If CategoriesCount = 0 Then InitCategories
+
+    Application.ScreenUpdating = False
     
-    Dim ws As Worksheet
-    Dim tbl As ListObject
-    Dim tablesToReload As Collection
-    Set tablesToReload = New Collection
+    Dim managedTables As Collection
+    Set managedTables = CollectManagedTables(ThisWorkbook)
     
-    ' Collecter tous les tableaux à recharger dans une structure temporaire
-    For Each ws In ThisWorkbook.Worksheets
-        For Each tbl In ws.ListObjects
-            If Left(tbl.Name, 3) = "EE_" Then
-                Dim tableComment As Comment
-                Set tableComment = tbl.Range.Cells(1, 1).Comment
-                
-                If Not tableComment Is Nothing Then
-                    Dim reloadItem As Object ' Scripting.Dictionary
-                    Set reloadItem = CreateObject("Scripting.Dictionary")
-                    reloadItem("Name") = tbl.Name
-                    reloadItem("SheetName") = ws.Name
-                    reloadItem("Address") = tbl.Range.Address
-                    reloadItem("Comment") = tableComment.Text
-                    tablesToReload.Add reloadItem
-                End If
-            End If
-        Next tbl
-    Next ws
-    
-    If tablesToReload.Count = 0 Then
-        MsgBox "Aucun tableau géré à mettre à jour n'a été trouvé dans ce classeur.", vbInformation, "Aucun tableau"
+    If managedTables.Count = 0 Then
+        MsgBox "Aucun tableau géré par l'addin n'a été trouvé dans ce classeur.", vbInformation
+        Application.ScreenUpdating = True
         Exit Sub
     End If
     
-    Dim answer As VbMsgBoxResult
-    answer = MsgBox("Mettre à jour " & tablesToReload.Count & " tableau(x) ?", vbYesNo + vbQuestion, "Confirmer la mise à jour globale")
-    If answer = vbNo Then Exit Sub
-    
-    Application.ScreenUpdating = False
-    
     Dim updatedCount As Long, failedCount As Long
-    Dim item As Variant
+    updatedCount = 0
+    failedCount = 0
     
-    For Each item In tablesToReload
-        Dim loadInfo As DataLoadInfo
-        ' Correction de l'accès au commentaire
+    Dim item As Variant
+    Dim targetTable As ListObject
+    
+    For Each item In managedTables
+        Set targetTable = Nothing ' Réinitialiser pour chaque itération
         On Error Resume Next
-        Set m_tableComment = item.Range.Cells(1, 1).Comment
+        Set targetTable = ThisWorkbook.Worksheets(item("SheetName")).ListObjects(item("Name"))
         On Error GoTo ErrorHandler
         
-        If m_tableComment Is Nothing Then
-            failedCount = failedCount + 1
-            Log "dataloader", "ERREUR: Pas de commentaire trouvé pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
-        Else
-            Dim commentText As String
-            On Error Resume Next
-            commentText = m_tableComment.Text
-            If Err.Number <> 0 Then
-                failedCount = failedCount + 1
-                Log "dataloader", "ERREUR: Impossible de lire le texte du commentaire pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
-                On Error GoTo ErrorHandler
-                GoTo NextItem
-            End If
-            On Error GoTo ErrorHandler
-            
-            DeserializeLoadInfo commentText, loadInfo
-            
-            If loadInfo.Category.CategoryName <> "" Then
-                Dim tableName As String
-                tableName = item("Name")
-                
-                Dim targetSheet As Worksheet
-                Set targetSheet = ThisWorkbook.Worksheets(item("SheetName"))
-                
-                Dim targetTableToDelete As ListObject
-                Set targetTableToDelete = targetSheet.ListObjects(tableName)
-                
-                ' Préparer les infos avant la suppression
-                loadInfo.FinalDestination = targetSheet.Range(item("Address")).Cells(1, 1)
-
-                ' Déprotéger et supprimer
-                targetSheet.Unprotect
-                targetTableToDelete.Delete
-                
-                ' Recharger
-                Dim result As DataLoadResult
-                result = ProcessDataLoad(loadInfo, IsReload:=True, TargetTableName:=tableName)
-                
-                ' La protection est gérée dans PasteData
-                
-                If result = Success Then
-                    updatedCount = updatedCount + 1
-                Else
-                    failedCount = failedCount + 1
-                End If
+        If Not targetTable Is Nothing Then
+            Dim updateResult As DataLoadResult
+            updateResult = ReloadTable(targetTable) ' Utiliser la nouvelle fonction de rechargement
+            If updateResult = Success Then
+                updatedCount = updatedCount + 1
             Else
                 failedCount = failedCount + 1
-                Log "dataloader", "ERREUR: Impossible de désérialiser les métadonnées pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
             End If
+        Else
+            failedCount = failedCount + 1
+            Log "dataloader", "ERREUR: Tableau '" & item("Name") & "' non trouvé sur la feuille '" & item("SheetName") & "' lors de ReloadAllTables.", ERROR_LEVEL, PROC_NAME, MODULE_NAME
         End If
-NextItem:
     Next item
     
     Application.ScreenUpdating = True
@@ -1234,6 +1153,164 @@ NextItem:
 ErrorHandler:
     Application.ScreenUpdating = True
     HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour de tous les tableaux."
+End Sub
+
+' Recharge un tableau spécifique de manière non-interactive.
+' C'est la fonction logique principale pour le rechargement.
+' Retourne un DataLoadResult pour indiquer le succès ou l'échec.
+Private Function ReloadTable(ByVal targetTable As ListObject) As DataLoadResult
+    Const PROC_NAME As String = "ReloadTable"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    On Error GoTo ErrorHandler
+    
+    ' S'assurer que les catégories sont initialisées avant de désérialiser.
+    If CategoriesCount = 0 Then InitCategories
+
+    ' Étape 1: Extraire les métadonnées
+    Dim tableComment As Comment
+    Set tableComment = targetTable.Range.Cells(1, 1).Comment
+    If tableComment Is Nothing Then
+        HandleError MODULE_NAME, PROC_NAME, "Le tableau '" & targetTable.Name & "' n'a pas de métadonnées."
+        ReloadTable = Error
+        Exit Function
+    End If
+    
+    Dim loadInfo As DataLoadInfo
+    DeserializeLoadInfo tableComment.Text, loadInfo
+    
+    If loadInfo.Category.CategoryName = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Impossible de lire les métadonnées du tableau '" & targetTable.Name & "'."
+        ReloadTable = Error
+        Exit Function
+    End If
+    
+    ' Étape 2: Préparer les informations pour un rechargement non-interactif
+    loadInfo.FinalDestination = targetTable.Range.Cells(1, 1)
+    
+    ' Étape 3: Appeler le processus de chargement en mode rechargement non-destructif
+    Dim result As DataLoadResult
+    result = ProcessDataLoad(loadInfo, IsReload:=True, TargetTableName:=targetTable.Name)
+    
+    ReloadTable = result ' Retourner le résultat de ProcessDataLoad
+    
+    Exit Function
+ErrorHandler:
+    ReloadTable = Error
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du rechargement du tableau " & targetTable.Name
+End Function
+
+' Recharge les données du tableau actuellement sélectionné (point d'entrée de la callback)
+Public Sub ReloadCurrentTable()
+    Const PROC_NAME As String = "ReloadCurrentTable"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    On Error GoTo ErrorHandler
+    
+    ' Vérifier qu'une cellule est sélectionnée
+    If TypeName(Selection) <> "Range" Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Vérifier que la cellule est dans un tableau
+    Dim targetTable As ListObject
+    On Error Resume Next
+    Set targetTable = Selection.ListObject
+    On Error GoTo ErrorHandler
+    
+    If targetTable Is Nothing Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Vérifier que c'est un tableau géré par l'addin
+    Dim hasComment As Boolean
+    hasComment = False
+    On Error Resume Next
+    hasComment = (Len(targetTable.Range.Cells(1, 1).Comment.Text) > 0)
+    On Error GoTo ErrorHandler
+
+    If Left(targetTable.Name, 3) = "EE_" And hasComment Then
+        ' Appeler la fonction logique de rechargement
+        If ReloadTable(targetTable) = Success Then
+            MsgBox "Le tableau a été mis à jour avec succès.", vbInformation
+        Else
+            MsgBox "La mise à jour du tableau a échoué. Consultez les logs pour plus de détails.", vbExclamation
+        End If
+    Else
+        MsgBox "Ce tableau n'est pas géré par l'addin.", vbInformation
+    End If
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour du tableau"
+End Sub
+
+' Callback pour recharger le tableau courant
+Public Sub ReloadCurrentTable_Click(control As IRibbonControl)
+    ReloadCurrentTable
+End Sub
+
+' Supprime le tableau géré actuellement sélectionné.
+Public Sub DeleteCurrentTable()
+    Const PROC_NAME As String = "DeleteCurrentTable"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    On Error GoTo ErrorHandler
+    
+    Dim targetTable As ListObject
+    
+    ' Vérifier la sélection
+    If TypeName(Selection) <> "Range" Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à supprimer.", vbInformation
+        Exit Sub
+    End If
+    
+    On Error Resume Next
+    Set targetTable = Selection.ListObject
+    On Error GoTo 0 ' Rétablir la gestion d'erreur normale
+    
+    If targetTable Is Nothing Then
+        MsgBox "La cellule sélectionnée n'appartient à aucun tableau.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Vérifier si c'est un tableau géré
+    Dim isManaged As Boolean
+    isManaged = (Left(targetTable.Name, 3) = "EE_") And (Not targetTable.Range.Cells(1, 1).Comment Is Nothing)
+    
+    If Not isManaged Then
+        MsgBox "Le tableau '" & targetTable.Name & "' n'est pas géré par l'addin.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Demander confirmation
+    If MsgBox("Êtes-vous sûr de vouloir supprimer définitivement le tableau '" & targetTable.Name & "' ?" & vbCrLf & _
+              "Cette action est irréversible.", vbQuestion + vbYesNo, "Confirmation de suppression") = vbNo Then
+        Exit Sub
+    End If
+    
+    ' Supprimer le tableau
+    Application.EnableEvents = False
+    targetTable.Parent.Unprotect
+    targetTable.Delete
+    targetTable.Parent.Protect UserInterfaceOnly:=True
+    Application.EnableEvents = True
+    
+    MsgBox "Le tableau a été supprimé.", vbInformation
+    
+    Exit Sub
+ErrorHandler:
+    If Not targetTable Is Nothing Then
+        On Error Resume Next
+        targetTable.Parent.Protect UserInterfaceOnly:=True
+        On Error GoTo 0
+    End If
+    Application.EnableEvents = True
+    HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+' Callback pour le bouton de suppression du ruban.
+Public Sub DeleteCurrentTable_Click(ByVal control As IRibbonControl)
+    DeleteCurrentTable
 End Sub
 
 ' ==========================================
@@ -1284,6 +1361,10 @@ End Function
 ' Désérialise une chaîne de caractères en un objet DataLoadInfo.
 Private Sub DeserializeLoadInfo(ByVal metadata As String, ByRef outLoadInfo As DataLoadInfo)
     On Error GoTo ErrorHandler
+    
+    ' S'assurer que les catégories sont initialisées avant de chercher dedans.
+    If CategoriesCount = 0 Then InitCategories
+    
     Set outLoadInfo.SelectedValues = New Collection
 
     Dim parts() As String
@@ -1300,8 +1381,7 @@ Private Sub DeserializeLoadInfo(ByVal metadata As String, ByRef outLoadInfo As D
             
             Select Case key
                 Case "CategoryName"
-                    If CategoriesCount = 0 Then InitCategories
-                    outLoadInfo.Category = GetCategoryByName(value)
+                    outLoadInfo.Category = GetCategoryByCategoryName(value)
                 Case "SelectedValues"
                     If value <> "" Then
                         Dim vals() As String
@@ -1322,97 +1402,6 @@ Private Sub DeserializeLoadInfo(ByVal metadata As String, ByRef outLoadInfo As D
 ErrorHandler:
     HandleError "DataLoaderManager", "DeserializeLoadInfo", "Erreur de désérialisation"
     ' outLoadInfo sera partiellement rempli mais la procédure va se terminer
-End Sub
-
-' Recharge les données du tableau actuellement sélectionné
-Public Sub ReloadCurrentTable()
-    Const PROC_NAME As String = "ReloadCurrentTable"
-    Const MODULE_NAME As String = "DataLoaderManager"
-    On Error GoTo ErrorHandler
-    
-    ' Vérifier qu'une cellule est sélectionnée
-    If TypeName(Selection) <> "Range" Then
-        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
-        Exit Sub
-    End If
-    
-    ' Vérifier que la cellule est dans un tableau
-    Dim targetTable As ListObject
-    On Error Resume Next
-    Set targetTable = Selection.ListObject
-    On Error GoTo ErrorHandler
-    
-    If targetTable Is Nothing Then
-        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
-        Exit Sub
-    End If
-    
-    ' Vérifier que c'est un tableau EE_ avec un commentaire
-    If Left(targetTable.Name, 3) = "EE_" Then
-        Dim tableComment As Comment
-        Set tableComment = targetTable.Range.Cells(1, 1).Comment
-        If tableComment Is Nothing Then
-            MsgBox "Ce tableau n'est pas géré par l'addin.", vbInformation
-            Exit Sub
-        End If
-        
-        ' Désérialiser les infos de chargement depuis le commentaire
-        Dim loadInfo As DataLoadInfo
-        DeserializeLoadInfo tableComment.Text, loadInfo  ' Correction ici : appel correct de la Sub
-        
-        ' Recharger les données
-        ProcessDataLoad loadInfo
-        
-        MsgBox "Le tableau a été mis à jour avec succès.", vbInformation
-    Else
-        MsgBox "Ce tableau n'est pas géré par l'addin.", vbInformation
-    End If
-    Exit Sub
-
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour du tableau"
-End Sub
-
-' Callback pour recharger le tableau courant
-Public Sub ReloadCurrentTable_Click(control As IRibbonControl)
-    ReloadCurrentTable
-End Sub
-
-' Callback pour recharger tous les tableaux
-Public Sub ReloadAllTablesCallback(control As IRibbonControl)
-    Const PROC_NAME As String = "ReloadAllTablesCallback"
-    Const MODULE_NAME As String = "DataLoaderManager"
-    On Error GoTo ErrorHandler
-    
-    ' Vérifier qu'il y a des tableaux à mettre à jour
-    Dim hasEETables As Boolean
-    Dim ws As Worksheet
-    Dim tbl As ListObject
-    
-    For Each ws In ActiveWorkbook.Worksheets
-        For Each tbl In ws.ListObjects
-            If Left(tbl.Name, 3) = "EE_" Then
-                Dim tableComment As Comment
-                Set tableComment = tbl.Range.Cells(1, 1).Comment
-                If Not tableComment Is Nothing Then
-                    hasEETables = True
-                    Exit For
-                End If
-            End If
-        Next tbl
-        If hasEETables Then Exit For
-    Next ws
-    
-    If Not hasEETables Then
-        MsgBox "Aucun tableau géré à mettre à jour n'a été trouvé dans ce classeur.", vbInformation
-        Exit Sub
-    End If
-    
-    ReloadAllTables
-    Exit Sub
-    
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour de tous les tableaux"
 End Sub
 
 

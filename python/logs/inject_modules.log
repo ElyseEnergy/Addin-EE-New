@@ -1393,3 +1393,487 @@
 2025-06-10 11:16:12,805 - INFO - Ribbon rafraîchi
 2025-06-10 11:16:13,248 - INFO - Excel rendu visible
 2025-06-10 11:16:13,360 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_11450ei9
+2025-06-10 11:52:02,059 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 11:52:02,065 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 11:52:17,058 - INFO - Accès au VBA Project confirmé
+2025-06-10 11:52:20,430 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 11:52:20,501 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_8izlrpqf
+2025-06-10 11:52:20,516 - DEBUG - Pas d'instance Excel active: (-2147221021, 'Opération non disponible', None, None)
+2025-06-10 11:52:29,046 - INFO - Nouvelle instance Excel créée
+2025-06-10 11:53:21,588 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 11:53:21,680 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 11:53:21,794 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 11:53:21,928 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 11:53:22,092 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 11:53:22,288 - INFO - Module VBA supprimé: env
+2025-06-10 11:53:22,884 - INFO - Module VBA supprimé: FileManager
+2025-06-10 11:53:23,217 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 11:53:23,342 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 11:53:23,396 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 11:53:23,455 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 11:53:23,630 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 11:53:23,813 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 11:53:23,940 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 11:53:24,097 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 11:53:24,169 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 11:53:24,274 - INFO - Module VBA supprimé: Types
+2025-06-10 11:53:24,364 - INFO - Module VBA supprimé: Utilities
+2025-06-10 11:53:24,367 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 11:53:24,647 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 11:53:24,650 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 11:53:24,676 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:24,767 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 11:53:24,813 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:24,897 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 11:53:24,955 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:25,136 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 11:53:25,168 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:25,280 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 11:53:25,305 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:25,395 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 11:53:25,437 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:27,205 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 11:53:27,228 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:27,518 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 11:53:27,543 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:27,774 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 11:53:27,805 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:27,875 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 11:53:27,900 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:27,969 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 11:53:28,002 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:28,123 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 11:53:28,142 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:28,222 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 11:53:28,241 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:28,323 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 11:53:28,344 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:28,414 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 11:53:28,447 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:28,790 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 11:53:28,907 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:31,926 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 11:53:32,078 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 11:53:32,250 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 11:53:32,302 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:32,555 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 11:53:32,578 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 11:53:32,676 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 11:53:32,678 - INFO - Sauvegarde des modifications...
+2025-06-10 11:53:37,920 - INFO - Ribbon rafraîchi
+2025-06-10 11:53:39,631 - INFO - Excel rendu visible
+2025-06-10 11:53:40,607 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_8izlrpqf
+2025-06-10 12:42:01,624 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 12:42:01,626 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 12:42:07,464 - INFO - Accès au VBA Project confirmé
+2025-06-10 12:42:09,988 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 12:42:10,008 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_hosrx41t
+2025-06-10 12:42:13,628 - INFO - Nouvelle instance Excel créée
+2025-06-10 12:42:22,208 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 12:42:22,245 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 12:42:22,310 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 12:42:22,343 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 12:42:22,370 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 12:42:22,427 - INFO - Module VBA supprimé: env
+2025-06-10 12:42:22,458 - INFO - Module VBA supprimé: FileManager
+2025-06-10 12:42:22,490 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 12:42:22,513 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 12:42:22,540 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 12:42:22,563 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 12:42:22,580 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 12:42:22,606 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 12:42:22,628 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 12:42:22,648 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 12:42:22,666 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 12:42:22,695 - INFO - Module VBA supprimé: Types
+2025-06-10 12:42:22,719 - INFO - Module VBA supprimé: Utilities
+2025-06-10 12:42:22,719 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 12:42:22,775 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 12:42:22,776 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 12:42:22,785 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:22,833 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 12:42:22,843 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:22,876 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 12:42:22,885 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:22,918 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 12:42:22,935 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:22,981 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 12:42:22,990 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,019 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 12:42:23,030 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,060 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 12:42:23,069 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,117 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 12:42:23,128 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,168 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 12:42:23,178 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,220 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 12:42:23,230 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,268 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 12:42:23,278 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,316 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 12:42:23,326 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,367 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 12:42:23,376 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,412 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 12:42:23,422 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,453 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 12:42:23,465 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,502 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 12:42:23,511 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,543 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 12:42:23,551 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,600 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 12:42:23,608 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,636 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 12:42:23,646 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 12:42:23,681 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 12:42:23,682 - INFO - Sauvegarde des modifications...
+2025-06-10 12:42:26,260 - INFO - Ribbon rafraîchi
+2025-06-10 12:42:26,923 - INFO - Excel rendu visible
+2025-06-10 12:42:27,044 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_hosrx41t
+2025-06-10 13:10:39,486 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 13:10:39,490 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 13:10:52,144 - INFO - Accès au VBA Project confirmé
+2025-06-10 13:10:55,152 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 13:10:55,181 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_5mw0utq7
+2025-06-10 13:11:02,747 - INFO - Nouvelle instance Excel créée
+2025-06-10 13:11:23,706 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 13:11:23,756 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 13:11:23,802 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 13:11:23,840 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 13:11:23,945 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 13:11:24,014 - INFO - Module VBA supprimé: env
+2025-06-10 13:11:24,307 - INFO - Module VBA supprimé: FileManager
+2025-06-10 13:11:24,493 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 13:11:24,556 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 13:11:24,578 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 13:11:24,603 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 13:11:24,624 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 13:11:24,662 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 13:11:24,684 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 13:11:24,713 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 13:11:24,735 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 13:11:24,765 - INFO - Module VBA supprimé: Types
+2025-06-10 13:11:24,800 - INFO - Module VBA supprimé: Utilities
+2025-06-10 13:11:24,801 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 13:11:24,856 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 13:11:24,858 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 13:11:24,945 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:24,989 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 13:11:25,002 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,040 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 13:11:25,064 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,100 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 13:11:25,114 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,260 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 13:11:25,287 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,324 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 13:11:25,350 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,377 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 13:11:25,448 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,620 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 13:11:25,662 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,724 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 13:11:25,754 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,811 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 13:11:25,831 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:25,877 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 13:11:25,886 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:32,829 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 13:11:32,904 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:34,065 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 13:11:34,112 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:34,224 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 13:11:34,273 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:34,419 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 13:11:34,472 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:34,620 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 13:11:34,633 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:34,766 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 13:11:34,825 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 13:11:35,205 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 13:11:35,218 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:35,392 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 13:11:35,751 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:11:35,850 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 13:11:35,851 - INFO - Sauvegarde des modifications...
+2025-06-10 13:11:38,846 - INFO - Ribbon rafraîchi
+2025-06-10 13:11:39,685 - INFO - Excel rendu visible
+2025-06-10 13:11:39,809 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_5mw0utq7
+2025-06-10 13:57:54,193 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 13:57:54,195 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 13:58:01,864 - INFO - Accès au VBA Project confirmé
+2025-06-10 13:58:07,320 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 13:58:07,340 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_1mbnt_d2
+2025-06-10 13:58:12,546 - INFO - Nouvelle instance Excel créée
+2025-06-10 13:58:25,367 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 13:58:25,388 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 13:58:25,412 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 13:58:25,441 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 13:58:25,468 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 13:58:25,500 - INFO - Module VBA supprimé: env
+2025-06-10 13:58:25,533 - INFO - Module VBA supprimé: FileManager
+2025-06-10 13:58:25,599 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 13:58:25,646 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 13:58:25,685 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 13:58:25,719 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 13:58:25,750 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 13:58:25,772 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 13:58:25,797 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 13:58:25,828 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 13:58:25,872 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 13:58:25,910 - INFO - Module VBA supprimé: Types
+2025-06-10 13:58:25,962 - INFO - Module VBA supprimé: Utilities
+2025-06-10 13:58:25,963 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 13:58:26,078 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 13:58:26,080 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 13:58:26,096 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:26,134 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 13:58:26,149 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:26,184 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 13:58:26,201 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:26,230 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 13:58:26,247 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,569 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 13:58:27,583 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,611 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 13:58:27,625 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,660 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 13:58:27,674 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,715 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 13:58:27,742 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,783 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 13:58:27,799 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,846 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 13:58:27,860 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,894 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 13:58:27,907 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,937 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 13:58:27,951 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:27,989 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 13:58:28,004 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,042 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 13:58:28,060 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,092 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 13:58:28,106 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,137 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 13:58:28,154 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,191 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 13:58:28,205 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,259 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 13:58:28,272 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,301 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 13:58:28,315 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 13:58:28,347 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 13:58:28,348 - INFO - Sauvegarde des modifications...
+2025-06-10 13:58:30,339 - INFO - Ribbon rafraîchi
+2025-06-10 13:58:30,904 - INFO - Excel rendu visible
+2025-06-10 13:58:31,056 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_1mbnt_d2
+2025-06-10 14:48:16,556 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 14:48:16,568 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 14:48:28,281 - INFO - Accès au VBA Project confirmé
+2025-06-10 14:48:31,088 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 14:48:31,142 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_ee015jmo
+2025-06-10 14:48:43,473 - INFO - Nouvelle instance Excel créée
+2025-06-10 14:49:11,137 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 14:49:11,856 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 14:49:12,562 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 14:49:13,075 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 14:49:13,268 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 14:49:13,440 - INFO - Module VBA supprimé: env
+2025-06-10 14:49:13,613 - INFO - Module VBA supprimé: FileManager
+2025-06-10 14:49:13,791 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 14:49:13,952 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 14:49:14,290 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 14:49:15,050 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 14:49:15,702 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 14:49:18,689 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 14:49:19,151 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 14:49:19,831 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 14:49:20,572 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 14:49:30,936 - INFO - Module VBA supprimé: Types
+2025-06-10 14:49:31,128 - INFO - Module VBA supprimé: Utilities
+2025-06-10 14:49:31,129 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 14:49:31,542 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 14:49:31,545 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 14:49:36,157 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:40,375 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 14:49:40,484 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:40,874 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 14:49:40,921 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:41,151 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 14:49:41,279 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:49,055 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 14:49:49,505 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:50,155 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 14:49:50,314 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:50,438 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 14:49:50,501 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:50,693 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 14:49:50,924 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:54,448 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 14:49:55,503 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:56,494 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 14:49:56,791 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:57,164 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 14:49:57,387 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:57,472 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 14:49:57,525 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:57,605 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 14:49:57,651 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:49:59,864 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 14:49:59,914 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:50:00,336 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 14:50:00,453 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:50:00,599 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 14:50:00,665 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:50:00,781 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 14:50:00,824 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 14:50:01,119 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 14:50:01,181 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:50:01,700 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 14:50:01,804 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 14:50:02,097 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 14:50:02,101 - INFO - Sauvegarde des modifications...
+2025-06-10 14:50:11,165 - INFO - Ribbon rafraîchi
+2025-06-10 14:50:13,551 - INFO - Excel rendu visible
+2025-06-10 14:50:13,963 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_ee015jmo
+2025-06-10 16:06:52,560 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 16:06:52,564 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 16:06:59,162 - INFO - Accès au VBA Project confirmé
+2025-06-10 16:07:02,270 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 16:07:02,331 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_gc28uag1
+2025-06-10 16:07:06,732 - INFO - Nouvelle instance Excel créée
+2025-06-10 16:07:27,114 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 16:07:27,144 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 16:07:27,161 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 16:07:27,184 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 16:07:27,210 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 16:07:27,229 - INFO - Module VBA supprimé: env
+2025-06-10 16:07:27,250 - INFO - Module VBA supprimé: FileManager
+2025-06-10 16:07:27,268 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 16:07:27,313 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 16:07:27,335 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 16:07:27,365 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 16:07:27,402 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 16:07:27,443 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 16:07:27,476 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 16:07:27,517 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 16:07:27,561 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 16:07:27,588 - INFO - Module VBA supprimé: Types
+2025-06-10 16:07:27,643 - INFO - Module VBA supprimé: Utilities
+2025-06-10 16:07:27,645 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 16:07:27,728 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 16:07:27,731 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 16:07:27,754 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:27,801 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 16:07:27,823 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:27,862 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 16:07:27,893 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:27,975 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 16:07:28,000 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,128 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 16:07:28,145 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,218 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 16:07:28,231 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,265 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 16:07:28,281 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,325 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 16:07:28,339 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,378 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 16:07:28,392 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,422 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 16:07:28,440 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,480 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 16:07:28,495 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,526 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 16:07:28,542 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:28,577 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 16:07:28,595 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,149 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 16:07:30,170 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,228 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 16:07:30,241 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,266 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 16:07:30,280 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,364 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 16:07:30,385 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,439 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 16:07:30,473 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,550 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 16:07:30,598 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 16:07:30,636 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 16:07:30,637 - INFO - Sauvegarde des modifications...
+2025-06-10 16:07:33,706 - INFO - Ribbon rafraîchi
+2025-06-10 16:07:34,331 - INFO - Excel rendu visible
+2025-06-10 16:07:34,420 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_gc28uag1
+2025-06-10 17:13:50,231 - INFO - Début de l'injection des modules. Log file: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\python\logs\inject_modules.log
+2025-06-10 17:13:50,234 - INFO - Vérification de l'accès au VBA Project
+2025-06-10 17:13:58,068 - INFO - Accès au VBA Project confirmé
+2025-06-10 17:14:00,558 - INFO - Fichier Excel cible: C:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\Addin Elyse Energy.xlsm
+2025-06-10 17:14:00,576 - INFO - Dossier temporaire créé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_pqcngd7_
+2025-06-10 17:14:06,076 - INFO - Nouvelle instance Excel créée
+2025-06-10 17:14:16,319 - INFO - Module VBA supprimé: AccessProfiles
+2025-06-10 17:14:16,400 - INFO - Module VBA supprimé: CategoryManager
+2025-06-10 17:14:16,448 - INFO - Module VBA supprimé: DataFormatter
+2025-06-10 17:14:16,552 - INFO - Module VBA supprimé: DataLoaderManager
+2025-06-10 17:14:16,624 - INFO - Module VBA supprimé: Diagnostics
+2025-06-10 17:14:16,658 - INFO - Module VBA supprimé: env
+2025-06-10 17:14:16,818 - INFO - Module VBA supprimé: FileManager
+2025-06-10 17:14:16,862 - INFO - Module VBA supprimé: IdentityTester
+2025-06-10 17:14:16,933 - INFO - Module VBA supprimé: LoadQueries
+2025-06-10 17:14:16,986 - INFO - Module VBA supprimé: PQDebugTools
+2025-06-10 17:14:17,030 - INFO - Module VBA supprimé: PQQueryManager
+2025-06-10 17:14:17,086 - INFO - Module VBA supprimé: RagicDictionary
+2025-06-10 17:14:17,150 - INFO - Module VBA supprimé: RibbonVisibility
+2025-06-10 17:14:17,193 - INFO - Module VBA supprimé: SYS_ErrorHandler
+2025-06-10 17:14:17,229 - INFO - Module VBA supprimé: SYS_Logger
+2025-06-10 17:14:17,274 - INFO - Module VBA supprimé: Technologies_Manager
+2025-06-10 17:14:17,313 - INFO - Module VBA supprimé: Types
+2025-06-10 17:14:17,427 - INFO - Module VBA supprimé: Utilities
+2025-06-10 17:14:17,427 - INFO - Total des modules VBA supprimés: 18
+2025-06-10 17:14:17,563 - INFO - Composants trouvés dans le classeur: ThisWorkbook, Sheet3, Sheet5, Sheet6
+2025-06-10 17:14:17,564 - INFO - Fichiers de module trouvés sur le disque: AccessProfiles.bas, CategoryManager.bas, DataFormatter.bas, DataLoaderManager.bas, Diagnostics.bas, env.bas, FileManager.bas, IdentityTester.bas, LoadQueries.bas, PQDebugTools.bas, PQQueryManager.bas, RagicDictionary.bas, RibbonVisibility.bas, SYS_ErrorHandler.bas, SYS_Logger.bas, Technologies_Manager.bas, ThisWorkbook.cls, Types.bas, Utilities.bas
+2025-06-10 17:14:17,583 - INFO - Fichier 'AccessProfiles.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:17,700 - INFO - Module 'AccessProfiles' importé avec succès depuis 'AccessProfiles.bas'.
+2025-06-10 17:14:17,718 - INFO - Fichier 'CategoryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:17,871 - INFO - Module 'CategoryManager' importé avec succès depuis 'CategoryManager.bas'.
+2025-06-10 17:14:17,905 - INFO - Fichier 'DataFormatter.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:17,989 - INFO - Module 'DataFormatter' importé avec succès depuis 'DataFormatter.bas'.
+2025-06-10 17:14:18,013 - INFO - Fichier 'DataLoaderManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,095 - INFO - Module 'DataLoaderManager' importé avec succès depuis 'DataLoaderManager.bas'.
+2025-06-10 17:14:18,114 - INFO - Fichier 'Diagnostics.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,152 - INFO - Module 'Diagnostics' importé avec succès depuis 'Diagnostics.bas'.
+2025-06-10 17:14:18,171 - INFO - Fichier 'env.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,236 - INFO - Module 'env' importé avec succès depuis 'env.bas'.
+2025-06-10 17:14:18,258 - INFO - Fichier 'FileManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,321 - INFO - Module 'FileManager' importé avec succès depuis 'FileManager.bas'.
+2025-06-10 17:14:18,340 - INFO - Fichier 'IdentityTester.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,407 - INFO - Module 'IdentityTester' importé avec succès depuis 'IdentityTester.bas'.
+2025-06-10 17:14:18,428 - INFO - Fichier 'LoadQueries.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,524 - INFO - Module 'LoadQueries' importé avec succès depuis 'LoadQueries.bas'.
+2025-06-10 17:14:18,540 - INFO - Fichier 'PQDebugTools.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,622 - INFO - Module 'PQDebugTools' importé avec succès depuis 'PQDebugTools.bas'.
+2025-06-10 17:14:18,641 - INFO - Fichier 'PQQueryManager.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,712 - INFO - Module 'PQQueryManager' importé avec succès depuis 'PQQueryManager.bas'.
+2025-06-10 17:14:18,729 - INFO - Fichier 'RagicDictionary.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,796 - INFO - Module 'RagicDictionary' importé avec succès depuis 'RagicDictionary.bas'.
+2025-06-10 17:14:18,814 - INFO - Fichier 'RibbonVisibility.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,864 - INFO - Module 'RibbonVisibility' importé avec succès depuis 'RibbonVisibility.bas'.
+2025-06-10 17:14:18,882 - INFO - Fichier 'SYS_ErrorHandler.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,932 - INFO - Module 'SYS_ErrorHandler' importé avec succès depuis 'SYS_ErrorHandler.bas'.
+2025-06-10 17:14:18,946 - INFO - Fichier 'SYS_Logger.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:18,992 - INFO - Module 'SYS_Logger' importé avec succès depuis 'SYS_Logger.bas'.
+2025-06-10 17:14:19,006 - INFO - Fichier 'Technologies_Manager.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:19,046 - INFO - Module 'Technologies_Manager' importé avec succès depuis 'Technologies_Manager.bas'.
+2025-06-10 17:14:19,061 - INFO - Fichier 'ThisWorkbook.cls' converti de UTF-8 à CP1252.
+2025-06-10 17:14:19,131 - INFO - Code du module Document 'ThisWorkbook' mis à jour.
+2025-06-10 17:14:19,148 - INFO - Fichier 'Types.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:19,185 - INFO - Module 'Types' importé avec succès depuis 'Types.bas'.
+2025-06-10 17:14:19,201 - INFO - Fichier 'Utilities.bas' converti de UTF-8 à CP1252.
+2025-06-10 17:14:19,233 - INFO - Module 'Utilities' importé avec succès depuis 'Utilities.bas'.
+2025-06-10 17:14:19,233 - INFO - Sauvegarde des modifications...
+2025-06-10 17:14:24,788 - INFO - Ribbon rafraîchi
+2025-06-10 17:14:25,391 - INFO - Excel rendu visible
+2025-06-10 17:14:25,477 - INFO - Dossier temporaire nettoyé: C:\Users\JULIEN~1\AppData\Local\Temp\vba_modules_pqcngd7_
