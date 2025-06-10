@@ -1,4 +1,9 @@
-﻿# Guide de développement VBA – Addin Elyse Energy
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Guide de développement VBA – Addin Elyse Energy
 
 Ce document sert de référence pour toutes les conventions de codage, les patterns d'architecture et les bonnes pratiques à suivre dans ce projet.
 
@@ -544,4 +549,5 @@ Le dictionnaire en mémoire (`RagicFieldDict`) est un objet `Scripting.Dictionar
     - `"NUMBER"` : Doit être traité comme un nombre.
     - `"TEXT"`
     - `"PERCENT"`
+
     - `

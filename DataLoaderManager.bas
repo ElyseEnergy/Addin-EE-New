@@ -9,6 +9,14 @@ Attribute VB_Name = "DataLoaderManager"
 ' ==========================================
 Option Explicit
 
+' Variables privées du module
+Private wsPQData As Worksheet
+Private m_tableComment As Comment ' Variable partagée pour la gestion des commentaires
+
+' Constantes pour la sérialisation
+Private Const META_DELIM As String = "||"
+Private Const META_KEYVAL_DELIM As String = "::"
+
 Public Enum DataLoadResult
     Success = 1
     Cancelled = 2
@@ -18,9 +26,11 @@ End Enum
 ' Fonction principale de traitement des chargements de données pour une catégorie.
 ' Paramètres :
 '   loadInfo (DataLoadInfo) : Informations de chargement
+'   IsReload (Boolean, optionnel) : Vrai si c'est un rechargement non-interactif
+'   TargetTableName (String, optionnel) : Nom du tableau à utiliser lors du rechargement
 ' Retour :
 '   DataLoadResult (Succès, Annulé, Erreur)
-Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
+Public Function ProcessDataLoad(loadInfo As DataLoadInfo, Optional IsReload As Boolean = False, Optional TargetTableName As String = "") As DataLoadResult
     On Error GoTo ErrorHandler
     Diagnostics.LogTime "Début de ProcessDataLoad pour la catégorie: " & loadInfo.Category.DisplayName
     Log "dataloader", "Début ProcessDataLoad | Catégorie: " & loadInfo.Category.DisplayName & " | URL: " & loadInfo.Category.URL, DEBUG_LEVEL, "ProcessDataLoad", "DataLoaderManager"
@@ -82,38 +92,40 @@ Public Function ProcessDataLoad(loadInfo As DataLoadInfo) As DataLoadResult
     Application.Cursor = xlDefault
     Application.StatusBar = False
 
-    ' --- SÉLECTION UTILISATEUR PAR INPUTBOX ---
-    Diagnostics.LogTime "Avant sélection des valeurs (InputBox)"
-    Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
-    If loadInfo.SelectedValues Is Nothing Or loadInfo.SelectedValues.Count = 0 Then
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    End If
+    If Not IsReload Then
+        ' --- SÉLECTION UTILISATEUR PAR INPUTBOX ---
+        Diagnostics.LogTime "Avant sélection des valeurs (InputBox)"
+        Set loadInfo.SelectedValues = GetSelectedValues(loadInfo.Category)
+        If loadInfo.SelectedValues Is Nothing Or loadInfo.SelectedValues.Count = 0 Then
+            ProcessDataLoad = DataLoadResult.Cancelled
+            Exit Function
+        End If
 
-    ' --- SÉLECTION DU MODE (NORMAL/TRANSPOSE) SANS PREVIEW ---
-    Diagnostics.LogTime "Avant sélection du mode d'affichage (MsgBox)"
-    Dim modeChoice As VbMsgBoxResult
-    modeChoice = MsgBox("Coller les fiches en mode NORMAL (lignes) ?" & VbCrLf & "Cliquez sur Non pour TRANSPOSE (colonnes).", vbYesNoCancel + vbQuestion, "Mode de collage")
-    If modeChoice = vbCancel Then
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
-    ElseIf modeChoice = vbNo Then
-        loadInfo.ModeTransposed = True
-    Else
-        loadInfo.ModeTransposed = False
-    End If
+        ' --- SÉLECTION DU MODE (NORMAL/TRANSPOSE) SANS PREVIEW ---
+        Diagnostics.LogTime "Avant sélection du mode d'affichage (MsgBox)"
+        Dim modeChoice As VbMsgBoxResult
+        modeChoice = MsgBox("Coller les fiches en mode NORMAL (lignes) ?" & VbCrLf & "Cliquez sur Non pour TRANSPOSE (colonnes).", vbYesNoCancel + vbQuestion, "Mode de collage")
+        If modeChoice = vbCancel Then
+            ProcessDataLoad = DataLoadResult.Cancelled
+            Exit Function
+        ElseIf modeChoice = vbNo Then
+            loadInfo.ModeTransposed = True
+        Else
+            loadInfo.ModeTransposed = False
+        End If
 
-    Diagnostics.LogTime "Avant sélection de la destination (InputBox)"
-    Set loadInfo.FinalDestination = GetDestination(loadInfo)
-    If loadInfo.FinalDestination Is Nothing Then
-        ProcessDataLoad = DataLoadResult.Cancelled
-        Exit Function
+        Diagnostics.LogTime "Avant sélection de la destination (InputBox)"
+        Set loadInfo.FinalDestination = GetDestination(loadInfo)
+        If loadInfo.FinalDestination Is Nothing Then
+            ProcessDataLoad = DataLoadResult.Cancelled
+            Exit Function
+        End If
     End If
 
 
     ' Coller les données avec la méthode optimisée
     Diagnostics.LogTime "Avant appel à PasteData (Optimisé)"
-    If Not PasteData(loadInfo) Then
+    If Not PasteData(loadInfo, TargetTableName) Then
         ProcessDataLoad = DataLoadResult.Error
         Exit Function
     End If
@@ -487,9 +499,10 @@ End Function
 ' Colle les données selon le mode choisi (normal ou transposé).
 ' Paramètres :
 '   loadInfo (DataLoadInfo) : Informations de chargement
+'   TargetTableName (String, optionnel) : Nom du tableau à utiliser si fourni
 ' Retour :
 '   Boolean (True si succès)
-Private Function PasteData(loadInfo As DataLoadInfo) As Boolean
+Private Function PasteData(loadInfo As DataLoadInfo, Optional TargetTableName As String = "") As Boolean
     On Error GoTo ErrorHandler
     
     Const PROC_NAME As String = "PasteData"
@@ -808,7 +821,11 @@ NextColumn:
     
     ' Créer le ListObject avec un nom unique
     Dim uniqueTableName As String
-    uniqueTableName = GetUniqueTableName(loadInfo.Category.CategoryName)
+    If TargetTableName <> "" Then
+        uniqueTableName = TargetTableName
+    Else
+        uniqueTableName = GetUniqueTableName(loadInfo.Category.CategoryName)
+    End If
     Log "dataloader", "Création du ListObject '" & uniqueTableName & "' sur la plage " & pastedRange.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' Déprotéger temporairement la feuille
@@ -838,6 +855,17 @@ NextColumn:
     End If
     
     newListObject.Name = uniqueTableName
+    
+    ' Stocker les métadonnées pour le rechargement
+    On Error Resume Next
+    With newListObject.Range.Cells(1, 1)
+        If .Comment Is Nothing Then
+            .AddComment SerializeLoadInfo(loadInfo)
+        Else
+            .Comment.Text SerializeLoadInfo(loadInfo)
+        End If
+    End With
+    On Error GoTo ErrorHandler
     
     ' Appliquer le style par défaut
     newListObject.TableStyle = "TableStyleMedium2"
@@ -1001,6 +1029,391 @@ ErrorHandler:
     End If
     ProcessCategory = Error ' Utilisation directe de l'énumération
 End Function
+
+' =========================================================================================
+' NOUVELLES FONCTIONS DE MISE À JOUR
+' =========================================================================================
+
+' Met à jour la table de données EE_ actuellement sélectionnée par l'utilisateur.
+Public Sub ReloadSelectedTable()
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "ReloadSelectedTable"
+    Const MODULE_NAME As String = "UpdateManager"
+    
+    Dim targetTable As ListObject
+    Set targetTable = Nothing
+    
+    If TypeName(Selection) <> "Range" Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation, "Sélection invalide"
+        Exit Sub
+    End If
+    
+    On Error Resume Next
+    Set targetTable = Selection.ListObject
+    On Error GoTo ErrorHandler
+    
+    If targetTable Is Nothing Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation, "Aucun tableau trouvé"
+        Exit Sub
+    End If
+    
+    ' Vérifier que c'est un tableau EE_ avec un commentaire
+    If Left(targetTable.Name, 3) <> "EE_" Then
+        MsgBox "Le tableau sélectionné n'est pas un tableau de données géré.", vbExclamation
+        Exit Sub
+    End If
+    
+    ' Vérifier le commentaire sur la première cellule du tableau
+    Dim tableComment As Comment
+    Set tableComment = targetTable.Range.Cells(1, 1).Comment
+    If tableComment Is Nothing Then
+        MsgBox "Le tableau ne contient pas de métadonnées de rechargement.", vbExclamation
+        Exit Sub
+    End If
+    
+    Dim loadInfo As DataLoadInfo
+    DeserializeLoadInfo tableComment.Text, loadInfo
+    
+    If loadInfo.Category.CategoryName = "" Then
+        MsgBox "Impossible de lire les métadonnées du tableau. Le rechargement a échoué.", vbExclamation, "Erreur de métadonnées"
+        Exit Sub
+    End If
+    
+    ' Préparer les informations pour un rechargement non-interactif
+    loadInfo.FinalDestination = targetTable.Range.Cells(1, 1)
+    
+    Dim tableName As String
+    tableName = targetTable.Name
+    
+    Dim ws As Worksheet
+    Set ws = targetTable.Parent
+    
+    Application.ScreenUpdating = False
+    
+    ' Supprimer l'ancien tableau
+    ws.Unprotect
+    targetTable.Delete
+    
+    ' Appeler le processus de chargement en mode rechargement
+    Dim result As DataLoadResult
+    result = ProcessDataLoad(loadInfo, IsReload:=True, TargetTableName:=tableName)
+    
+    ' La protection est maintenant gérée à l'intérieur de PasteData
+
+    Application.ScreenUpdating = True
+
+    If result = Success Then
+        MsgBox "Le tableau '" & tableName & "' a été mis à jour avec succès.", vbInformation, "Mise à jour réussie"
+    Else
+        MsgBox "La mise à jour du tableau '" & tableName & "' a échoué.", vbExclamation, "Échec de la mise à jour"
+    End If
+    
+    Exit Sub
+ErrorHandler:
+    Application.ScreenUpdating = True
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour du tableau."
+End Sub
+
+' Met à jour tous les tableaux de données EE_ dans le classeur actif.
+Public Sub ReloadAllTables()
+    On Error GoTo ErrorHandler
+    
+    Const PROC_NAME As String = "ReloadAllTables"
+    Const MODULE_NAME As String = "UpdateManager"
+    
+    Dim ws As Worksheet
+    Dim tbl As ListObject
+    Dim tablesToReload As Collection
+    Set tablesToReload = New Collection
+    
+    ' Collecter tous les tableaux à recharger dans une structure temporaire
+    For Each ws In ThisWorkbook.Worksheets
+        For Each tbl In ws.ListObjects
+            If Left(tbl.Name, 3) = "EE_" Then
+                Dim tableComment As Comment
+                Set tableComment = tbl.Range.Cells(1, 1).Comment
+                
+                If Not tableComment Is Nothing Then
+                    Dim reloadItem As Object ' Scripting.Dictionary
+                    Set reloadItem = CreateObject("Scripting.Dictionary")
+                    reloadItem("Name") = tbl.Name
+                    reloadItem("SheetName") = ws.Name
+                    reloadItem("Address") = tbl.Range.Address
+                    reloadItem("Comment") = tableComment.Text
+                    tablesToReload.Add reloadItem
+                End If
+            End If
+        Next tbl
+    Next ws
+    
+    If tablesToReload.Count = 0 Then
+        MsgBox "Aucun tableau géré à mettre à jour n'a été trouvé dans ce classeur.", vbInformation, "Aucun tableau"
+        Exit Sub
+    End If
+    
+    Dim answer As VbMsgBoxResult
+    answer = MsgBox("Mettre à jour " & tablesToReload.Count & " tableau(x) ?", vbYesNo + vbQuestion, "Confirmer la mise à jour globale")
+    If answer = vbNo Then Exit Sub
+    
+    Application.ScreenUpdating = False
+    
+    Dim updatedCount As Long, failedCount As Long
+    Dim item As Variant
+    
+    For Each item In tablesToReload
+        Dim loadInfo As DataLoadInfo
+        ' Correction de l'accès au commentaire
+        On Error Resume Next
+        Set m_tableComment = item.Range.Cells(1, 1).Comment
+        On Error GoTo ErrorHandler
+        
+        If m_tableComment Is Nothing Then
+            failedCount = failedCount + 1
+            Log "dataloader", "ERREUR: Pas de commentaire trouvé pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        Else
+            Dim commentText As String
+            On Error Resume Next
+            commentText = m_tableComment.Text
+            If Err.Number <> 0 Then
+                failedCount = failedCount + 1
+                Log "dataloader", "ERREUR: Impossible de lire le texte du commentaire pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
+                On Error GoTo ErrorHandler
+                GoTo NextItem
+            End If
+            On Error GoTo ErrorHandler
+            
+            DeserializeLoadInfo commentText, loadInfo
+            
+            If loadInfo.Category.CategoryName <> "" Then
+                Dim tableName As String
+                tableName = item("Name")
+                
+                Dim targetSheet As Worksheet
+                Set targetSheet = ThisWorkbook.Worksheets(item("SheetName"))
+                
+                Dim targetTableToDelete As ListObject
+                Set targetTableToDelete = targetSheet.ListObjects(tableName)
+                
+                ' Préparer les infos avant la suppression
+                loadInfo.FinalDestination = targetSheet.Range(item("Address")).Cells(1, 1)
+
+                ' Déprotéger et supprimer
+                targetSheet.Unprotect
+                targetTableToDelete.Delete
+                
+                ' Recharger
+                Dim result As DataLoadResult
+                result = ProcessDataLoad(loadInfo, IsReload:=True, TargetTableName:=tableName)
+                
+                ' La protection est gérée dans PasteData
+                
+                If result = Success Then
+                    updatedCount = updatedCount + 1
+                Else
+                    failedCount = failedCount + 1
+                End If
+            Else
+                failedCount = failedCount + 1
+                Log "dataloader", "ERREUR: Impossible de désérialiser les métadonnées pour le tableau " & item("Name"), ERROR_LEVEL, PROC_NAME, MODULE_NAME
+            End If
+        End If
+NextItem:
+    Next item
+    
+    Application.ScreenUpdating = True
+    
+    Dim finalMsg As String
+    finalMsg = updatedCount & " tableau(x) mis à jour avec succès."
+    If failedCount > 0 Then
+        finalMsg = finalMsg & vbCrLf & failedCount & " mise(s) à jour en échec."
+    End If
+    MsgBox finalMsg, vbInformation, "Rapport de mise à jour"
+    
+    Exit Sub
+ErrorHandler:
+    Application.ScreenUpdating = True
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour de tous les tableaux."
+End Sub
+
+' ==========================================
+' Fonctions de sérialisation des métadonnées
+' ==========================================
+
+' Sérialise les informations de chargement en une chaîne de caractères pour le stockage.
+Private Function SerializeLoadInfo(loadInfo As DataLoadInfo) As String
+    On Error GoTo ErrorHandler
+    Dim parts As Collection
+    Set parts = New Collection
+    
+    parts.Add "CategoryName" & META_KEYVAL_DELIM & loadInfo.Category.CategoryName
+    
+    Dim sVals As String
+    If Not loadInfo.SelectedValues Is Nothing Then
+        If loadInfo.SelectedValues.Count > 0 Then
+            Dim arrVals() As String
+            ReDim arrVals(1 To loadInfo.SelectedValues.Count)
+            Dim i As Long: i = 1
+            Dim v As Variant
+            For Each v In loadInfo.SelectedValues
+                arrVals(i) = CStr(v)
+                i = i + 1
+            Next v
+            sVals = Join(arrVals, ",")
+        End If
+    End If
+    parts.Add "SelectedValues" & META_KEYVAL_DELIM & sVals
+    
+    parts.Add "ModeTransposed" & META_KEYVAL_DELIM & CStr(loadInfo.ModeTransposed)
+    
+    Dim tempArray() As String
+    ReDim tempArray(1 To parts.Count)
+    Dim j As Long
+    For j = 1 To parts.Count
+        tempArray(j) = parts(j)
+    Next j
+
+    SerializeLoadInfo = Join(tempArray, META_DELIM)
+    Exit Function
+    
+ErrorHandler:
+    HandleError "DataLoaderManager", "SerializeLoadInfo", "Erreur de sérialisation"
+    SerializeLoadInfo = ""
+End Function
+
+' Désérialise une chaîne de caractères en un objet DataLoadInfo.
+Private Sub DeserializeLoadInfo(ByVal metadata As String, ByRef outLoadInfo As DataLoadInfo)
+    On Error GoTo ErrorHandler
+    Set outLoadInfo.SelectedValues = New Collection
+
+    Dim parts() As String
+    parts = Split(metadata, META_DELIM)
+    
+    Dim i As Long
+    For i = LBound(parts) To UBound(parts)
+        Dim pair() As String
+        pair = Split(parts(i), META_KEYVAL_DELIM)
+        
+        If UBound(pair) >= 1 Then
+            Dim key As String: key = pair(0)
+            Dim value As String: value = pair(1)
+            
+            Select Case key
+                Case "CategoryName"
+                    If CategoriesCount = 0 Then InitCategories
+                    outLoadInfo.Category = GetCategoryByName(value)
+                Case "SelectedValues"
+                    If value <> "" Then
+                        Dim vals() As String
+                        vals = Split(value, ",")
+                        Dim v As Variant
+                        For Each v In vals
+                            outLoadInfo.SelectedValues.Add v
+                        Next v
+                    End If
+                Case "ModeTransposed"
+                    outLoadInfo.ModeTransposed = (value = "True")
+            End Select
+        End If
+    Next i
+    
+    Exit Sub
+    
+ErrorHandler:
+    HandleError "DataLoaderManager", "DeserializeLoadInfo", "Erreur de désérialisation"
+    ' outLoadInfo sera partiellement rempli mais la procédure va se terminer
+End Sub
+
+' Recharge les données du tableau actuellement sélectionné
+Public Sub ReloadCurrentTable()
+    Const PROC_NAME As String = "ReloadCurrentTable"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    On Error GoTo ErrorHandler
+    
+    ' Vérifier qu'une cellule est sélectionnée
+    If TypeName(Selection) <> "Range" Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Vérifier que la cellule est dans un tableau
+    Dim targetTable As ListObject
+    On Error Resume Next
+    Set targetTable = Selection.ListObject
+    On Error GoTo ErrorHandler
+    
+    If targetTable Is Nothing Then
+        MsgBox "Veuillez sélectionner une cellule dans un tableau à mettre à jour.", vbInformation
+        Exit Sub
+    End If
+    
+    ' Vérifier que c'est un tableau EE_ avec un commentaire
+    If Left(targetTable.Name, 3) = "EE_" Then
+        Dim tableComment As Comment
+        Set tableComment = targetTable.Range.Cells(1, 1).Comment
+        If tableComment Is Nothing Then
+            MsgBox "Ce tableau n'est pas géré par l'addin.", vbInformation
+            Exit Sub
+        End If
+        
+        ' Désérialiser les infos de chargement depuis le commentaire
+        Dim loadInfo As DataLoadInfo
+        DeserializeLoadInfo tableComment.Text, loadInfo  ' Correction ici : appel correct de la Sub
+        
+        ' Recharger les données
+        ProcessDataLoad loadInfo
+        
+        MsgBox "Le tableau a été mis à jour avec succès.", vbInformation
+    Else
+        MsgBox "Ce tableau n'est pas géré par l'addin.", vbInformation
+    End If
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour du tableau"
+End Sub
+
+' Callback pour recharger le tableau courant
+Public Sub ReloadCurrentTable_Click(control As IRibbonControl)
+    ReloadCurrentTable
+End Sub
+
+' Callback pour recharger tous les tableaux
+Public Sub ReloadAllTablesCallback(control As IRibbonControl)
+    Const PROC_NAME As String = "ReloadAllTablesCallback"
+    Const MODULE_NAME As String = "DataLoaderManager"
+    On Error GoTo ErrorHandler
+    
+    ' Vérifier qu'il y a des tableaux à mettre à jour
+    Dim hasEETables As Boolean
+    Dim ws As Worksheet
+    Dim tbl As ListObject
+    
+    For Each ws In ActiveWorkbook.Worksheets
+        For Each tbl In ws.ListObjects
+            If Left(tbl.Name, 3) = "EE_" Then
+                Dim tableComment As Comment
+                Set tableComment = tbl.Range.Cells(1, 1).Comment
+                If Not tableComment Is Nothing Then
+                    hasEETables = True
+                    Exit For
+                End If
+            End If
+        Next tbl
+        If hasEETables Then Exit For
+    Next ws
+    
+    If Not hasEETables Then
+        MsgBox "Aucun tableau géré à mettre à jour n'a été trouvé dans ce classeur.", vbInformation
+        Exit Sub
+    End If
+    
+    ReloadAllTables
+    Exit Sub
+    
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la mise à jour de tous les tableaux"
+End Sub
 
 
 

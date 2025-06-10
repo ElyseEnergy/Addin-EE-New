@@ -101,6 +101,29 @@
                               onAction="ProcessForceRefreshRagicDictionary"
                               getSupertip="GetRagicDictSupertip"/>
                 </ns0:group>
+
+                <ns0:group id="grpUpdate" label="Mise à jour">
+                    <ns0:button 
+                        id="btnReloadCurrentTable" 
+                        label="Recharger le tableau courant" 
+                        imageMso="RefreshAll"
+                        size="large"
+                        onAction="ReloadCurrentTable_Click"
+                        getEnabled="GetReloadCurrentEnabled"
+                        getVisible="GetReloadButtonsVisible"
+                        screentip="Recharge les données du tableau actuellement sélectionné"
+                        supertip="Met à jour les données du tableau EE_ actuellement sélectionné en rechargeant depuis Ragic." />
+                    <ns0:button 
+                        id="btnReloadAllTables" 
+                        label="Recharger tous les tableaux" 
+                        imageMso="RefreshAllPivotTables"
+                        size="large"
+                        onAction="ReloadAllTablesCallback"
+                        getEnabled="GetReloadAllEnabled"
+                        getVisible="GetReloadButtonsVisible"
+                        screentip="Recharge tous les tableaux du classeur"
+                        supertip="Met à jour les données de tous les tableaux EE_ présents dans le classeur en rechargeant depuis Ragic." />
+                </ns0:group>
             </ns0:tab>
         </ns0:tabs>
     </ns0:ribbon>

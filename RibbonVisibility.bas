@@ -3,6 +3,12 @@ Attribute VB_Name = "RibbonVisibility"
 ' Gère la visibilité des éléments du ruban
 Option Explicit
 
+' Ajouter en haut du module, après Option Explicit
+Private Const MODULE_NAME As String = "RibbonVisibility"
+
+' Ajouter en haut du module, après Option Explicit et MODULE_NAME
+Private Const TABLE_PREFIX As String = "EE_"
+
 ' Variable globale pour stocker l'instance du ruban
 Public gRibbon As IRibbonUI
 
@@ -141,4 +147,118 @@ End Sub
 Public Sub GetAdminVisibility(control As IRibbonControl, ByRef visible As Variant)
     visible = HasAccess("Admin")
 End Sub
+
+' Callback pour la visibilité des boutons de rechargement.
+' Le ruban appelle cette fonction pour savoir s'il doit afficher les boutons.
+'---------------------------------------------------------------------------------------
+Public Sub GetReloadButtonsVisible(control As IRibbonControl, ByRef visible As Variant)
+    Const PROC_NAME As String = "GetReloadButtonsVisible"
+    On Error GoTo ErrorHandler
+    ' La logique est simple : les boutons sont toujours visibles.
+    visible = True
+Exit Sub
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Callback pour l'état activé du bouton "Recharger le tableau courant".
+' Le ruban appelle cette fonction pour savoir si le bouton doit être cliquable.
+'---------------------------------------------------------------------------------------
+Public Sub GetReloadCurrentEnabled(control As IRibbonControl, ByRef enabled As Variant)
+    Const PROC_NAME As String = "GetReloadCurrentEnabled"
+    On Error GoTo ErrorHandler
+
+    Dim currentTable As ListObject
+    enabled = False ' Désactivé par défaut
+
+    On Error Resume Next
+    Set currentTable = ActiveCell.ListObject
+    On Error GoTo ErrorHandler
+
+    If Not currentTable Is Nothing Then
+        Dim hasComment As Boolean
+        hasComment = False
+        On Error Resume Next
+        ' Vérifie si la cellule en haut à gauche du tableau a un commentaire non vide.
+        hasComment = (Len(currentTable.Range.Cells(1, 1).Comment.Text) > 0)
+        On Error GoTo ErrorHandler ' Rétablir la gestion d'erreur
+
+        If currentTable.Name Like TABLE_PREFIX & "*" And hasComment Then
+            enabled = True
+        End If
+    End If
+
+Exit Sub
+ErrorHandler:
+    enabled = False
+    HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+'---------------------------------------------------------------------------------------
+' Callback pour l'état activé du bouton "Recharger tous les tableaux".
+'---------------------------------------------------------------------------------------
+Public Sub GetReloadAllEnabled(control As IRibbonControl, ByRef enabled As Variant)
+    Const PROC_NAME As String = "GetReloadAllEnabled"
+    On Error GoTo ErrorHandler
+
+    ' Activer le bouton s'il y a au moins un tableau géré par l'addin dans le classeur.
+    enabled = (CountManagedTables(ThisWorkbook) > 0)
+
+Exit Sub
+ErrorHandler:
+    enabled = False ' En cas d'erreur, le bouton est désactivé
+    HandleError MODULE_NAME, PROC_NAME
+End Sub
+
+' --- PRIVATE HELPERS ---
+
+'---------------------------------------------------------------------------------------
+' Compte le nombre de tableaux gérés par l'addin dans un classeur.
+' Un tableau est "géré" s'il a le bon préfixe ET un commentaire non vide sur sa première cellule.
+'---------------------------------------------------------------------------------------
+Private Function CountManagedTables(ByVal wb As Workbook) As Long
+    Const PROC_NAME As String = "CountManagedTables"
+    On Error GoTo ErrorHandler
+
+    Dim ws As Worksheet
+    Dim tbl As ListObject
+    Dim count As Long
+    Dim hasComment As Boolean
+    Dim commentText As String
+    count = 0
+
+    Debug.Print "--- Début de la vérification des tableaux managés ---"
+
+    For Each ws In wb.Worksheets
+        For Each tbl In ws.ListObjects
+            hasComment = False
+            commentText = ""
+            On Error Resume Next
+            ' Essayer de lire le texte du commentaire sur la cellule en haut à gauche du tableau
+            commentText = tbl.Range.Cells(1, 1).Comment.Text
+            hasComment = (Len(commentText) > 0)
+            On Error GoTo 0 ' Réinitialiser la gestion d'erreur
+
+            ' Afficher les informations de diagnostic pour chaque tableau
+            Debug.Print "Tableau: '" & tbl.Name & "' sur la feuille '" & ws.Name & "'. " & _
+                        "Préfixe OK: " & (tbl.Name Like TABLE_PREFIX & "*") & ". " & _
+                        "Commentaire OK: " & hasComment & ". " & _
+                        "Longueur du commentaire: " & Len(commentText)
+
+            If tbl.Name Like TABLE_PREFIX & "*" And hasComment Then
+                count = count + 1
+            End If
+        Next tbl
+    Next ws
+
+    CountManagedTables = count
+    Debug.Print "--- Fin de la vérification. Total des tableaux managés: " & count & " ---"
+
+Exit Function
+ErrorHandler:
+    CountManagedTables = 0
+    Debug.Print "!!! ERREUR dans CountManagedTables: " & Err.Description
+    HandleError MODULE_NAME, PROC_NAME
+End Function
 

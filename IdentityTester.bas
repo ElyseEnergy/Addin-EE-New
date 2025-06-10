@@ -1,4 +1,5 @@
-﻿' ========================================================================
+Attribute VB_Name = "IdentityTester"
+'========================================================================
 ' Module: IdentityTester
 ' Description: Module complet pour tester toutes les méthodes de récupération
 '              d'informations d'identité utilisateur sous VBA

@@ -66,7 +66,7 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     For i = 1 To CategoryManager.CategoriesCount
         Category = categories(i)
         Log "cleanup_pq", "Nettoyage de " & Category.PowerQueryName, DEBUG_LEVEL, "ProcessCleanupAllPowerQueries", "PQDebugTools"
-        DataLoaderManager.CleanupPowerQuery Category.PowerQueryName
+        Call DataLoaderManager.CleanupPowerQuery(Category.PowerQueryName)
         ' Nettoyage avancé : supprimer la connexion et les QueryTables orphelins
         Dim conn As WorkbookConnection
         On Error Resume Next
