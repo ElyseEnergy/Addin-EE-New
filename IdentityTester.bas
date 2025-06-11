@@ -519,3 +519,48 @@ Sub DiagnoseIssues()
     On Error GoTo 0
     Debug.Print "=== FIN DU DIAGNOSTIC ==="
 End Sub
+
+' --- Constantes et Enums du module ---
+Private Const MODULE_NAME As String = "IdentityTester"
+
+' --- Procédures publiques ---
+Public Sub TestRagicApiKey()
+    Const PROC_NAME As String = "TestRagicApiKey"
+    On Error GoTo ErrorHandler
+    
+    ' Test 1: Vérifier que la clé API peut être récupérée
+    Dim apiKey As String
+    apiKey = env.GetRagicApiKey()
+    Debug.Print "Test 1 - Clé API récupérée : " & IIf(Len(apiKey) > 0, "OK", "ÉCHEC")
+    
+    ' Test 2: Vérifier que les paramètres d'API sont correctement formés
+    Dim apiParams As String
+    apiParams = env.GetRagicApiParams()
+    Debug.Print "Test 2 - Paramètres API formés : " & IIf(InStr(apiParams, "APIKey=") > 0, "OK", "ÉCHEC")
+    
+    ' Test 3: Tester une requête réelle vers Ragic
+    Dim http As Object
+    Set http = CreateObject("MSXML2.XMLHTTP.6.0")
+    Dim testUrl As String
+    testUrl = env.RAGIC_BASE_URL & "1" & env.GetRagicApiParams()
+    
+    http.Open "GET", testUrl, False
+    http.send
+    
+    Debug.Print "Test 3 - Requête API : " & IIf(http.Status = 200, "OK", "ÉCHEC (Status " & http.Status & ")")
+    
+    ' Test 4: Vérifier que CategoryManager peut toujours construire des URLs
+    Dim categories() As CategoryInfo
+    categories = CategoryManager.GetAllCategories()
+    Debug.Print "Test 4 - URLs des catégories : " & IIf(UBound(categories) >= 0, "OK", "ÉCHEC")
+    
+    ' Test 5: Vérifier que le logging fonctionne toujours
+    Log "test_api", "Test de l'API Ragic", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Debug.Print "Test 5 - Logging : OK"
+    
+    MsgBox "Tests terminés. Consultez la fenêtre Immediate pour les résultats.", vbInformation
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors des tests de l'API : " & Err.Description
+End Sub

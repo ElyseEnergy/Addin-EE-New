@@ -2,6 +2,17 @@ Attribute VB_Name = "RagicDictionary"
 
 Option Explicit
 
+' ==================================================================================================
+' Module: RagicDictionary
+' Auteur: 
+' Date: 2024-03-01
+' Description: Ce module gère la récupération, le cache et l'utilisation du dictionnaire de données
+'              provenant de Ragic. Ce dictionnaire fournit des métadonnées sur les champs,
+'              comme le type de données ou si un champ doit être masqué.
+' ==================================================================================================
+
+' --- CONSTANTES PUBLIQUES ---
+
 Public RagicFieldDict As Object
 Public wsPQDict As Worksheet
 
@@ -95,7 +106,7 @@ Public Sub LoadRagicDictionary()
         With dictCategory
             .CategoryName = BASE_NAME
             .DisplayName = BASE_NAME
-            .URL = env.RAGIC_BASE_URL & RAGIC_PATH & env.RAGIC_API_PARAMS
+            .URL = env.RAGIC_BASE_URL & RAGIC_PATH & env.GetRagicApiParams()
             .PowerQueryName = pqName
             .SheetName = BASE_NAME
         End With

@@ -1,6 +1,11 @@
 Attribute VB_Name = "PQDebugTools"
-' Module : PQDebugTools
-' Module de debug pour injecter et tester les requêtes PowerQuery
+' ========================================================================
+' Module: PQDebugTools
+' ------------------------------------------------------------------------
+' Outils de débogage pour les requêtes PowerQuery
+' Auteurs:
+' Date de création: 2024-03-01
+' ========================================================================
 Option Explicit
 
 ' Module de debug pour tester les requêtes PowerQuery dans l'éditeur

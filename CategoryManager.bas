@@ -110,7 +110,7 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
     Categories(idx).filterLevel = filterLevel
     Categories(idx).SecondaryFilterLevel = secondaryFilterLevel
     Categories(idx).displayName = displayName
-    Categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
+    Categories(idx).URL = env.RAGIC_BASE_URL & path & env.GetRagicApiParams()
     Categories(idx).PowerQueryName = "PQ_" & Utilities.SanitizeTableName(name)
     Categories(idx).categoryGroup = categoryGroup
     If sheetName = "" Then sheetName = displayName

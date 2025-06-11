@@ -137,7 +137,7 @@ Private Function UploadToRagic(filePath As String, data As Collection) As String
     url = env.RAGIC_BASE_URL & "simulation-files/1"
     
     Dim apiKey As String
-    apiKey = Replace(env.RAGIC_API_KEY, "&", "") ' La clé dans env.bas a un '&' en trop
+    apiKey = Replace(env.GetRagicApiKey(), "&", "") ' Retirer le '&' de la clé
     
     http.Open "POST", url, False
     http.SetRequestHeader "Authorization", "Basic " & apiKey

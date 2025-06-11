@@ -177,7 +177,7 @@ Private Sub LogToRagic(ByVal logMessage As String)
     "}"
 
     ' Construire l'URL avec la clé API du module env
-    ragicUrl = RAGIC_LOG_URL & "?APIKey=" & env.RAGIC_API_KEY
+    ragicUrl = RAGIC_LOG_URL & "?APIKey=" & env.GetRagicApiKey()
     
     ' Envoyer la requête POST de manière asynchrone pour ne pas attendre la réponse
     http.Open "POST", ragicUrl, True ' True = Asynchrone

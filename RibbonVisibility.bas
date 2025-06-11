@@ -323,14 +323,14 @@ End Sub
 Public Sub GetReloadCurrentEnabled(control As IRibbonControl, ByRef enabled As Variant)
     Const PROC_NAME As String = "GetReloadCurrentEnabled"
     On Error GoTo ErrorHandler
-
+    
     Dim currentTable As ListObject
     enabled = False ' Désactivé par défaut
 
     On Error Resume Next
     Set currentTable = ActiveCell.ListObject
     On Error GoTo ErrorHandler
-
+    
     If Not currentTable Is Nothing Then
         Dim hasComment As Boolean
         hasComment = False
@@ -344,7 +344,7 @@ Public Sub GetReloadCurrentEnabled(control As IRibbonControl, ByRef enabled As V
         End If
     End If
 
-Exit Sub
+    Exit Sub
 ErrorHandler:
     enabled = False
     HandleError MODULE_NAME, PROC_NAME
@@ -356,9 +356,9 @@ End Sub
 Public Sub GetReloadAllEnabled(control As IRibbonControl, ByRef enabled As Variant)
     Const PROC_NAME As String = "GetReloadAllEnabled"
     On Error GoTo ErrorHandler
-
+    
     ' Activer le bouton s'il y a au moins un tableau géré par l'addin dans le classeur.
-    enabled = (CountManagedTables(ThisWorkbook) > 0)
+    enabled = (TableManager.CountManagedTables(ThisWorkbook) > 0)
 
 Exit Sub
 ErrorHandler:
@@ -384,7 +384,7 @@ Private Function CountManagedTables(ByVal wb As Workbook) As Long
     count = 0
 
     Log "dataloader", "--- Début de la vérification des tableaux managés ---", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
-
+    
     For Each ws In wb.Worksheets
         For Each tbl In ws.ListObjects
             hasComment = False
