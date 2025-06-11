@@ -5,16 +5,16 @@ Private startTime As Double
 Private lastTime As Double
 Private Const LOG_SHEET_NAME As String = "App_Logs"
 
-' DÃ©marre le chronomÃ¨tre global pour un processus donnÃ©
+' Démarre le chronomètre global pour un processus donné
 Public Sub StartTimer(processName As String)
     startTime = Timer
     lastTime = startTime
-    Log "PERF_LOG", "--- DÃ‰BUT: " & processName & " ---", INFO_LEVEL, "StartTimer", "Diagnostics"
+    Log "PERF_LOG", "--- DÉBUT: " & processName & " ---", INFO_LEVEL, "StartTimer", "Diagnostics"
 End Sub
 
-' ArrÃªte le chronomÃ¨tre global et loggue la durÃ©e totale
+' Arrête le chronomètre global et loggue la durée totale
 Public Sub StopTimer(processName As String)
-    ' On loggue une derniÃ¨re Ã©tape avant le calcul total
+    ' On loggue une dernière étape avant le calcul total
     LogTime "FIN DU CODE VBA pour " & processName
     
     Dim currentTime As Double
@@ -27,10 +27,10 @@ Public Sub StopTimer(processName As String)
         elapsedTotal = currentTime - startTime
     End If
     
-    Log "PERF_LOG", "--- FIN: " & processName & ". DurÃ©e totale du code VBA: " & Format(elapsedTotal, "0.000s") & " ---", INFO_LEVEL, "StopTimer", "Diagnostics"
+    Log "PERF_LOG", "--- FIN: " & processName & ". Durée totale du code VBA: " & Format(elapsedTotal, "0.000s") & " ---", INFO_LEVEL, "StopTimer", "Diagnostics"
 End Sub
 
-' Loggue le temps Ã©coulÃ© pour une Ã©tape spÃ©cifique
+' Loggue le temps écoulé pour une étape spécifique
 Public Sub LogTime(stepName As String)
     Dim currentTime As Double
     currentTime = Timer
@@ -38,16 +38,16 @@ Public Sub LogTime(stepName As String)
     Dim elapsedTotal As Double
     Dim elapsedStep As Double
     
-    ' GÃ©rer le passage de minuit
+    ' Gérer le passage de minuit
     If currentTime < startTime Then elapsedTotal = (86400 - startTime) + currentTime Else elapsedTotal = currentTime - startTime
     If currentTime < lastTime Then elapsedStep = (86400 - lastTime) + currentTime Else elapsedStep = currentTime - lastTime
 
     Dim logMessage As String
     logMessage = "TIMER | " & stepName & _
-                   " | Ã‰tape: " & Format(elapsedStep, "0.000s") & _
+                   " | Étape: " & Format(elapsedStep, "0.000s") & _
                    " | Total: " & Format(elapsedTotal, "0.000s")
     
-    ' Utiliser le systÃ¨me de logging existant
+    ' Utiliser le système de logging existant
     Log "PERF_LOG", logMessage, INFO_LEVEL, "LogTime", "Diagnostics"
     
     lastTime = currentTime
@@ -72,31 +72,31 @@ Public Sub WaitAndLogCalculation()
     
     Log "PERF_LOG", "Temps de recalcul/rendu Excel: " & Format(elapsedCalc, "0.000s"), INFO_LEVEL, "WaitAndLogCalculation", "Diagnostics"
     
-    LogTime "FIN TOTALE (main rÃ©ellement rendue)"
+    LogTime "FIN TOTALE (main réellement rendue)"
 End Sub
 
-' Routine de log qui Ã©crit dans une feuille de calcul
+' Routine de log qui écrit dans une feuille de calcul
 Public Sub LogToSheet(message As String, level As LogLevel, procedureName As String, moduleName As String)
     On Error GoTo ErrorHandler
     
     Dim ws As Worksheet
     Dim nextRow As Long
     
-    ' DÃ©sactiver la mise Ã  jour pour accÃ©lÃ©rer
+    ' Désactiver la mise à jour pour accélérer
     Dim initialScreenUpdating As Boolean
     initialScreenUpdating = Application.ScreenUpdating
     If initialScreenUpdating Then Application.ScreenUpdating = False
     
-    ' Essayer de rÃ©cupÃ©rer la feuille de log, la crÃ©er si elle n'existe pas
+    ' Essayer de récupérer la feuille de log, la créer si elle n'existe pas
     On Error Resume Next
     Set ws = ThisWorkbook.Worksheets(LOG_SHEET_NAME)
-    On Error GoTo ErrorHandler ' RÃ©activer la gestion d'erreur normale
+    On Error GoTo ErrorHandler ' Réactiver la gestion d'erreur normale
     
     If ws Is Nothing Then
-        Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        Set ws = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.count))
         ws.Name = LOG_SHEET_NAME
         ws.Tab.Color = vbRed
-        ' CrÃ©er les en-tÃªtes
+        ' Créer les en-têtes
         ws.Cells(1, 1).Value = "Timestamp"
         ws.Cells(1, 2).Value = "Level"
         ws.Cells(1, 3).Value = "Module"
@@ -106,9 +106,9 @@ Public Sub LogToSheet(message As String, level As LogLevel, procedureName As Str
     End If
     
     ' Trouver la prochaine ligne vide
-    nextRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row + 1
+    nextRow = ws.Cells(ws.Rows.count, 1).End(xlUp).row + 1
     
-    ' Ã‰crire les informations de log
+    ' Écrire les informations de log
     ws.Cells(nextRow, 1).Value = Now()
     ws.Cells(nextRow, 1).NumberFormat = "yyyy-mm-dd hh:mm:ss"
     ws.Cells(nextRow, 2).Value = LogLevelToString(level)
@@ -119,13 +119,13 @@ Public Sub LogToSheet(message As String, level As LogLevel, procedureName As Str
     ' Ajuster la largeur des colonnes si c'est le premier log
     If nextRow = 2 Then ws.Columns("A:E").AutoFit
     
-    ' RÃ©activer la mise Ã  jour de l'Ã©cran si elle l'Ã©tait au dÃ©part
+    ' Réactiver la mise à jour de l'écran si elle l'était au départ
     If initialScreenUpdating Then Application.ScreenUpdating = True
     
     Exit Sub
     
 ErrorHandler:
-    ' En cas d'erreur de logging (par ex: feuille protÃ©gÃ©e), on ne fait rien pour ne pas planter le process principal
+    ' En cas d'erreur de logging (par ex: feuille protégée), on ne fait rien pour ne pas planter le process principal
     Debug.Print "ERREUR DE LOGGING: " & Err.Description
     If initialScreenUpdating Then Application.ScreenUpdating = True
 End Sub
@@ -139,4 +139,4 @@ Private Function LogLevelToString(level As LogLevel) As String
         Case 3: LogLevelToString = "ERROR"
         Case Else: LogLevelToString = "UNKNOWN"
     End Select
-End Function 
+End Function

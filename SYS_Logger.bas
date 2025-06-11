@@ -2,11 +2,11 @@ Attribute VB_Name = "SYS_Logger"
 Option Explicit
 
 ' ============================================================================
-' SYS_Logger - Système de Logging Simplifié
+' SYS_Logger - Syst�me de Logging Simplifi�
 ' ============================================================================
 
 ' Chemin absolu du dossier de logs
-Private Const LOG_FOLDER_PATH As String = "c:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\logs"
+Private Const LOG_FOLDER_PATH As String = "C:\Users\NicolasBOUMOUR\_repo\Addin-EE-New\logs"
 Private Const LOG_FILE_NAME As String = "elyse_energy.log"
 
 ' Niveaux de log
@@ -18,13 +18,6 @@ Public Enum LogLevel
     CRITICAL_LEVEL = 4
 End Enum
 
-' --- NOUVEAU : Paramètres pour le logging vers Ragic ---
-Private Const ENABLE_RAGIC_LOGGING As Boolean = True
-Private Const RAGIC_LOG_URL As String = "https://ragic.elyse.energy/default/excel-addin/1"
-Private Const RAGIC_FIELD_ID_EMAIL As String = "1005232"
-Private Const RAGIC_FIELD_ID_LOG As String = "1005233"
-' ---------------------------------------------------------
-
 ' Variables du module
 Private mCurrentLogLevel As LogLevel
 
@@ -34,8 +27,8 @@ Private mCurrentLogLevel As LogLevel
 
 ' Nettoyer le log au lancement, puis append pour chaque message
 Public Sub InitializeLogger()
-    ' Initialisation du niveau de log par défaut
-    mCurrentLogLevel = DEBUG_LEVEL
+    ' Initialisation du niveau de log par d�faut
+    mCurrentLogLevel = INFO_LEVEL
     
     ' S'assurer que le dossier de logs existe
     EnsureLogFolderExists
@@ -48,7 +41,7 @@ Public Sub InitializeLogger()
     logFile.Close
     
     ' Log d'initialisation
-    Log "sys_init", "Système de logging initialisé (niveau DEBUG)", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
+    Log "sys_init", "Syst�me de logging initialis�", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
 End Sub
 
 ' ============================================================================
@@ -65,7 +58,7 @@ Private Sub EnsureLogFolderExists()
     End If
 End Sub
 
-' Écrit dans le fichier de log (append)
+' �crit dans le fichier de log (append)
 Private Sub WriteToLogFile(logMessage As String)
     Dim fso As Object
     Dim logFile As Object
@@ -80,7 +73,7 @@ Private Sub WriteToLogFile(logMessage As String)
     ' Ouvrir le fichier en mode append (8 = ForAppending, -1 = TristateMixed pour Unicode)
     Set logFile = fso.OpenTextFile(logFilePath, 8, True, -1)
     
-    ' Écrire le message (ajoute à la fin du fichier)
+    ' �crire le message (ajoute � la fin du fichier)
     logFile.WriteLine logMessage
     
     ' Fermer le fichier
@@ -96,7 +89,7 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     Dim levelString As String
     Dim timeStamp As String
     
-    ' Déterminer le niveau de log
+    ' D�terminer le niveau de log
     Select Case level
         Case DEBUG_LEVEL
             levelString = "DEBUG"
@@ -131,58 +124,8 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     ' Afficher dans Immediate Window
     Debug.Print logMessage
     
-    ' Écrire dans le fichier de log
+    ' �crire dans le fichier de log
     WriteToLogFile logMessage
-    
-    ' === NOUVEAU: Logging vers Ragic pour les avertissements et erreurs ===
-    If ENABLE_RAGIC_LOGGING And level >= WARNING_LEVEL Then
-        On Error Resume Next ' "Fire and forget" pour ne pas bloquer l'utilisateur
-        LogToRagic logMessage
-        On Error GoTo 0
-    End If
-End Sub
-
-' ============================================================================
-' NOUVEAU : FONCTIONS POUR LE LOGGING VERS RAGIC
-' ============================================================================
-
-' Échappe une chaîne de caractères pour être valide dans un JSON.
-Private Function JsonEscape(ByVal text As String) As String
-    text = Replace(text, "\", "\\")
-    text = Replace(text, """", "\""")
-    JsonEscape = text
-End Function
-
-' Envoie le message de log formaté à la base de données Ragic.
-Private Sub LogToRagic(ByVal logMessage As String)
-    Dim http As Object
-    Dim ragicUrl As String
-    Dim jsonPayload As String
-    Dim userEmail As String
-    
-    ' Créer l'objet HTTP. Tente la version 6.0, puis une version de base.
-    On Error Resume Next
-    Set http = CreateObject("MSXML2.XMLHTTP.6.0")
-    If http Is Nothing Then Set http = CreateObject("MSXML2.XMLHTTP")
-    If http Is Nothing Then Exit Sub ' Ne pas continuer si l'objet HTTP ne peut être créé
-    On Error GoTo 0
-
-    ' Récupérer l'email de l'utilisateur depuis le module Utilities
-    userEmail = Utilities.GetUserEmail()
-
-    ' Construire le payload JSON
-    jsonPayload = "{" & _
-        """" & RAGIC_FIELD_ID_EMAIL & """: """ & JsonEscape(userEmail) & """, " & _
-        """" & RAGIC_FIELD_ID_LOG & """: """ & JsonEscape(logMessage) & """" & _
-    "}"
-
-    ' Construire l'URL avec la clé API du module env
-    ragicUrl = RAGIC_LOG_URL & "?APIKey=" & env.RAGIC_API_KEY
-    
-    ' Envoyer la requête POST de manière asynchrone pour ne pas attendre la réponse
-    http.Open "POST", ragicUrl, True ' True = Asynchrone
-    http.SetRequestHeader "Content-Type", "application/json; charset=utf-8"
-    http.send jsonPayload
 End Sub
 
 ' ============================================================================
@@ -191,7 +134,7 @@ End Sub
 
 Public Sub SetLogLevel(level As LogLevel)
     mCurrentLogLevel = level
-    Log "log_level_changed", "Niveau de log défini à: " & level, INFO_LEVEL
+    Log "log_level_changed", "Niveau de log d�fini �: " & level, INFO_LEVEL
 End Sub
 
 ' Purge les anciens fichiers de log

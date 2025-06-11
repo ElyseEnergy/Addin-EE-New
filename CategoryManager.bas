@@ -1,19 +1,19 @@
 Attribute VB_Name = "CategoryManager"
 ' Module : CategoryManager.bas
 ' ==============================
-' GÃ¨re toutes les catÃ©gories et leurs configurations sous forme de module standard.
-' Permet l'initialisation, l'ajout, la recherche et la rÃ©cupÃ©ration des catÃ©gories.
+' Gère toutes les catégories et leurs configurations sous forme de module standard.
+' Permet l'initialisation, l'ajout, la recherche et la récupération des catégories.
 Option Explicit
 
 ' Categories
 ' ----------
-' Tableau global contenant toutes les catÃ©gories chargÃ©es.
-Public Categories() As CategoryInfo
+' Tableau global contenant toutes les catégories chargées.
+Public categories() As categoryInfo
 Public CategoriesCount As Long
 
 ' InitCategories
 ' --------------
-' Initialise la liste des catÃ©gories et charge les donnÃ©es associÃ©es.
+' Initialise la liste des catégories et charge les données associées.
 ' Retourne : Rien
 Public Sub InitCategories()
     On Error GoTo ErrorHandler
@@ -22,7 +22,7 @@ Public Sub InitCategories()
     Const MODULE_NAME As String = "CategoryManager"
     
     CategoriesCount = 0
-    ReDim Categories(1 To 1)
+    ReDim categories(1 To 1)
     
     ' # Engineering
     ' ## Technologies
@@ -43,58 +43,58 @@ Public Sub InitCategories()
     AddCategory "Power losses", "Pas de filtrage", "Power losses", "utilities/9.csv", "Utilities"
     AddCategory "WasteWater Treatment", "Pas de filtrage", "WasteWater Treatment", "utilities/6.csv", "Utilities"
     AddCategory "Water Treatment", "Pas de filtrage", "Water Treatment", "utilities/2.csv", "Utilities"
-    ' ## MÃ©triques de rÃ©fÃ©rence
-    AddCategory "MÃ©triques de base", "Pas de filtrage", "MÃ©triques de base", "plant-power-requirement-v2/2.csv", "Engineering Metrics"
-    AddCategory "MÃ©triques expert", "Pas de filtrage", "MÃ©triques expert", "plant-power-requirement-v2/5.csv", "Engineering Metrics"
-    AddCategory "Timings de rÃ©fÃ©rence", "Pas de filtrage", "Timings de rÃ©fÃ©rence", "plant-power-requirement-v2/10.csv", "Engineering Metrics"
+    ' ## Métriques de référence
+    AddCategory "Métriques de base", "Pas de filtrage", "Métriques de base", "plant-power-requirement-v2/2.csv", "Engineering Metrics"
+    AddCategory "Métriques expert", "Pas de filtrage", "Métriques expert", "plant-power-requirement-v2/5.csv", "Engineering Metrics"
+    AddCategory "Timings de référence", "Pas de filtrage", "Timings de référence", "plant-power-requirement-v2/10.csv", "Engineering Metrics"
     ' ## LCA
-    AddCategory "MÃ©triques RED III", "Pas de filtrage", "MÃ©triques RED III", "red-ii/7.csv", "LCA"
+    AddCategory "Métriques RED III", "Pas de filtrage", "Métriques RED III", "red-ii/7.csv", "LCA"
     AddCategory "Emissions", "Pas de filtrage", "Emissions", "red-ii/8.csv", "LCA"
     ' ## Logistique
     AddCategory "Infra et logistique", "Pas de filtrage", "Infra et logistique", "guilhem-infra/5.csv", "Log"
 
     ' Finances
-    AddCategory "Budget Corpo", "budget AssociÃ©", "Budget Corpo", "newbudget/2.csv", "Finances"
-    AddCategory "DÃ©tails Budgets", "budget AssociÃ©", "DÃ©tails Budgets", "newbudget/8.csv", "Finances"
-    AddCategory "DIB", "Pole & DÃ©partement", "DIB", "items-budgtaires/1.csv", "Finances"
-    AddCategory "Demandes d'achat", "Centre de coÃ»t", "Demandes d'achat", "mouvements/15.csv", "Finances"
-    AddCategory "RÃ©ceptions", "Nom Founisseur", "RÃ©ceptions", "mouvements/20.csv", "Finances"
+    AddCategory "Budget Corpo", "budget Associé", "Budget Corpo", "newbudget/2.csv", "Finances"
+    AddCategory "Détails Budgets", "budget Associé", "Détails Budgets", "newbudget/8.csv", "Finances"
+    AddCategory "DIB", "Pole & Département", "DIB", "items-budgtaires/1.csv", "Finances"
+    AddCategory "Demandes d'achat", "Centre de coût", "Demandes d'achat", "mouvements/15.csv", "Finances"
+    AddCategory "Réceptions", "Nom Founisseur", "Réceptions", "mouvements/20.csv", "Finances"
     
     ' Projets
-    AddCategory "ScÃ©narios techniques", "Projet", "ScÃ©narios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
+    AddCategory "Scénarios techniques", "Projet", "Scénarios techniques", "scnarios-technico-conomiques/1.csv", "Projets"
     AddCategory "Plannings de phases", "Project", "Plannings de phases", "tests/6.csv", "Projets", "Planning link"
     AddCategory "Plannings de sous phases", "Project", "Plannings de sous phases", "tests/7.csv", "Projets", "Planning link"
-    AddCategory "Budget Projet", "budget AssociÃ©", "Budget Projet", "newbudget/2.csv", "Projets"
+    AddCategory "Budget Projet", "budget Associé", "Budget Projet", "newbudget/2.csv", "Projets"
     AddCategory "Devex", "Projet", "Devex", "costing/16.csv", "Projets"
     AddCategory "Capex", "Projet", "Capex", "costing/2.csv", "Projets"
     AddCategory "Capex EPC", "Projet", "Capex EPC", "costing/13.csv", "Projets"    'TODO : AddCategory "Opex", "Projet", "Opex", "costing/opex.csv", "Projets"
     'TODO : AddCategory "Pricings", "Projet", "Pricings", "costing/pricings.csv", "Projets"
     
-    ' Maintenant que toutes les catÃ©gories sont initialisÃ©es, on peut charger le dictionnaire
+    ' Maintenant que toutes les catégories sont initialisées, on peut charger le dictionnaire
     LoadRagicDictionary
     
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'initialisation des catÃ©gories"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'initialisation des catégories"
 End Sub
 
-' Ajoute une catÃ©gorie au tableau des catÃ©gories.
-' ParamÃ¨tres :
-'   name (String) : Nom de la catÃ©gorie
+' Ajoute une catégorie au tableau des catégories.
+' Paramètres :
+'   name (String) : Nom de la catégorie
 '   filterLevel (String) : Niveau de filtrage principal
 '   displayName (String) : Nom d'affichage
 '   path (String) : Chemin du fichier source
-'   categoryGroup (String) : Groupe de la catÃ©gorie
+'   categoryGroup (String) : Groupe de la catégorie
 '   secondaryFilterLevel (String, optionnel) : Niveau de filtrage secondaire
-'   sheetName (String, optionnel) : Nom de la feuille associÃ©e
-Public Sub AddCategory(name As String, filterLevel As String, displayName As String, path As String, categoryGroup As String, Optional secondaryFilterLevel As String = "", Optional sheetName As String = "")
+'   sheetName (String, optionnel) : Nom de la feuille associée
+Public Sub AddCategory(Name As String, FilterLevel As String, DisplayName As String, path As String, CategoryGroup As String, Optional SecondaryFilterLevel As String = "", Optional SheetName As String = "")
     On Error GoTo ErrorHandler
     
     Const PROC_NAME As String = "AddCategory"
     Const MODULE_NAME As String = "CategoryManager"
-      If name = "" Or displayName = "" Or path = "" Or categoryGroup = "" Then
-        HandleError MODULE_NAME, PROC_NAME, "ParamÃ¨tres invalides pour l'ajout de catÃ©gorie"
+      If Name = "" Or DisplayName = "" Or path = "" Or CategoryGroup = "" Then
+        HandleError MODULE_NAME, PROC_NAME, "Paramètres invalides pour l'ajout de catégorie"
         Exit Sub
     End If
     
@@ -105,34 +105,34 @@ Public Sub AddCategory(name As String, filterLevel As String, displayName As Str
         idx = CategoriesCount + 1
     End If
     
-    ReDim Preserve Categories(1 To idx)
-    Categories(idx).categoryName = name
-    Categories(idx).filterLevel = filterLevel
-    Categories(idx).SecondaryFilterLevel = secondaryFilterLevel
-    Categories(idx).displayName = displayName
-    Categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
-    Categories(idx).PowerQueryName = "PQ_" & Utilities.SanitizeTableName(name)
-    Categories(idx).categoryGroup = categoryGroup
-    If sheetName = "" Then sheetName = displayName
-    Categories(idx).SheetName = sheetName
+    ReDim Preserve categories(1 To idx)
+    categories(idx).categoryName = Name
+    categories(idx).FilterLevel = FilterLevel
+    categories(idx).SecondaryFilterLevel = SecondaryFilterLevel
+    categories(idx).DisplayName = DisplayName
+    categories(idx).URL = env.RAGIC_BASE_URL & path & env.RAGIC_API_PARAMS
+    categories(idx).PowerQueryName = "PQ_" & Utilities.SanitizeTableName(Name)
+    categories(idx).CategoryGroup = CategoryGroup
+    If SheetName = "" Then SheetName = DisplayName
+    categories(idx).SheetName = SheetName
     CategoriesCount = idx
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'ajout de la catÃ©gorie: " & name
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'ajout de la catégorie: " & Name
 End Sub
 
-' Retourne l'index d'une catÃ©gorie par son nom d'affichage.
-' ParamÃ¨tres :
-'   displayName (String) : Nom d'affichage de la catÃ©gorie
+' Retourne l'index d'une catégorie par son nom d'affichage.
+' Paramètres :
+'   displayName (String) : Nom d'affichage de la catégorie
 ' Retour :
-'   Long (index de la catÃ©gorie ou 0 si non trouvÃ©e)
-Public Function GetCategoryIndexByName(displayName As String) As Long
+'   Long (index de la catégorie ou 0 si non trouvée)
+Public Function GetCategoryIndexByName(DisplayName As String) As Long
     On Error GoTo ErrorHandler
     
     Const PROC_NAME As String = "GetCategoryIndexByName"
     Const MODULE_NAME As String = "CategoryManager"
-      If displayName = "" Then
+      If DisplayName = "" Then
         HandleError MODULE_NAME, PROC_NAME, "Nom d'affichage vide"
         GetCategoryIndexByName = 0
         Exit Function
@@ -140,68 +140,68 @@ Public Function GetCategoryIndexByName(displayName As String) As Long
     
     Dim i As Long
     For i = 1 To CategoriesCount
-        If Categories(i).displayName = displayName Then
+        If categories(i).DisplayName = DisplayName Then
             GetCategoryIndexByName = i
             Exit Function
         End If
     Next i
-    GetCategoryIndexByName = 0 ' Non trouvÃ©
+    GetCategoryIndexByName = 0 ' Non trouvé
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la recherche de l'index de la catÃ©gorie: " & displayName
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la recherche de l'index de la catégorie: " & DisplayName
     GetCategoryIndexByName = 0
 End Function
 
-' Retourne une catÃ©gorie par son nom d'affichage.
-' ParamÃ¨tres :
-'   displayName (String) : Nom d'affichage de la catÃ©gorie
+' Retourne une catégorie par son nom d'affichage.
+' Paramètres :
+'   displayName (String) : Nom d'affichage de la catégorie
 ' Retour :
-'   CategoryInfo (structure de la catÃ©gorie)
-Public Function GetCategoryByName(displayName As String) As CategoryInfo
+'   CategoryInfo (structure de la catégorie)
+Public Function GetCategoryByName(DisplayName As String) As categoryInfo
     On Error GoTo ErrorHandler
     
     Const PROC_NAME As String = "GetCategoryByName"
     Const MODULE_NAME As String = "CategoryManager"
-      If displayName = "" Then
+      If DisplayName = "" Then
         HandleError MODULE_NAME, PROC_NAME, "Nom d'affichage vide"
         Exit Function
     End If
     
     Dim idx As Long
-    idx = GetCategoryIndexByName(displayName)
+    idx = GetCategoryIndexByName(DisplayName)
     If idx > 0 Then
-        GetCategoryByName = Categories(idx)
+        GetCategoryByName = categories(idx)
     End If
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la rÃ©cupÃ©ration de la catÃ©gorie: " & displayName
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de la catégorie: " & DisplayName
 End Function
 
-' Retourne toutes les catÃ©gories sous forme de tableau.
+' Retourne toutes les catégories sous forme de tableau.
 ' Retour :
 '   CategoryInfo() (tableau de CategoryInfo)
-Public Function GetAllCategories() As CategoryInfo()
+Public Function GetAllCategories() As categoryInfo()
     On Error GoTo ErrorHandler
 
     Const PROC_NAME As String = "GetAllCategories"
     Const MODULE_NAME As String = "CategoryManager"
 
     If CategoriesCount = 0 Then
-        HandleError MODULE_NAME, PROC_NAME, "Aucune catÃ©gorie n'est dÃ©finie"
+        HandleError MODULE_NAME, PROC_NAME, "Aucune catégorie n'est définie"
         Exit Function
     End If
 
-    ' CrÃ©er un nouveau tableau de la bonne taille
-    Dim result() As CategoryInfo
-    ReDim result(LBound(Categories) To UBound(Categories))
+    ' Créer un nouveau tableau de la bonne taille
+    Dim result() As categoryInfo
+    ReDim result(LBound(categories) To UBound(categories))
 
-    ' Copier chaque Ã©lÃ©ment (copie profonde)
+    ' Copier chaque élément (copie profonde)
     Dim i As Long
-    For i = LBound(Categories) To UBound(Categories)
-        With Categories(i)
-            result(i).CategoryName = .CategoryName
+    For i = LBound(categories) To UBound(categories)
+        With categories(i)
+            result(i).categoryName = .categoryName
             result(i).FilterLevel = .FilterLevel
             result(i).SecondaryFilterLevel = .SecondaryFilterLevel
             result(i).DisplayName = .DisplayName
@@ -216,5 +216,5 @@ Public Function GetAllCategories() As CategoryInfo()
     Exit Function
 
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la rÃ©cupÃ©ration de toutes les catÃ©gories"
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la récupération de toutes les catégories"
 End Function

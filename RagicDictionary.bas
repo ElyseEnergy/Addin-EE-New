@@ -5,7 +5,7 @@ Option Explicit
 Public RagicFieldDict As Object
 Public wsPQDict As Worksheet
 
-' Constantes pour les noms et propriÃ©tÃ©s
+' Constantes pour les noms et propriétés
 Private Const BASE_NAME As String = "RagicDictionary"
 Private Const RAGIC_PATH As String = "matching-matrix/6.csv"
 Private Const PROP_LAST_REFRESH As String = "RagicDictLastRefresh"
@@ -14,15 +14,15 @@ Private Const PROP_LAST_REFRESH As String = "RagicDictLastRefresh"
 ' CALLBACKS DU RUBAN
 '==================================================================================================
 
-' Callback pour le bouton du ruban pour forcer le rafraÃ®chissement
+' Callback pour le bouton du ruban pour forcer le rafraîchissement
 Public Sub ProcessForceRefreshRagicDictionary(ByVal control As IRibbonControl)
     ForceRefreshRagicDictionary
 End Sub
 
-' Callback pour l'info-bulle (supertip) du bouton de rafraÃ®chissement
+' Callback pour l'info-bulle (supertip) du bouton de rafraîchissement
 Public Sub GetRagicDictSupertip(control As IRibbonControl, ByRef supertip)
     Dim lastUpdate As Date
-    lastUpdate = GetLastRefreshDate() ' On rÃ©utilise la fonction existante
+    lastUpdate = GetLastRefreshDate() ' On réutilise la fonction existante
     
     Dim lastUpdateText As String
     If lastUpdate > 0 Then
@@ -35,23 +35,23 @@ Public Sub GetRagicDictSupertip(control As IRibbonControl, ByRef supertip)
 End Sub
 
 '==================================================================================================
-' MÃ‰THODES PUBLIQUES
+' MÉTHODES PUBLIQUES
 '==================================================================================================
 
-' Force le rafraÃ®chissement du dictionnaire depuis Ragic
+' Force le rafraîchissement du dictionnaire depuis Ragic
 Public Sub ForceRefreshRagicDictionary()
-    Application.StatusBar = "ForÃ§age du rafraÃ®chissement du dictionnaire Ragic..."
-    ' RÃ©initialiser la date dans les propriÃ©tÃ©s pour forcer le rechargement
+    Application.StatusBar = "Forçage du rafraîchissement du dictionnaire Ragic..."
+    ' Réinitialiser la date dans les propriétés pour forcer le rechargement
     SetLastRefreshDate (0)
     ' Appeler la routine de chargement
     LoadRagicDictionary
     Application.StatusBar = False
-    MsgBox "Le dictionnaire Ragic a Ã©tÃ© mis Ã  jour.", vbInformation
+    MsgBox "Le dictionnaire Ragic a été mis à jour.", vbInformation
 End Sub
 
 ' Charge le dictionnaire Ragic, depuis le cache si possible
 Public Sub LoadRagicDictionary()
-    ' S'assurer que la liste des catÃ©gories est initialisÃ©e
+    ' S'assurer que la liste des catégories est initialisée
     If CategoryManager.CategoriesCount = 0 Then
         CategoryManager.InitCategories
     End If
@@ -59,55 +59,55 @@ Public Sub LoadRagicDictionary()
     Dim lastRefresh As Date
     lastRefresh = GetLastRefreshDate()
 
-    ' On ne vÃ©rifie plus si l'objet RagicFieldDict existe, car il est toujours vide Ã  l'ouverture.
+    ' On ne vérifie plus si l'objet RagicFieldDict existe, car il est toujours vide à l'ouverture.
     ' La logique se base sur l'existence de la table dans la feuille de cache et la date.
 
-    Application.StatusBar = "VÃ©rification du dictionnaire Ragic..."
+    Application.StatusBar = "Vérification du dictionnaire Ragic..."
 
-    ' DÃ©finir les noms standardisÃ©s
+    ' Définir les noms standardisés
     Dim pqName As String
     pqName = "PQ_" & Utilities.SanitizeTableName(BASE_NAME)
     Dim tableName As String
-    tableName = "Table_" & pqName
+    tableName = "Table_" & Utilities.SanitizeTableName(BASE_NAME)
 
-    ' CrÃ©er ou rÃ©cupÃ©rer la feuille PQ_DICT
+    ' Créer ou récupérer la feuille PQ_DICT
     Set wsPQDict = GetOrCreatePQDictSheet()
 
-    ' VÃ©rifier si la table de cache existe dÃ©jÃ  dans la feuille
+    ' Vérifier si la table de cache existe déjà dans la feuille
     Dim tableExists As Boolean
     On Error Resume Next
     tableExists = (wsPQDict.ListObjects(tableName).Name <> "")
     On Error GoTo 0
     Log "load_dict", "Table " & tableName & " existe: " & tableExists, DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
     
-    ' DÃ©cider s'il faut rafraÃ®chir depuis le rÃ©seau
+    ' Décider s'il faut rafraîchir depuis le réseau
     Dim needsRefresh As Boolean
-    needsRefresh = Not tableExists Or (VBA.Date - lastRefresh >= 1)
-    Log "load_dict", "DerniÃ¨re MÃ J: " & lastRefresh & ", Ã‚ge (heures): " & ((Now - lastRefresh) * 24) & "h", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
-    Log "load_dict", "RafraÃ®chissement nÃ©cessaire: " & needsRefresh & " (table existe: " & tableExists & ")", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    needsRefresh = Not tableExists Or ((Now - lastRefresh) * 24 >= 24)
+    Log "load_dict", "Dernière MàJ: " & lastRefresh & ", Âge (heures): " & ((Now - lastRefresh) * 24) & "h", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    Log "load_dict", "Rafraîchissement nécessaire: " & needsRefresh & " (table existe: " & tableExists & ")", DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
     If needsRefresh Then
-        Application.StatusBar = "Chargement du dictionnaire Ragic depuis le rÃ©seau..."
-        Log "load_dict", "RafraÃ®chissement du dictionnaire Ragic depuis le rÃ©seau.", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+        Application.StatusBar = "Chargement du dictionnaire Ragic depuis le réseau..."
+        Log "load_dict", "Rafraîchissement du dictionnaire Ragic depuis le réseau.", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
-        ' CrÃ©er une catÃ©gorie pour le dictionnaire
-        Dim dictCategory As CategoryInfo
+        ' Créer une catégorie pour le dictionnaire
+        Dim dictCategory As categoryInfo
         With dictCategory
-            .CategoryName = BASE_NAME
+            .categoryName = BASE_NAME
             .DisplayName = BASE_NAME
             .URL = env.RAGIC_BASE_URL & RAGIC_PATH & env.RAGIC_API_PARAMS
             .PowerQueryName = pqName
             .SheetName = BASE_NAME
         End With
 
-        Log "load_dict", "URL de requÃªte dictionnaire : " & dictCategory.URL, INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+        Log "load_dict", "URL de requête dictionnaire : " & dictCategory.URL, INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
-        ' CrÃ©er ou mettre Ã  jour la requÃªte
+        ' Créer ou mettre à jour la requête
         If QueryExists(pqName) Then
             On Error Resume Next
             ThisWorkbook.Queries(pqName).formula = GenerateDictionaryQuery(dictCategory.URL)
             If Err.Number <> 0 Then
-                Log "ragic_dict_err", "Erreur MÃ J requÃªte " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+                Log "ragic_dict_err", "Erreur MàJ requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
                 Application.StatusBar = False
                 Exit Sub
             End If
@@ -116,30 +116,30 @@ Public Sub LoadRagicDictionary()
             On Error Resume Next
             ThisWorkbook.Queries.Add pqName, GenerateDictionaryQuery(dictCategory.URL)
             If Err.Number <> 0 Then
-                Log "ragic_dict_err", "Erreur ajout requÃªte " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+                Log "ragic_dict_err", "Erreur ajout requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
                 Application.StatusBar = False
                 Exit Sub
             End If
             On Error GoTo 0
         End If
 
-        ' RafraÃ®chir la requÃªte (c'est l'Ã©tape lente)
+        ' Rafraîchir la requête (c'est l'étape lente)
         On Error Resume Next
         ThisWorkbook.Queries(pqName).Refresh
         If Err.Number <> 0 Then
-            Log "ragic_dict_err", "Erreur Refresh requÃªte " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "ragic_dict_err", "Erreur Refresh requête " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
             Application.StatusBar = False
             Exit Sub
         End If
         On Error GoTo 0
 
-        ' Charger les donnÃ©es dans la feuille PQ_DICT
-        ' Si la table existe dÃ©jÃ , forcer un refresh de la requÃªte associÃ©e
+        ' Charger les données dans la feuille PQ_DICT
+        ' Si la table existe déjà, forcer un refresh de la requête associée
         If QueryExists(pqName) Then
             On Error Resume Next
             ThisWorkbook.Queries(pqName).Refresh
             If Err.Number <> 0 Then
-                Log "ragic_dict_err", "Erreur Refresh requÃªte existante " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+                Log "ragic_dict_err", "Erreur Refresh requête existante " & pqName & ": " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
                 Application.StatusBar = False
                 Exit Sub
             End If
@@ -148,23 +148,23 @@ Public Sub LoadRagicDictionary()
             LoadQueries.LoadQuery pqName, wsPQDict, wsPQDict.Range("A1")
         End If
 
-        ' Mettre Ã  jour la date du rafraÃ®chissement dans les propriÃ©tÃ©s du classeur
+        ' Mettre à jour la date du rafraîchissement dans les propriétés du classeur
         SetLastRefreshDate VBA.Date
         
-        ' Sauvegarder le classeur pour rendre la date de mise Ã  jour persistante
-        Log "load_dict", "Tentative de sauvegarde forcÃ©e du classeur pour persistance de la date...", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+        ' Sauvegarder le classeur pour rendre la date de mise à jour persistante
+        Log "load_dict", "Tentative de sauvegarde forcée du classeur pour persistance de la date...", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         On Error Resume Next
-        ' On marque explicitement le classeur comme ayant des modifications non enregistrÃ©es pour forcer la sauvegarde
+        ' On marque explicitement le classeur comme ayant des modifications non enregistrées pour forcer la sauvegarde
         ThisWorkbook.Saved = False
         ThisWorkbook.Save
         If Err.Number <> 0 Then
             Log "ragic_dict_err", "ERREUR lors de la sauvegarde du classeur: " & Err.Description, ERROR_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         Else
-            Log "load_dict", "Classeur sauvegardÃ© avec succÃ¨s. La date de mise Ã  jour est maintenant persistante.", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+            Log "load_dict", "Classeur sauvegardé avec succès. La date de mise à jour est maintenant persistante.", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
         End If
         On Error GoTo 0
         
-        ' Invalider le contrÃ´le du ruban pour mettre Ã  jour l'info-bulle
+        ' Invalider le contrôle du ruban pour mettre à jour l'info-bulle
         If Not RibbonVisibility.gRibbon Is Nothing Then
             RibbonVisibility.gRibbon.InvalidateControl "btnForceRefreshRagic"
         End If
@@ -172,7 +172,7 @@ Public Sub LoadRagicDictionary()
         Log "load_dict", "Chargement du dictionnaire Ragic depuis le cache local (feuille PQ_DICT).", INFO_LEVEL, "LoadRagicDictionary", "RagicDictionary"
     End If
 
-    ' Initialiser et charger les donnÃ©es dans le dictionnaire VBA
+    ' Initialiser et charger les données dans le dictionnaire VBA
     Application.StatusBar = "Finalisation du chargement du dictionnaire..."
     If RagicFieldDict Is Nothing Then
         Set RagicFieldDict = CreateObject("Scripting.Dictionary")
@@ -182,104 +182,38 @@ Public Sub LoadRagicDictionary()
 
     LoadDictionaryData tableName
 
-    ' Log des 10 premiÃ¨res clÃ©s du dictionnaire pour debug
+    ' Log des 10 premières clés du dictionnaire pour debug
     Dim debugKeys As String, debugCount As Long
     debugKeys = ""
-    For debugCount = 0 To Application.Min(9, RagicFieldDict.Count - 1)
+    For debugCount = 0 To Application.Min(9, RagicFieldDict.count - 1)
         debugKeys = debugKeys & RagicFieldDict.Keys()(debugCount) & "; "
     Next debugCount
-    Log "load_dict", "PremiÃ¨res clÃ©s du dictionnaire : " & debugKeys, DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
+    Log "load_dict", "Premières clés du dictionnaire : " & debugKeys, DEBUG_LEVEL, "LoadRagicDictionary", "RagicDictionary"
 
-    ' Forcer la visibilitÃ© de la feuille PQ_DICT
+    ' Forcer la visibilité de la feuille PQ_DICT
     If Not wsPQDict Is Nothing Then
-        wsPQDict.Visible = xlSheetVisible
+        wsPQDict.visible = xlSheetVisible
     End If
 
-    ' RÃ©initialiser la barre de statut
+    ' Réinitialiser la barre de statut
     Application.StatusBar = False
 End Sub
 
-' Recherche la meilleure ligne pour un fieldName donnÃ© (et SheetName si doublons)
-Public Function FindBestRowForField(lo As ListObject, SheetName As String, fieldName As String) As Long
-    Log "FindBestRowForField", "EntrÃ©e: SheetName='" & SheetName & "', fieldName='" & fieldName & "'", DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary"
-    Dim arr As Variant
-    arr = lo.DataBodyRange.Value
-    Dim colSheetName As Long, colFieldName As Long, i As Long
-    For i = 1 To lo.ListColumns.Count
-        Select Case lo.ListColumns(i).Name
-            Case "SheetName": colSheetName = i
-            Case "Field Name": colFieldName = i
-        End Select
-    Next i
-    Dim matches() As Long, matchCount As Long
-    matchCount = 0
-    For i = 1 To UBound(arr, 1)
-        If StrComp(Trim(arr(i, colFieldName)), Trim(fieldName), vbTextCompare) = 0 Then
-            matchCount = matchCount + 1
-            ReDim Preserve matches(1 To matchCount)
-            matches(matchCount) = i
-        End If
-    Next i
-    Log "FindBestRowForField", "Nb matches sur FieldName: " & matchCount, DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary"
-    If matchCount = 0 Then Log "FindBestRowForField", "Aucun match trouvÃ©.", DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = 0: Exit Function
-    If matchCount = 1 Then Log "FindBestRowForField", "Un seul match, row=" & matches(1), DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = matches(1): Exit Function
-    Dim j As Long
-    For j = 1 To matchCount
-        If StrComp(Trim(arr(matches(j), colSheetName)), Trim(SheetName), vbTextCompare) = 0 Then Log "FindBestRowForField", "Match exact SheetName Ã  row=" & matches(j), DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = matches(j): Exit Function
-    Next j
-    For j = 1 To matchCount
-        If InStr(1, arr(matches(j), colSheetName), SheetName, vbTextCompare) > 0 Then Log "FindBestRowForField", "Match contains SheetName Ã  row=" & matches(j), DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = matches(j): Exit Function
-    Next j
-    For j = 1 To matchCount
-        If Left(arr(matches(j), colSheetName), Len(SheetName)) = SheetName Then Log "FindBestRowForField", "Match startswith SheetName Ã  row=" & matches(j), DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = matches(j): Exit Function
-    Next j
-    Log "FindBestRowForField", "Fallback premier match Ã  row=" & matches(1), DEBUG_LEVEL, "FindBestRowForField", "RagicDictionary": FindBestRowForField = matches(1)
-End Function
-
-' Retourne la valeur d'une colonne pour une ligne donnÃ©e
-Public Function GetValueFromRow(lo As ListObject, arr As Variant, rowIndex As Long, colName As String) As Variant
-    Log "GetValueFromRow", "rowIndex=" & rowIndex & ", colName='" & colName & "'", DEBUG_LEVEL, "GetValueFromRow", "RagicDictionary"
-    Dim colIdx As Long, i As Long
-    For i = 1 To lo.ListColumns.Count
-        If lo.ListColumns(i).Name = colName Then colIdx = i: Exit For
-    Next i
-    If colIdx = 0 Or rowIndex = 0 Then
-        Log "GetValueFromRow", "Colonne ou ligne non trouvÃ©e.", DEBUG_LEVEL, "GetValueFromRow", "RagicDictionary"
-        GetValueFromRow = ""
-    Else
-        GetValueFromRow = arr(rowIndex, colIdx)
-        Log "GetValueFromRow", "Valeur extraite: '" & GetValueFromRow & "'", DEBUG_LEVEL, "GetValueFromRow", "RagicDictionary"
-    End If
-End Function
-
-' Fonction principale Hidden
 Public Function IsFieldHidden(SheetName As String, fieldName As String) As Boolean
-    Log "IsFieldHidden", "EntrÃ©e: SheetName='" & SheetName & "', fieldName='" & fieldName & "'", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
-    IsFieldHidden = False
-    If wsPQDict Is Nothing Then Set wsPQDict = GetOrCreatePQDictSheet()
-    Dim lo As ListObject
-    Dim tableName As String
-    tableName = "Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME)
-    On Error Resume Next
-    Set lo = wsPQDict.ListObjects(tableName)
-    On Error GoTo 0
-    If lo Is Nothing Or lo.ListRows.Count = 0 Then Log "IsFieldHidden", "Table non trouvÃ©e ou vide.", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary": Exit Function
-    Dim arr As Variant
-    arr = lo.DataBodyRange.Value
-    Dim rowIdx As Long
-    rowIdx = FindBestRowForField(lo, SheetName, fieldName)
-    If rowIdx = 0 Then Log "IsFieldHidden", "Aucune ligne trouvÃ©e.", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary": Exit Function
-    Dim memoVal As String
-    memoVal = GetValueFromRow(lo, arr, rowIdx, "Memo")
-    If InStr(1, memoVal, "Hidden", vbTextCompare) > 0 Then
-        Log "IsFieldHidden", "Champ HIDDEN dÃ©tectÃ©.", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
-        IsFieldHidden = True
+    If RagicFieldDict Is Nothing Then
+        Log "field_hidden", "RagicFieldDict est Nothing, chargement...", WARNING_LEVEL, "IsFieldHidden", "RagicDictionary"
+        LoadRagicDictionary
+    End If
+    Dim key As String
+    key = NormalizeSheetName(SheetName) & "|" & fieldName
+    If RagicFieldDict.Exists(key) Then
+        IsFieldHidden = InStr(1, RagicFieldDict(key), "Hidden", vbTextCompare) > 0
     Else
-        Log "IsFieldHidden", "Champ NON hidden.", DEBUG_LEVEL, "IsFieldHidden", "RagicDictionary"
+        IsFieldHidden = False
     End If
 End Function
 
-' Normalise le nom de la feuille pour la clÃ© dictionnaire
+' Normalise le nom de la feuille pour la clé dictionnaire
 Public Function NormalizeSheetName(SheetName As String) As String
     Dim i As Long
     Dim c As String
@@ -297,15 +231,15 @@ Public Function NormalizeSheetName(SheetName As String) As String
 End Function
 
 '==================================================================================================
-' MÃ‰THODES PRIVÃ‰ES
+' MÉTHODES PRIVÉES
 '==================================================================================================
 
-' GÃ¨re la persistance de la date de rafraÃ®chissement via les propriÃ©tÃ©s du document
+' Gère la persistance de la date de rafraîchissement via les propriétés du document
 Private Function GetLastRefreshDate() As Date
     On Error Resume Next
     GetLastRefreshDate = ThisWorkbook.CustomDocumentProperties(PROP_LAST_REFRESH).Value
     If Err.Number <> 0 Then
-        GetLastRefreshDate = 0 ' Force le rafraÃ®chissement si la propriÃ©tÃ© n'existe pas
+        GetLastRefreshDate = 0 ' Force le rafraîchissement si la propriété n'existe pas
     End If
     On Error GoTo 0
 End Function
@@ -316,10 +250,10 @@ Private Sub SetLastRefreshDate(d As Date)
     Set prop = ThisWorkbook.CustomDocumentProperties(PROP_LAST_REFRESH)
     
     If Err.Number = 0 Then
-        ' La propriÃ©tÃ© existe, on met juste Ã  jour la valeur
+        ' La propriété existe, on met juste à jour la valeur
         prop.Value = d
     Else
-        ' La propriÃ©tÃ© n'existe pas, on l'ajoute
+        ' La propriété n'existe pas, on l'ajoute
         Err.Clear
         ThisWorkbook.CustomDocumentProperties.Add _
             Name:=PROP_LAST_REFRESH, _
@@ -330,20 +264,20 @@ Private Sub SetLastRefreshDate(d As Date)
     On Error GoTo 0
 End Sub
 
-' GÃ©nÃ¨re la requÃªte PowerQuery spÃ©cifique pour le dictionnaire
+' Génère la requête PowerQuery spécifique pour le dictionnaire
 Private Function GenerateDictionaryQuery(ByVal URL As String) As String
 
         Dim q As String: q = Chr(34) ' guillemet double
     Dim lines As Collection: Set lines = New Collection
 
-    ' RÃ©cupÃ©rer les URLs de toutes les catÃ©gories actives
+    ' Récupérer les URLs de toutes les catégories actives
     Dim nbUrls As Long
     Dim urlsList As String
     nbUrls = CategoryManager.CategoriesCount
 
     ' Construire la liste des paths comme une expression M
     urlsList = "{"
-    Dim cat As CategoryInfo
+    Dim cat As categoryInfo
     Dim i As Long
     For i = 1 To nbUrls
         cat = CategoryManager.categories(i)
@@ -361,11 +295,11 @@ Private Function GenerateDictionaryQuery(ByVal URL As String) As String
         If i < nbUrls Then urlsList = urlsList & ", "
     Next i
     urlsList = urlsList & "}"
-    Log "load_dict", "ValidPaths utilisÃ©s pour filtrage PowerQuery (Contains, sans .csv): " & urlsList, DEBUG_LEVEL, "GenerateDictionaryQuery", "RagicDictionary"
+    Log "load_dict", "ValidPaths utilisés pour filtrage PowerQuery (Contains, sans .csv): " & urlsList, DEBUG_LEVEL, "GenerateDictionaryQuery", "RagicDictionary"
     
     ' Construction ligne par ligne
     Dim dq As String
-    ' Correction: dÃ©claration et affectation sÃ©parÃ©es pour compatibilitÃ© VBA
+    ' Correction: déclaration et affectation séparées pour compatibilité VBA
      dq = Chr(34)
     lines.Add "let"
     lines.Add "    Source = Csv.Document(Web.Contents(" & dq & URL & dq & "),[Delimiter=" & dq & "," & dq & ", Encoding=65001]),"
@@ -384,11 +318,11 @@ Private Function GenerateDictionaryQuery(ByVal URL As String) As String
     GenerateDictionaryQuery = result
 End Function
 
-' VÃ©rifie si une requÃªte PowerQuery existe
-Public Function QueryExists(queryName As String) As Boolean
+' Vérifie si une requête PowerQuery existe
+Public Function QueryExists(QueryName As String) As Boolean
     On Error Resume Next
     Dim q As Object
-    Set q = ThisWorkbook.Queries(queryName)
+    Set q = ThisWorkbook.Queries(QueryName)
     QueryExists = (Err.Number = 0)
     On Error GoTo 0
 End Function
@@ -399,48 +333,82 @@ Private Function GetOrCreatePQDictSheet() As Worksheet
     On Error GoTo 0
     
     If GetOrCreatePQDictSheet Is Nothing Then
-        ' CrÃ©er la feuille si elle n'existe pas
-        Log "load_dict", "CrÃ©ation de la feuille PQ_DICT...", INFO_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
+        ' Créer la feuille si elle n'existe pas
+        Log "load_dict", "Création de la feuille PQ_DICT...", INFO_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
         Set GetOrCreatePQDictSheet = ThisWorkbook.Worksheets.Add
         GetOrCreatePQDictSheet.Name = "PQ_DICT"
     End If
     
-    ' Force la visibilitÃ© de la feuille dans tous les cas
-    If GetOrCreatePQDictSheet.Visible <> xlSheetVisible Then
+    ' Force la visibilité de la feuille dans tous les cas
+    If GetOrCreatePQDictSheet.visible <> xlSheetVisible Then
         Log "load_dict", "Rendre la feuille PQ_DICT visible...", INFO_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
-        GetOrCreatePQDictSheet.Visible = xlSheetVisible
+        GetOrCreatePQDictSheet.visible = xlSheetVisible
     End If
     
     Exit Function
 ErrorHandler:
-    Log "load_dict", "Erreur lors de la crÃ©ation/rÃ©cupÃ©ration de PQ_DICT : " & Err.Description, ERROR_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
+    Log "load_dict", "Erreur lors de la création/récupération de PQ_DICT : " & Err.Description, ERROR_LEVEL, "GetOrCreatePQDictSheet", "RagicDictionary"
 End Function
 
 Private Sub LoadDictionaryData(ByVal tableName As String)
-    On Error GoTo ErrorHandler
+    Log "load_dict", "Tables présentes dans PQ_DICT : " & ListAllTableNames(wsPQDict), DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
     Dim lo As ListObject
+    On Error Resume Next
     Set lo = wsPQDict.ListObjects(tableName)
+    On Error GoTo 0
+
+    ' Si le tableau n'existe pas, essayer de le trouver par nom partiel
+    If lo Is Nothing Then
+        Dim tbl As ListObject
+        For Each tbl In wsPQDict.ListObjects
+            If InStr(tbl.Name, BASE_NAME) > 0 Then
+                Set lo = tbl
+                Exit For
+            End If
+        Next tbl
+    End If
+
+    If lo Is Nothing Then
+        MsgBox "Le tableau '" & tableName & "' n'a pas été trouvé dans la feuille PQ_DICT." & vbCrLf & _
+               "Tableaux présents : " & ListAllTableNames(wsPQDict), vbExclamation
+        Exit Sub
+    End If
+
+    Dim sheetIdx As Long, fieldIdx As Long, memoIdx As Long
+    On Error Resume Next
+    sheetIdx = lo.ListColumns("SheetName").index
+    fieldIdx = lo.ListColumns("Field Name").index
+    memoIdx = lo.ListColumns("Memo").index
+    On Error GoTo 0
     
-    Dim r As Long
-    Dim key As String, value As String
-    Dim sheetNameRaw As String, fieldNameRaw As String
+    ' Suppression des colonnes URL et API URL : on ne les utilise plus du tout dans le code.
+    ' Si elles étaient utilisées ailleurs, il faudrait aussi les retirer.
     
-    For r = 1 To lo.ListRows.Count
-        ' Utilisation explicite des noms de colonnes pour Ã©viter les erreurs d'index
-        sheetNameRaw = CStr(lo.DataBodyRange(r, lo.ListColumns("SheetName").Index).Value)
-        fieldNameRaw = CStr(lo.DataBodyRange(r, lo.ListColumns("Field Name").Index).Value)
-        key = NormalizeSheetName(sheetNameRaw) & "|" & fieldNameRaw
-        value = lo.DataBodyRange(r, lo.ListColumns("Field Type").Index).Value
+    If sheetIdx = 0 Or fieldIdx = 0 Or memoIdx = 0 Then
+        Log "load_dict", "Colonnes non trouvées dans la table du dictionnaire. Le chargement va échouer.", WARNING_LEVEL, "LoadDictionaryData", "RagicDictionary"
+        Exit Sub
+    End If
+
+    If lo.DataBodyRange Is Nothing Then
+        Log "load_dict", "La table '" & tableName & "' ne contient aucune donnée (DataBodyRange is Nothing).", WARNING_LEVEL, "LoadDictionaryData", "RagicDictionary"
+        Exit Sub
+    End If
+    
+    Dim i As Long
+    Dim nbLignes As Long
+    nbLignes = lo.DataBodyRange.Rows.count
+    Log "load_dict", "Nombre de lignes dans le dictionnaire : " & nbLignes, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
+
+    Dim key As Variant
+    For i = 1 To nbLignes
+        key = NormalizeSheetName(CStr(lo.DataBodyRange.Cells(i, sheetIdx).Value)) & "|" & _
+              CStr(lo.DataBodyRange.Cells(i, fieldIdx).Value)
         If Not RagicFieldDict.Exists(key) Then
-            RagicFieldDict.Add key, value
-        Else
-            RagicFieldDict(key) = value ' Mettre Ã  jour si la clÃ© existe dÃ©jÃ 
+            RagicFieldDict.Add key, CStr(lo.DataBodyRange.Cells(i, memoIdx).Value)
         End If
-    Next r
-    
-    Exit Sub
-ErrorHandler:
-    Log "load_dict_data_err", "Erreur lors du chargement des donnÃ©es depuis la table " & tableName & " : " & Err.Description, ERROR_LEVEL, "LoadDictionaryData", "RagicDictionary"
+    Next i
+
+    Log "load_dict", "Nombre de clés dans le dictionnaire VBA : " & RagicFieldDict.count, DEBUG_LEVEL, "LoadDictionaryData", "RagicDictionary"
 End Sub
 
 Public Function ListAllTableNames(ws As Worksheet) As String
@@ -458,32 +426,104 @@ Public Sub TestIsFieldHidden_BudgetGroupes()
     End If
     Log "test_hidden", "Test IsFieldHidden pour Budget Groupes :", DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
     Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Montant Total' => " & IsFieldHidden("? Budget Groupes", "Montant Total"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
-    Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'AnnÃ©e' => " & IsFieldHidden("? Budget Groupes", "AnnÃ©e"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
+    Log "test_hidden", "  SheetName = '? Budget Groupes', FieldName = 'Année' => " & IsFieldHidden("? Budget Groupes", "Année"), DEBUG_LEVEL, "TestIsFieldHidden_BudgetGroupes", "RagicDictionary"
 End Sub
 
-' Recherche Ã  deux Ã©tages pour le type de champ
+' Fixed GetFieldRagicType function with correct column names
+' Replace the existing GetFieldRagicType function with this version
+
+' Simple fix using the actual column names from the RagicDict
 Public Function GetFieldRagicType(categorySheetName As String, fieldName As String) As String
-    Log "GetFieldRagicType", "EntrÃ©e: SheetName='" & categorySheetName & "', fieldName='" & fieldName & "'", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
-    GetFieldRagicType = "Text" ' Default value
-    If wsPQDict Is Nothing Then Set wsPQDict = GetOrCreatePQDictSheet()
-    Dim lo As ListObject
+    On Error GoTo ErrorHandler
+    
+    ' Quick check for Section pattern first
+    If fieldName Like "__*__" And Left(fieldName, 2) = "__" And Right(fieldName, 2) = "__" Then
+        GetFieldRagicType = "Section"
+        Exit Function
+    End If
+    
+    ' Ensure dictionary is loaded
+    If RagicFieldDict Is Nothing Or RagicFieldDict.count = 0 Then
+        LoadRagicDictionary
+    End If
+    
+    If wsPQDict Is Nothing Then
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+
+    ' Get the dictionary table
+    Dim dictTable As ListObject
     Dim tableName As String
     tableName = "Table_PQ_" & Utilities.SanitizeTableName(BASE_NAME)
+
     On Error Resume Next
-    Set lo = wsPQDict.ListObjects(tableName)
-    On Error GoTo 0
-    If lo Is Nothing Or lo.ListRows.Count = 0 Then Log "GetFieldRagicType", "Table non trouvÃ©e ou vide.", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary": Exit Function
-    Dim arr As Variant
-    arr = lo.DataBodyRange.Value
-    Dim rowIdx As Long
-    rowIdx = FindBestRowForField(lo, categorySheetName, fieldName)
-    If rowIdx = 0 Then Log "GetFieldRagicType", "Aucune ligne trouvÃ©e.", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary": Exit Function
-    Dim fieldTypeVal As String
-    fieldTypeVal = GetValueFromRow(lo, arr, rowIdx, "Field Type")
-    If Trim(fieldTypeVal) <> "" Then
-        Log "GetFieldRagicType", "Type trouvÃ©: '" & fieldTypeVal & "'", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
-        GetFieldRagicType = Trim(fieldTypeVal)
-    Else
-        Log "GetFieldRagicType", "Type vide, fallback 'Text'", DEBUG_LEVEL, "GetFieldRagicType", "RagicDictionary"
+    Set dictTable = wsPQDict.ListObjects(tableName)
+    On Error GoTo ErrorHandler
+
+    If dictTable Is Nothing Then
+        GetFieldRagicType = "Text"
+        Exit Function
     End If
+
+    ' Use the EXACT column names from the log
+    Dim categoryCol As ListColumn, fieldNameCol As ListColumn, fieldTypeCol As ListColumn
+    
+    On Error Resume Next
+    Set categoryCol = dictTable.ListColumns("SheetName")
+    Set fieldNameCol = dictTable.ListColumns("Field Name")
+    Set fieldTypeCol = dictTable.ListColumns("Field Type")
+    On Error GoTo ErrorHandler
+
+    If categoryCol Is Nothing Or fieldNameCol Is Nothing Or fieldTypeCol Is Nothing Then
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+
+    If dictTable.DataBodyRange Is Nothing Then
+        GetFieldRagicType = "Text"
+        Exit Function
+    End If
+
+    ' Search in dictionary
+    Dim normalizedCategoryKey As String
+    normalizedCategoryKey = NormalizeSheetName(categorySheetName)
+    
+    Dim r As Long
+    For r = 1 To dictTable.ListRows.count
+        Dim currentCategory As String, currentFieldName As String, currentFieldType As String
+        
+        On Error Resume Next
+        currentCategory = NormalizeSheetName(CStr(dictTable.DataBodyRange.Cells(r, categoryCol.index).Value))
+        currentFieldName = CStr(dictTable.DataBodyRange.Cells(r, fieldNameCol.index).Value)
+        currentFieldType = UCase(CStr(dictTable.DataBodyRange.Cells(r, fieldTypeCol.index).Value))
+        On Error GoTo ErrorHandler
+
+        ' Match found
+        If normalizedCategoryKey = currentCategory And fieldName = currentFieldName Then
+            ' Check section pattern again
+            If currentFieldName Like "__*__" And Left(currentFieldName, 2) = "__" And Right(currentFieldName, 2) = "__" Then
+                GetFieldRagicType = "Section"
+                Exit Function
+            End If
+
+            ' Map field type
+            Select Case currentFieldType
+                Case "DATE", "DATE_INPUT"
+                    GetFieldRagicType = "Date"
+                Case "NUMBER", "NUMERIC", "INTEGER", "FLOAT", "DECIMAL"
+                    GetFieldRagicType = "Number"
+                Case Else
+                    GetFieldRagicType = "Text"
+            End Select
+            Exit Function
+        End If
+    Next r
+
+    ' Not found in dictionary - default to Text
+    GetFieldRagicType = "Text"
+    Exit Function
+
+ErrorHandler:
+    GetFieldRagicType = "Text"
 End Function
