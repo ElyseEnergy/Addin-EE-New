@@ -1,30 +1,30 @@
 Attribute VB_Name = "LoadQueries"
-Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
+Sub LoadQuery(QueryName As String, ws As Worksheet, destCell As Range)
     On Error GoTo ErrorHandler
     
-    If queryName = "" Then
-        HandleError "LoadQueries", "LoadQuery", "Nom de requÃªte vide"
+    If QueryName = "" Then
+        HandleError "LoadQueries", "LoadQuery", "Nom de requête vide"
         Exit Sub
     End If
     
     If ws Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spÃ©cifiÃ©e"
+        HandleError "LoadQueries", "LoadQuery", "Feuille de calcul non spécifiée"
         Exit Sub
     End If
     
-    If DestCell Is Nothing Then
-        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spÃ©cifiÃ©e"
+    If destCell Is Nothing Then
+        HandleError "LoadQueries", "LoadQuery", "Cellule de destination non spécifiée"
         Exit Sub
     End If
     
     Dim lo As ListObject
     Dim sanitizedName As String
-    sanitizedName = "Table_" & Utilities.SanitizeTableName(queryName)
+    sanitizedName = "Table_" & Utilities.SanitizeTableName(QueryName)
     
     ' Log state before
-    Log "loadquery", "Avant crÃ©ation: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
+    Log "loadquery", "Avant création: QueryExists=" & PQQueryManager.QueryExists(QueryName) & ", TableExists=" & tableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
     
-    ' VÃ©rifier si la table existe dÃ©jÃ 
+    ' Vérifier si la table existe déjà
     For Each lo In ws.ListObjects
         If lo.Name = sanitizedName Then
             Exit Sub
@@ -32,10 +32,10 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
     Next lo
 
     With ws.ListObjects.Add(SourceType:=0, Source:= _
-        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & queryName & ";Extended Properties=""""", _
-        Destination:=DestCell).QueryTable
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=" & QueryName & ";Extended Properties=""""", _
+        Destination:=destCell).QueryTable
         .CommandType = xlCmdSql
-        .CommandText = Array("SELECT * FROM [" & queryName & "]")
+        .CommandText = Array("SELECT * FROM [" & QueryName & "]")
         .RowNumbers = False
         .FillAdjacentFormulas = False
         .RefreshOnFileOpen = False
@@ -49,76 +49,76 @@ Sub LoadQuery(queryName As String, ws As Worksheet, DestCell As Range)
         .Refresh BackgroundQuery:=False
     End With
     
-    ' AprÃ¨s le chargement de la requÃªte, s'assurer que le nom est correct
-    Set lo = ws.ListObjects(ws.ListObjects.Count) ' Le dernier tableau crÃ©Ã©
+    ' Après le chargement de la requête, s'assurer que le nom est correct
+    Set lo = ws.ListObjects(ws.ListObjects.count) ' Le dernier tableau créé
     If Not lo Is Nothing Then
         lo.Name = sanitizedName
     End If
     ' Log state after
-    Log "loadquery", "AprÃ¨s crÃ©ation: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
+    Log "loadquery", "Après création: QueryExists=" & PQQueryManager.QueryExists(QueryName) & ", TableExists=" & tableExists(ws, sanitizedName), DEBUG_LEVEL, "LoadQuery", "LoadQueries"
     Exit Sub
     
 ErrorHandler:
     Log "loadquery", "ERREUR: " & Err.Description, ERROR_LEVEL, "LoadQuery", "LoadQueries"
-    Log "loadquery", "Diagnostics: QueryExists=" & PQQueryManager.QueryExists(queryName) & ", TableExists=" & TableExists(ws, sanitizedName), ERROR_LEVEL, "LoadQuery", "LoadQueries"
-    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requÃªte: " & queryName
+    Log "loadquery", "Diagnostics: QueryExists=" & PQQueryManager.QueryExists(QueryName) & ", TableExists=" & tableExists(ws, sanitizedName), ERROR_LEVEL, "LoadQuery", "LoadQueries"
+    HandleError "LoadQueries", "LoadQuery", "Erreur lors du chargement de la requête: " & QueryName
 End Sub
 
 Function ChooseMultipleValuesFromListWithAll(idList As Collection, displayList As Collection, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
     If idList Is Nothing Or displayList Is Nothing Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisÃ©es"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Listes non initialisées"
         Exit Function
     End If
     
-    If idList.Count <> displayList.Count Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la mÃªme taille"
+    If idList.count <> displayList.count Then
+        HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Les listes n'ont pas la même taille"
         Exit Function
     End If
     
     Dim i As Long
     Dim userChoice As String
     Dim selectedIndexes As Variant
-    Dim SelectedValues As New Collection
+    Dim selectedValues As New Collection
     Dim listPrompt As String
 
     listPrompt = prompt & vbCrLf & "* : Toutes" & vbCrLf
-    For i = 1 To displayList.Count
+    For i = 1 To displayList.count
         listPrompt = listPrompt & i & ". " & displayList(i) & vbCrLf
     Next i
     
-    userChoice = InputBox(listPrompt, "SÃ©lection", "1")
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         Exit Function
     End If
     
     If Trim(userChoice) = "*" Then
-        For i = 1 To idList.Count
-            SelectedValues.Add idList(i)
+        For i = 1 To idList.count
+            selectedValues.Add idList(i)
         Next i
     Else
         selectedIndexes = Split(userChoice, ",")
         For i = LBound(selectedIndexes) To UBound(selectedIndexes)
             Dim idx As Long
             idx = val(Trim(selectedIndexes(i)))
-            If idx >= 1 And idx <= idList.Count Then
-                SelectedValues.Add idList(idx)
+            If idx >= 1 And idx <= idList.count Then
+                selectedValues.Add idList(idx)
             End If
         Next i
     End If
-    Set ChooseMultipleValuesFromListWithAll = SelectedValues
+    Set ChooseMultipleValuesFromListWithAll = selectedValues
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sÃ©lection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromListWithAll", "Erreur lors de la sélection des valeurs"
 End Function
 
 Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As String) As Collection
     On Error GoTo ErrorHandler
     
     If Not IsArray(values) Then
-        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisÃ©"
+        HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Tableau non initialisé"
         Exit Function
     End If
     
@@ -137,21 +137,21 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
         listPrompt = listPrompt & i & ". " & values(i) & vbCrLf
     Next i
 
-    userChoice = InputBox(listPrompt, "SÃ©lection", "1")
+    userChoice = InputBox(listPrompt, "Sélection", "1")
     If StrPtr(userChoice) = 0 Or Len(Trim(userChoice)) = 0 Then
         Exit Function
     End If
     
-    Dim SelectedValues As New Collection
+    Dim selectedValues As New Collection
     userChoice = Trim(userChoice)
     
-    ' Cas spÃ©cial : sÃ©lection de toutes les valeurs avec *
+    ' Cas spécial : sélection de toutes les valeurs avec *
     If userChoice = "*" Then
         For i = 1 To UBound(values)
-            SelectedValues.Add values(i)
+            selectedValues.Add values(i)
         Next i
     Else
-        ' SÃ©lection de valeurs spÃ©cifiques
+        ' Sélection de valeurs spécifiques
         Dim selectedIndexes As Variant
         selectedIndexes = Split(userChoice, ",")
         Dim hasValidSelection As Boolean
@@ -161,29 +161,29 @@ Function ChooseMultipleValuesFromArrayWithAll(values() As String, prompt As Stri
             Dim idx As Long
             idx = val(Trim(selectedIndexes(i)))
             If idx >= 1 And idx <= UBound(values) Then
-                SelectedValues.Add values(idx)
+                selectedValues.Add values(idx)
                 hasValidSelection = True
             End If
         Next i
         
-        ' Si aucune sÃ©lection valide n'a Ã©tÃ© trouvÃ©e
+        ' Si aucune sélection valide n'a été trouvée
         If Not hasValidSelection Then
-            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sÃ©lection valide"
+            HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Aucune sélection valide"
             Exit Function
         End If
     End If
     
-    Set ChooseMultipleValuesFromArrayWithAll = SelectedValues
+    Set ChooseMultipleValuesFromArrayWithAll = selectedValues
     Exit Function
     
 ErrorHandler:
-    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sÃ©lection des valeurs"
+    HandleError "LoadQueries", "ChooseMultipleValuesFromArrayWithAll", "Erreur lors de la sélection des valeurs"
 End Function
 
 ' Helper function for table existence
-Private Function TableExists(ws As Worksheet, tableName As String) As Boolean
+Private Function tableExists(ws As Worksheet, tableName As String) As Boolean
     On Error Resume Next
-    TableExists = Not ws.ListObjects(tableName) Is Nothing
+    tableExists = Not ws.ListObjects(tableName) Is Nothing
     On Error GoTo 0
 End Function
 

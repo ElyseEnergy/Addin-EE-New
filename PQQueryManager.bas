@@ -1,48 +1,48 @@
 Attribute VB_Name = "PQQueryManager"
 ' Module: PQQueryManager
-' GÃ¨re la crÃ©ation et la vÃ©rification des requÃªtes PowerQuery
+' Gère la création et la vérification des requêtes PowerQuery
 Option Explicit
 
 Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
 
-' VÃ©rifie si une requÃªte PowerQuery existe et la crÃ©e si nÃ©cessaire
-Public Function EnsurePQQueryExists(Category As CategoryInfo) As Boolean
+' Vérifie si une requête PowerQuery existe et la crée si nécessaire
+Public Function EnsurePQQueryExists(Category As categoryInfo) As Boolean
     On Error GoTo ErrorHandler
     
     Dim newFormula As String
     newFormula = GeneratePQQueryTemplate(Category)
     
-    Dim queryExists As Boolean
+    Dim QueryExists As Boolean
     Dim needsUpdate As Boolean
     
-    ' VÃ©rifier si la requÃªte existe
+    ' Vérifier si la requête existe
     On Error Resume Next
     Dim pq As Object ' WorkbookQuery
     Set pq = ThisWorkbook.Queries(Category.PowerQueryName)
-    queryExists = (Err.Number = 0)
+    QueryExists = (Err.Number = 0)
     On Error GoTo ErrorHandler
 
-    If queryExists Then
-        ' La requÃªte existe, vÃ©rifier si la formule a changÃ©
+    If QueryExists Then
+        ' La requête existe, vérifier si la formule a changé
         If pq.formula <> newFormula Then
             needsUpdate = True
-            Diagnostics.LogTime "La formule de la requÃªte '" & Category.PowerQueryName & "' a changÃ©. Mise Ã  jour nÃ©cessaire."
+            Diagnostics.LogTime "La formule de la requête '" & Category.PowerQueryName & "' a changé. Mise à jour nécessaire."
         Else
             needsUpdate = False
-            Diagnostics.LogTime "La requÃªte '" & Category.PowerQueryName & "' est dÃ©jÃ  Ã  jour. Pas de modification."
+            Diagnostics.LogTime "La requête '" & Category.PowerQueryName & "' est déjà à jour. Pas de modification."
         End If
     Else
-        ' La requÃªte n'existe pas, il faut la crÃ©er
+        ' La requête n'existe pas, il faut la créer
         needsUpdate = True
-        Diagnostics.LogTime "La requÃªte '" & Category.PowerQueryName & "' n'existe pas. CrÃ©ation nÃ©cessaire."
+        Diagnostics.LogTime "La requête '" & Category.PowerQueryName & "' n'existe pas. Création nécessaire."
     End If
     
     If needsUpdate Then
-        If queryExists Then
-            ' Mise Ã  jour de la formule
+        If QueryExists Then
+            ' Mise à jour de la formule
             pq.formula = newFormula
         Else
-            ' Ajout de la nouvelle requÃªte
+            ' Ajout de la nouvelle requête
             ThisWorkbook.Queries.Add Category.PowerQueryName, newFormula
         End If
     End If
@@ -55,23 +55,23 @@ ErrorHandler:
     EnsurePQQueryExists = False
 End Function
 
-' VÃ©rifie si une requÃªte PowerQuery existe
-Public Function QueryExists(queryName As String) As Boolean
+' Vérifie si une requête PowerQuery existe
+Public Function QueryExists(QueryName As String) As Boolean
     On Error Resume Next
     Dim query As Object
-    Set query = ThisWorkbook.Queries(queryName)
+    Set query = ThisWorkbook.Queries(QueryName)
     QueryExists = (Err.Number = 0)
     On Error GoTo 0
 End Function
 
-' Ajoute une requÃªte PowerQuery
-Public Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
+' Ajoute une requête PowerQuery
+Public Function AddQueryToPowerQuery(QueryName As String, query As String) As Boolean
     On Error Resume Next
-    ThisWorkbook.Queries.Add queryName, query
+    ThisWorkbook.Queries.Add QueryName, query
     Dim errNum As Long
     errNum = Err.Number
     If errNum <> 0 Then
-        Log "pq_add", "Erreur lors de l'ajout de la requÃªte " & queryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
+        Log "pq_add", "Erreur lors de l'ajout de la requête " & QueryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
         AddQueryToPowerQuery = False
     Else
         AddQueryToPowerQuery = True
@@ -79,10 +79,10 @@ Public Function AddQueryToPowerQuery(queryName As String, query As String) As Bo
     On Error GoTo 0
 End Function
 
-' GÃ©nÃ¨re le template de requÃªte PowerQuery
-Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
+' Génère le template de requête PowerQuery
+Private Function GeneratePQQueryTemplate(Category As categoryInfo) As String
     Dim template As String
-    ' Template de base pour charger les donnÃ©es depuis l'API Ragic avec rÃ©organisation des colonnes
+    ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
           "    Source = Csv.Document(Web.Contents(""" & Category.URL & """),[Delimiter="","",Encoding=65001,QuoteStyle=QuoteStyle.Csv])," & vbCrLf & _
           "    PromotedHeaders = Table.PromoteHeaders(Source)," & vbCrLf & _
@@ -90,7 +90,7 @@ Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
           "    Colonnes = Table.ColumnNames(PromotedHeaders)," & vbCrLf & _
           "    IdColumn = List.First(List.Select(Colonnes, each Text.Lower(_) = ""id""))," & vbCrLf & _
           "    AutresColonnes = List.Select(Colonnes, each Text.Lower(_) <> ""id"")," & vbCrLf & _
-          "    // RÃ©organiser les colonnes pour avoir ID en premier" & vbCrLf & _
+          "    // Réorganiser les colonnes pour avoir ID en premier" & vbCrLf & _
           "    ReorderedColumns = Table.ReorderColumns(PromotedHeaders, {IdColumn} & AutresColonnes)," & vbCrLf & _
           "    // Typer la colonne ID" & vbCrLf & _
           "    TypedTable = Table.TransformColumnTypes(ReorderedColumns,{{IdColumn, Int64.Type}})" & vbCrLf & _
@@ -101,16 +101,16 @@ Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
 End Function
 
 
-' Fonction pour stocker les types de colonnes d'une requÃªte
-Private Sub StoreColumnTypes(queryName As String)
+' Fonction pour stocker les types de colonnes d'une requête
+Private Sub StoreColumnTypes(QueryName As String)
     If mColumnTypes Is Nothing Then
         Set mColumnTypes = CreateObject("Scripting.Dictionary")
     End If
     
     On Error Resume Next
-    ' Obtenir la rÃ©fÃ©rence Ã  la table PowerQuery
+    ' Obtenir la référence à la table PowerQuery
     Dim connection As WorkbookConnection
-    Set connection = ThisWorkbook.Connections(queryName)
+    Set connection = ThisWorkbook.Connections(QueryName)
     
     If Not connection Is Nothing Then
         ' Parcourir les colonnes et stocker leurs types
@@ -119,22 +119,22 @@ Private Sub StoreColumnTypes(queryName As String)
         
         Dim col As ListColumn
         For Each col In table.ListColumns
-            ' Stocker le type de donnÃ©es de la colonne
-            If Not mColumnTypes.Exists(queryName) Then
-                Set mColumnTypes(queryName) = CreateObject("Scripting.Dictionary")
+            ' Stocker le type de données de la colonne
+            If Not mColumnTypes.Exists(QueryName) Then
+                Set mColumnTypes(QueryName) = CreateObject("Scripting.Dictionary")
             End If
-            mColumnTypes(queryName)(col.Name) = col.Range.Cells(2).NumberFormat
+            mColumnTypes(QueryName)(col.Name) = col.Range.Cells(2).NumberFormat
         Next col
     End If
     On Error GoTo 0
 End Sub
 
-' Fonction pour rÃ©cupÃ©rer le type d'une colonne
-Public Function GetStoredColumnType(queryName As String, columnName As String) As String
+' Fonction pour récupérer le type d'une colonne
+Public Function GetStoredColumnType(QueryName As String, columnName As String) As String
     If mColumnTypes Is Nothing Then Exit Function
-    If Not mColumnTypes.Exists(queryName) Then Exit Function
-    If Not mColumnTypes(queryName).Exists(columnName) Then Exit Function
+    If Not mColumnTypes.Exists(QueryName) Then Exit Function
+    If Not mColumnTypes(QueryName).Exists(columnName) Then Exit Function
     
-    GetStoredColumnType = mColumnTypes(queryName)(columnName)
+    GetStoredColumnType = mColumnTypes(QueryName)(columnName)
 End Function
 

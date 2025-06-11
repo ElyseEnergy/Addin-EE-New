@@ -1,42 +1,40 @@
 Attribute VB_Name = "AccessProfiles"
 ' Module: AccessProfiles
-' G√®re les profils de d√©monstration pour les droits d'acc√®s
+' GËre les profils de dÈmonstration pour les droits d'accËs
 Option Explicit
 
-' Note: Utilise le type AccessProfile d√©fini dans Types.bas
+' Note: Utilise le type AccessProfile dÈfini dans Types.bas
 
 Public Enum DemoProfile
     Engineer_Basic = 0
     Project_Manager = 1
     Finance_Controller = 2
     Technical_Director = 3
-    Business_Analyst = 4    ' Renomm√© de Multi_Project_Lead pour mieux refl√©ter le r√¥le
+    Business_Analyst = 4    ' RenommÈ de Multi_Project_Lead pour mieux reflÈter le rÙle
     Full_Admin = 5
 End Enum
 
 Private mCurrentProfile As DemoProfile
 Dim Profiles() As AccessProfile
 Dim ProfilesCount As Long
-Private mProfilesInitialized As Boolean ' Added module-level flag
 
-' Initialisation des profils de d√©monstration
+' Initialisation des profils de dÈmonstration
 Public Sub InitializeDemoProfiles()
     On Error GoTo ErrorHandler
     
-    mProfilesInitialized = False ' Initialize to false at the start
     ProfilesCount = 0
     Erase Profiles
-    ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils d√®s le d√©but
+    ReDim Profiles(0 To 5)  ' Allouer l'espace pour tous les profils dËs le dÈbut
     
-    ' Ing√©nieur de base (acc√®s Engineering + Tools basiques)
+    ' IngÈnieur de base (accËs Engineering + Tools basiques)
     AddProfile Engineer_Basic, "Basic Engineer", _
                True, False, True, False, Array()
                
-    ' Chef de projet (acc√®s Tools + Projets)
+    ' Chef de projet (accËs Tools + Projets)
     AddProfile Project_Manager, "Project Manager", _
                False, False, True, True, Array()
                
-    ' Contr√¥leur financier (Finance + tous les budgets)
+    ' ContrÙleur financier (Finance + tous les budgets)
     AddProfile Finance_Controller, "Finance Controller", _
                False, True, True, False, Array()
                
@@ -48,18 +46,16 @@ Public Sub InitializeDemoProfiles()
     AddProfile Business_Analyst, "Business Analyst", _
                False, True, True, False, Array()
                
-    ' Admin (acc√®s total)
+    ' Admin (accËs total)
     AddProfile Full_Admin, "Admin (Full Access)", _
                True, True, True, True, Array()
                
-    ' Par d√©faut, on commence avec le profil Technical Director
+    ' Par dÈfaut, on commence avec le profil Technical Director
     mCurrentProfile = Technical_Director
-    mProfilesInitialized = True ' Set to true on successful completion
     Exit Sub
     
 ErrorHandler:
-    mProfilesInitialized = False ' Ensure it's false if an error occurs
-    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de d√©monstration"
+    HandleError "AccessProfiles", "InitializeDemoProfiles", "Erreur lors de l'initialisation des profils de dÈmonstration"
 End Sub
 
 Private Sub AddProfile(id As DemoProfile, Name As String, _
@@ -87,7 +83,7 @@ ErrorHandler:
     HandleError "AccessProfiles", "AddProfile", "Erreur lors de l'ajout du profil " & Name
 End Sub
 
-' D√©finit le profil actif
+' DÈfinit le profil actif
 Public Sub SetCurrentProfile(profile As DemoProfile)
     On Error GoTo ErrorHandler
     
@@ -103,58 +99,30 @@ ErrorHandler:
     HandleError "AccessProfiles", "SetCurrentProfile", "Erreur lors du changement de profil"
 End Sub
 
-' R√©cup√®re le profil par ID (suppose que l'ID correspond √† l'index)
+' RÈcupËre le profil par ID (suppose que l'ID correspond ‡ l'index)
 Private Function GetProfileById(id As DemoProfile) As AccessProfile
     On Error GoTo ErrorHandler
-    Const PROC_NAME As String = "GetProfileById"
-    Const MODULE_NAME_STR As String = "AccessProfiles"
     
-    If Not mProfilesInitialized Then
-        SYS_Logger.Log "profile_error", "Tentative d'acc√®s au profil ID " & id & " mais les profils ne sont pas initialis√©s (mProfilesInitialized=False).", WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
-        Exit Function ' Or handle error appropriately, e.g., return an empty/default profile
-    End If
-    
-    ' Combined and clarified boundary checks
-    If id < LBound(Profiles) Or id > UBound(Profiles) Then ' Added UBound check
-        SYS_Logger.Log "profile_error", "ID de profil " & id & " hors limites (LBound: " & LBound(Profiles) & ", UBound: " & UBound(Profiles) & ").", ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
-        ' Consider returning a default/empty profile or raising a more specific error
+    If id < Engineer_Basic Or id > Full_Admin Then
+        HandleError "AccessProfiles", "GetProfileById", "ID de profil invalide: " & id
         Exit Function
     End If
     
-    ' Check if Profiles array has been initialized (basic check)
-    ' This check is now largely covered by mProfilesInitialized and the LBound/UBound check above.
-    ' The IsEmpty/Name="" check below is still valuable for individual profile validity.
-    ' If ProfilesCount = 0 And id <> ProfilesCount Then ' ProfilesCount is last assigned ID, so if 0, only Profiles(0) might be valid if ever assigned directly.
-                                                ' More robustly, check if Profiles(id).Name is empty if not all profiles are guaranteed to be filled.
-    If IsEmpty(Profiles(id).Name) Or Profiles(id).Name = "" Then
-        SYS_Logger.Log "profile_error", "Profil ID " & id & " est dans les limites mais non rempli (nom vide).", WARNING_LEVEL, PROC_NAME, MODULE_NAME_STR
-        Exit Function
-    End If
-    ' End If
-
     GetProfileById = Profiles(id)
     Exit Function
     
 ErrorHandler:
-    ' Log the specific error from Err object BEFORE calling HandleError, which might reset it.
-    SYS_Logger.Log "profile_error", "Erreur VBA dans " & MODULE_NAME_STR & "." & PROC_NAME & " - Num√©ro: " & CStr(Err.Number) & ", Description: " & Err.Description & ", Source: " & Err.Source, ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
-    HandleError MODULE_NAME_STR, PROC_NAME, "Erreur lors de la r√©cup√©ration du profil ID: " & id ' HandleError might be a more generic handler
-    ' To prevent returning an uninitialized AccessProfile object, which can cause further errors:
-    ' One option is to clear the return object or set it to a known safe state if possible,
-    ' but since it's a UDT, direct clearing is tricky. The Exit Function above is safer.
-    ' If absolutely necessary, and if AccessProfile had an 'IsValid' flag or similar:
-    ' Dim emptyProfile as AccessProfile
-    ' GetProfileById = emptyProfile ' Or set a flag within it
+    HandleError "AccessProfiles", "GetProfileById", "Erreur lors de la rÈcupÈration du profil"
 End Function
 
-' V√©rifie si le profil actuel a acc√®s √† une fonctionnalit√©
+' VÈrifie si le profil actuel a accËs ‡ une fonctionnalitÈ
 Public Function HasAccess(feature As String) As Boolean
     On Error GoTo ErrorHandler
     
     Dim prof As AccessProfile
     prof = GetProfileById(mCurrentProfile)
     
-    ' Acc√®s total pour l'admin
+    ' AccËs total pour l'admin
     If mCurrentProfile = Full_Admin Then
         HasAccess = True
         Exit Function
@@ -170,17 +138,17 @@ Public Function HasAccess(feature As String) As Boolean
         Case "Admin"
             HasAccess = (mCurrentProfile = Full_Admin)
         Case Else
-            ' Pour les projets (plus de r√©f√©rence aux projets sp√©cifiques)
+            ' Pour les projets (plus de rÈfÈrence aux projets spÈcifiques)
             HasAccess = prof.AllProjects
     End Select
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la v√©rification des droits d'acc√®s pour: " & feature
+    HandleError "AccessProfiles", "HasAccess", "Erreur lors de la vÈrification des droits d'accËs pour: " & feature
     HasAccess = False
 End Function
 
-' R√©cup√®re le nom du profil actuel
+' RÈcupËre le nom du profil actuel
 Public Function GetCurrentProfileName() As String
     On Error GoTo ErrorHandler
     
@@ -188,7 +156,7 @@ Public Function GetCurrentProfileName() As String
     Exit Function
     
 ErrorHandler:
-    HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la r√©cup√©ration du nom du profil actuel"
+    HandleError "AccessProfiles", "GetCurrentProfileName", "Erreur lors de la rÈcupÈration du nom du profil actuel"
     GetCurrentProfileName = "Profil inconnu"
 End Function
 
