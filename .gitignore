@@ -60,6 +60,7 @@ Thumbs.db
 logs/*.log
 logs/
 !logs/.gitkeep
+!python/logs/.gitkeep
 
 # Debug
 debug/
