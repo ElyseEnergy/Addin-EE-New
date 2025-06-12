@@ -52,6 +52,7 @@ End Function
 ' UPDATED: ProcessCategorySimplified without the userCancelled parameter
 Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Boolean
     On Error GoTo ErrorHandler
+    Dim lastCol As Long
     
     Log "debug", "=== ProcessCategorySimplified START ===", DEBUG_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
     
@@ -91,7 +92,7 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     
     If lo Is Nothing Then
         Log "debug", "Table not found, loading query...", DEBUG_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
-        Dim lastCol As Long
+        
         lastCol = Utilities.GetLastColumn(wsPQData)
         LoadQueries.LoadQuery categoryInfo.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
         
@@ -124,7 +125,7 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
                 ' Delete and recreate the table
                 lo.Delete
                 
-                Dim lastCol As Long
+                
                 lastCol = Utilities.GetLastColumn(wsPQData)
                 LoadQueries.LoadQuery categoryInfo.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
                 
@@ -366,6 +367,7 @@ End Function
 ' UPDATED: GetSelectedValues function that now handles both category selection and mode selection
 Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeTransposed As Boolean) As Collection
     On Error GoTo ErrorHandler
+    Dim lastCol As Long
     
     Const PROC_NAME As String = "GetSelectedValuesWithMode"
     Const MODULE_NAME As String = "DataLoaderManager"
@@ -398,7 +400,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
         Log "debug_selection", "Table not found, loading query...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         
         ' Load the query
-        Dim lastCol As Long
+        
         lastCol = Utilities.GetLastColumn(wsPQData)
         LoadQueries.LoadQuery Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
         
@@ -428,7 +430,6 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
                 Log "debug_selection", "Table still empty, recreating...", WARNING_LEVEL, PROC_NAME, MODULE_NAME
                 lo.Delete
                 
-                Dim lastCol As Long
                 lastCol = Utilities.GetLastColumn(wsPQData)
                 LoadQueries.LoadQuery Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
                 
