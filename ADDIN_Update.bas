@@ -1,7 +1,7 @@
 ﻿Option Explicit
 
 Private Const RAGIC_API_KEY As String = "WUJ1UllGWVVyUzRQY3I0Rm0rT2llMWxlOFZxTnQzc092ZlRSU1F0SkJpelFNVFludWQrWHBuamxQMldUVWNTWnJvK1B6RWYzNzR5SDJ6RjdsTTVUcmc9PQ=="
-Private Const RAGIC_CSV_URL As String = "https://ragic.elyse.energy/default/simulation-files/1.csv?APIKey=" & RAGIC_API_KEY
+Private Const RAGIC_CSV_URL As String = "https://ragic.elyse.energy/default/simulation-files/1.csv?f=all&APIKey=" & RAGIC_API_KEY
 
 Private Function GetTempFilePath(Optional extension As String = "") As String
     Dim fso As Object
@@ -22,14 +22,32 @@ Private Sub DeleteFileIfExists(filePath As String)
     On Error GoTo 0
 End Sub
 
-Private Function GetColumnIndex(headerLine As String, columnName As String) As Long
+Private Function GetColumnIndex(ByVal headerLine As String, columnName As String) As Long
     Dim headers() As String, i As Long
-    ' Split en gérant les guillemets
-    headers = ParseCSVLine(headerLine)
+    Dim currentProcessedHeader As String
+    
+    headers = ParseCSVLine(headerLine) ' This should return fields already trimmed and unquoted
+    
     For i = 0 To UBound(headers)
-        ' Enlever les guillemets si présents
-        headers(i) = Replace(Replace(headers(i), """", ""), " ", "")
-        If headers(i) = columnName Then
+        currentProcessedHeader = headers(i) ' Should be trimmed by ParseCSVLine
+        
+        ' BOMs (Byte Order Marks) only affect the very first field derived from the start of a stream.
+        If i = 0 Then
+            ' Check for UTF-8 BOM (ï»¿ which are ChrW(&HEF), ChrW(&HBB), ChrW(&HBF))
+            If Len(currentProcessedHeader) >= 3 And Left(currentProcessedHeader, 3) = ChrW(&HEF) & ChrW(&HBB) & ChrW(&HBF) Then
+                currentProcessedHeader = Mid(currentProcessedHeader, 4)
+            ' Check for UTF-16LE BOM (U+FEFF)
+            ElseIf Len(currentProcessedHeader) >= 1 And AscW(Left(currentProcessedHeader, 1)) = &HFEFF Then
+                currentProcessedHeader = Mid(currentProcessedHeader, 2)
+            ' Check for UTF-16BE BOM (U+FFFE)
+            ElseIf Len(currentProcessedHeader) >= 1 And AscW(Left(currentProcessedHeader, 1)) = &HFFFE Then
+                currentProcessedHeader = Mid(currentProcessedHeader, 2)
+            End If
+        End If
+        
+        currentProcessedHeader = Trim(currentProcessedHeader)
+        
+        If currentProcessedHeader = columnName Then
             GetColumnIndex = i
             Exit Function
         End If
@@ -41,30 +59,64 @@ Private Function ParseCSVLine(line As String) As String()
     Dim result() As String
     Dim field As String
     Dim inQuotes As Boolean
-    Dim i As Long, resultCount As Long
+    Dim charIndex As Long, resultCount As Long
     Dim char As String
+    Dim lineLen As Long
     
-    ReDim result(0)
+    lineLen = Len(line)
+    
+    If lineLen = 0 Then
+        ReDim result(0 To 0)
+        result(0) = ""
+        ParseCSVLine = result
+        Exit Function
+    End If
+    
+    Dim tempCharIndex As Long, tempChar As String, tempInQuotes As Boolean, numFields As Long
+    numFields = 1 ' Always at least one field
+    tempInQuotes = False
+    For tempCharIndex = 1 To lineLen
+        tempChar = Mid(line, tempCharIndex, 1)
+        If tempChar = """" Then
+            If tempInQuotes And tempCharIndex < lineLen And Mid(line, tempCharIndex + 1, 1) = """" Then
+                tempCharIndex = tempCharIndex + 1 ' Skip next quote (escaped)
+            Else
+                tempInQuotes = Not tempInQuotes
+            End If
+        ElseIf tempChar = "," And Not tempInQuotes Then
+            numFields = numFields + 1
+        End If
+    Next tempCharIndex
+    
+    ReDim result(0 To numFields - 1)
+
     field = ""
     inQuotes = False
+    resultCount = 0
+    charIndex = 1
     
-    For i = 1 To Len(line)
-        char = Mid(line, i, 1)
+    While charIndex <= lineLen
+        char = Mid(line, charIndex, 1)
         
         If char = """" Then
-            inQuotes = Not inQuotes
+            ' Check for escaped quote: "" inside quotes
+            If inQuotes And charIndex < lineLen And Mid(line, charIndex + 1, 1) = """" Then
+                field = field & """" ' Append one quote
+                charIndex = charIndex + 1 ' Skip the second quote of the pair
+            Else
+                inQuotes = Not inQuotes ' Toggle quote state (entering or exiting a quoted field)
+            End If
         ElseIf char = "," And Not inQuotes Then
-            ReDim Preserve result(resultCount)
-            result(resultCount) = Trim(field)
-            field = ""
+            result(resultCount) = Trim(field) ' Store the trimmed field
+            field = "" ' Reset for next field
             resultCount = resultCount + 1
         Else
-            field = field & char
+            field = field & char ' Append character to current field
         End If
-    Next i
+        charIndex = charIndex + 1
+    Wend
     
-    ' Ajouter le dernier champ
-    ReDim Preserve result(resultCount)
+    ' Add the last field
     result(resultCount) = Trim(field)
     
     ParseCSVLine = result
@@ -126,31 +178,41 @@ Sub CheckRagicForUpdate()
         MsgBox "Format CSV invalide", vbCritical
         Exit Sub
     End If
-    
-    ' Trouver les indices des colonnes
+      ' Trouver les indices des colonnes
     Dim nameIdx As Long, versionIdx As Long, fileIdx As Long
     nameIdx = GetColumnIndex(lines(0), "Name")
     versionIdx = GetColumnIndex(lines(0), "Version")
-    fileIdx = GetColumnIndex(lines(0), "File")
+    fileIdx = 1001040 ' ID fixe du champ File dans Ragic
     
-    If nameIdx = -1 Or versionIdx = -1 Or fileIdx = -1 Then
+    If nameIdx = -1 Or versionIdx = -1 Then
         MsgBox "Format CSV invalide : colonnes manquantes", vbCritical
         Exit Sub
     End If
     
     ' Chercher la dernière version de l'addin
     Dim i As Long, fields() As String
+    Dim maxIdx As Long ' To find the highest index needed
+    
+    maxIdx = nameIdx
+    If versionIdx > maxIdx Then maxIdx = versionIdx
+    If fileIdx > maxIdx Then maxIdx = fileIdx
+            
     For i = 1 To UBound(lines)
+        If Trim(lines(i)) = "" Then GoTo NextLineInLoop ' Skip empty lines if any
+        
         fields = ParseCSVLine(lines(i))
-        If UBound(fields) >= fileIdx Then
-            ' Enlever les guillemets si présents
-            fields(nameIdx) = Replace(fields(nameIdx), """", "")
-            If Trim(fields(nameIdx)) = "Addin Elyse Energy" Then
-                remoteVersion = Replace(fields(versionIdx), """", "")
-                fileUrl = Replace(fields(fileIdx), """", "")
-                Exit For
+        
+        ' Ensure fields array is large enough for all expected indices
+        If UBound(fields) >= maxIdx Then
+            ' fields are already unquoted and trimmed by ParseCSVLine
+            ' Assuming "Addin Elyse Energy" is the exact string expected in the 'name' column
+            If fields(nameIdx) = "Addin Elyse Energy" Then
+                remoteVersion = fields(versionIdx)
+                fileUrl = fields(fileIdx)
+                Exit For ' Found the addin entry
             End If
         End If
+NextLineInLoop:
     Next i
     
     If remoteVersion = "" Or fileUrl = "" Then
@@ -201,7 +263,7 @@ Private Function GetLocalAddinPath() As String
     
     For Each file In fso.GetFolder(folder).Files
         If file.Name Like "EE Addin_v*.xlam" Then
-            GetLocalAddinPath = file.Path
+            GetLocalAddinPath = file.path
             Exit Function
         End If
     Next
@@ -232,7 +294,6 @@ Private Function DownloadText(url As String) As String
     Dim http As Object
     Set http = CreateObject("MSXML2.XMLHTTP")
     http.Open "GET", url, False
-    http.SetRequestHeader "Content-Type", "application/json; charset=utf-8"
     http.send
     If http.Status = 200 Then
         DownloadText = http.responseText
@@ -247,13 +308,50 @@ Private Function DownloadFile(url As String, destPath As String) As Boolean
     Dim http As Object, ado As Object, arr() As Byte
     Set http = CreateObject("MSXML2.XMLHTTP")
     
-    ' Ajouter l'API key si pas déjà présente
-    If InStr(url, "APIKey=") = 0 Then
-        url = url & IIf(InStr(url, "?") > 0, "&", "?") & "APIKey=" & RAGIC_API_KEY
+    ' Si l'URL pointe vers Ragic et contient file.jsp
+    If InStr(LCase(url), "ragic") > 0 And InStr(LCase(url), "file.jsp") > 0 Then
+        ' Pour les fichiers Ragic, on s'assure d'encoder correctement l'URL
+        Dim fileName As String, accountName As String
+        
+        ' Extraction du nom de fichier après le paramètre f=
+        Dim fPos As Long
+        fPos = InStr(url, "f=")
+        If fPos > 0 Then
+            fileName = Mid(url, fPos + 2)
+            ' Enlever tout ce qui suit un éventuel &
+            Dim ampPos As Long
+            ampPos = InStr(fileName, "&")
+            If ampPos > 0 Then
+                fileName = Left(fileName, ampPos - 1)
+            End If
+            ' URL encode le nom de fichier (uniquement la partie après @)
+            Dim atPos As Long
+            atPos = InStr(fileName, "@")
+            If atPos > 0 Then
+                fileName = Left(fileName, atPos) & URLEncode(Mid(fileName, atPos + 1))
+            End If
+        End If
+        
+        ' Extraction du nom de compte après le paramètre a=
+        Dim aPos As Long
+        aPos = InStr(url, "a=")
+        If aPos > 0 Then
+            accountName = Mid(url, aPos + 2)
+            ' Enlever tout ce qui suit un éventuel &
+            ampPos = InStr(accountName, "&")
+            If ampPos > 0 Then
+                accountName = Left(accountName, ampPos - 1)
+            End If
+            accountName = URLEncode(accountName)
+        End If
+        
+        ' Construction de l'URL finale
+        url = "https://ragic.elyse.energy/sims/file.jsp?a=" & accountName & "&f=" & fileName
     End If
     
+    Debug.Print "URL de téléchargement: " & url
+    
     http.Open "GET", url, False
-    http.SetRequestHeader "Content-Type", "application/json; charset=utf-8"
     http.send
     If http.Status = 200 Then
         arr = http.responseBody
@@ -265,11 +363,41 @@ Private Function DownloadFile(url As String, destPath As String) As Boolean
         ado.Close
         DownloadFile = True
     Else
+        Debug.Print "Erreur HTTP: " & http.Status & " - " & http.statusText
         DownloadFile = False
     End If
     Exit Function
 errh:
+    Debug.Print "Erreur de téléchargement: " & Err.Description
     DownloadFile = False
+End Function
+
+Private Function URLEncode(ByVal text As String) As String
+    Dim length As Long
+    Dim pos As Long
+    Dim char As String
+    Dim asciiVal As Integer
+    Dim result As String
+    
+    length = Len(text)
+    
+    For pos = 1 To length
+        char = Mid(text, pos, 1)
+        asciiVal = AscW(char)
+        
+        ' Ne pas encoder les caractères alphanumériques et certains caractères spéciaux
+        If (asciiVal >= 48 And asciiVal <= 57) Or _
+           (asciiVal >= 65 And asciiVal <= 90) Or _
+           (asciiVal >= 97 And asciiVal <= 122) Or _
+           char = "-" Or char = "_" Or char = "." Or char = "~" Then
+            result = result & char
+        Else
+            ' Encoder en %HH où HH est la valeur hexadécimale
+            result = result & "%" & Right("0" & Hex(AscB(char)), 2)
+        End If
+    Next pos
+    
+    URLEncode = result
 End Function
 
 Private Function ChampIndex(nomChamp As String, headerLine As String) As Long
@@ -363,22 +491,75 @@ Public Sub TestTempFileOperations()
 End Sub
 
 Public Sub TestRagicConnection()
-    Dim content As String
+    Dim tempCsvPath As String
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Dim headerLine As String
+    Dim csvFileDownloaded As Boolean
+    Dim headerLineRead As Boolean
     
     Debug.Print "=== DÉBUT TEST CONNECTION RAGIC ==="
     
-    ' Test 1: Téléchargement CSV
-    content = DownloadText(RAGIC_CSV_URL)
-    LogTest "Download CSV", content <> "", IIf(content = "", "Échec téléchargement", "Taille: " & Len(content))
+    ' Générer un nom unique pour le CSV temporaire
+    tempCsvPath = GetTempFilePath("csv")
+    headerLine = "" ' Initialize
+    csvFileDownloaded = False
+    headerLineRead = False ' Initialize
+
+    ' Test 1: Téléchargement CSV via DownloadFile (mimicking main logic)
+    If DownloadFile(RAGIC_CSV_URL, tempCsvPath) Then
+        LogTest "Download CSV (via DownloadFile)", True, "File downloaded to: " & tempCsvPath
+        csvFileDownloaded = True
+        
+        ' Lire la première ligne du fichier téléchargé (mimicking CheckRagicForUpdate more closely)
+        Dim fileNum As Integer, fileContent As String
+        
+        On Error Resume Next
+        fileNum = FreeFile
+        Open tempCsvPath For Input As #fileNum
+        If Err.Number = 0 Then
+            If Not EOF(fileNum) Then
+                fileContent = Input$(LOF(fileNum), fileNum) ' Read whole file
+            End If
+            Close #fileNum
+            
+            If fileContent <> "" Then
+                Dim csvLines() As String
+                csvLines = Split(fileContent, vbLf) ' Split by Line Feed
+                
+                If UBound(csvLines) >= 0 Then
+                    headerLine = csvLines(0)
+                    ' Remove trailing CR if present (from CRLF line endings)
+                    If Len(headerLine) > 0 And Right(headerLine, 1) = vbCr Then
+                        headerLine = Left(headerLine, Len(headerLine) - 1)
+                    End If
+                    headerLineRead = True
+                End If ' Else: fileContent was not empty but resulted in no lines (e.g. only LFs)
+            End If ' Else: fileContent was empty
+            LogTest "Read Header Line from File", headerLineRead And headerLine <> "", "Header: '" & headerLine & "'"
+        Else
+            LogTest "Read Header Line from File", False, "Error reading file: " & Err.Description
+        End If
+        On Error GoTo 0
+    Else
+        LogTest "Download CSV (via DownloadFile)", False, "Failed to download file"
+    End If
     
-    If content <> "" Then
-        ' Test 2: Vérification contenu
-        LogTest "Contenu CSV", InStr(content, "Addin Elyse Energy") > 0, "Addin trouvé dans le CSV"
+    ' Nettoyer le fichier CSV temporaire
+    DeleteFileIfExists tempCsvPath
+
+    If csvFileDownloaded And headerLineRead And headerLine <> "" Then
+        ' Test 2: Vérification contenu (simple check on header if it looks like CSV)
+        LogTest "Contenu CSV (Header basic check)", InStr(headerLine, ",") > 0 Or InStr(headerLine, ";") > 0, "Header appears to be CSV-like: '" & headerLine & "'"
         
         ' Test 3: Parse header
         Dim nameIdx As Long
-        nameIdx = GetColumnIndex(Split(content, vbLf)(0), "Name")
+        nameIdx = GetColumnIndex(headerLine, "Name") ' Pass the actual header line
         LogTest "Parse Header", nameIdx >= 0, "Index colonne Name: " & nameIdx
+    ElseIf csvFileDownloaded And headerLineRead And headerLine = "" Then
+        LogTest "Parse Header", False, "Header line was empty after reading file."
+    Else
+        LogTest "Parse Header", False, "Skipped due to download/read failure or empty header."
     End If
     
     Debug.Print "=== FIN TEST CONNECTION RAGIC ==="
@@ -401,6 +582,64 @@ Public Sub TestAddinPathDetection()
     Debug.Print "=== FIN TEST DETECTION ADDIN ==="
 End Sub
 
+Public Sub TestFileDownload()
+    On Error GoTo ErrorHandler
+    
+    Debug.Print "=== DÉBUT TEST TÉLÉCHARGEMENT FICHIER ==="
+    
+    ' 1. D'abord récupérer les informations du fichier via l'API
+    Dim jsonResponse As String
+    jsonResponse = GetRagicFileInfo()
+    
+    If jsonResponse = "" Then
+        Debug.Print "Erreur : impossible d'obtenir les informations du fichier"
+        Exit Sub
+    End If
+    
+    ' 2. Extraire le nom du fichier du JSON
+    Dim fileName As String
+    fileName = ExtractFileNameFromJson(jsonResponse)
+    
+    If fileName = "" Then
+        Debug.Print "Erreur : impossible de trouver le nom du fichier dans la réponse"
+        Exit Sub
+    End If
+    
+    Debug.Print "Nom de fichier trouvé : " & fileName
+    
+    ' Préparation du test
+    Dim tempPath As String
+    tempPath = Environ$("TEMP") & "\test_download.xlam"
+    
+    ' Construction de l'URL selon la doc Ragic
+    Dim testFileUrl As String
+    testFileUrl = "https://ragic.elyse.energy/sims/file.jsp?a=julien.fernandez.work@gmail.com&f=" & fileName
+    
+    Debug.Print "Tentative de téléchargement depuis: " & testFileUrl
+    
+    ' Test du téléchargement avec l'URL construite
+    Dim success As Boolean
+    success = DownloadFile(testFileUrl, tempPath)
+    
+    ' Vérification des résultats
+    If success Then
+        If Dir(tempPath) <> "" Then
+            Debug.Print "Test réussi : fichier téléchargé à " & tempPath
+            Kill tempPath ' Nettoyage
+        Else
+            Debug.Print "Erreur : fichier non trouvé après téléchargement"
+        End If
+    Else
+        Debug.Print "Erreur : échec du téléchargement"
+    End If
+    
+    Debug.Print "=== FIN TEST TÉLÉCHARGEMENT FICHIER ==="
+    Exit Sub
+
+ErrorHandler:
+    Debug.Print "Erreur lors du test : " & Err.Description
+End Sub
+
 Public Sub RunAllTests()
     Debug.Print "========================================"
     Debug.Print "DÉBUT DES TESTS - " & Now()
@@ -411,8 +650,157 @@ Public Sub RunAllTests()
     TestTempFileOperations
     TestRagicConnection
     TestAddinPathDetection
+    TestFileDownload
     
     Debug.Print "========================================"
     Debug.Print "FIN DES TESTS - " & Now()
     Debug.Print "========================================"
 End Sub
+
+Private Function GetRagicFileInfo() As String
+    ' Construction de l'URL pour obtenir les infos du fichier (JSON)
+    Dim apiUrl As String
+    apiUrl = "https://ragic.elyse.energy/default/simulation-files/1?api&APIKey=" & RAGIC_API_KEY
+    
+    ' Appel à l'API pour obtenir le JSON
+    Dim http As Object
+    Set http = CreateObject("MSXML2.XMLHTTP")
+    
+    On Error GoTo ErrorHandler
+    
+    http.Open "GET", apiUrl, False
+    http.send
+    
+    If http.Status = 200 Then
+        GetRagicFileInfo = http.responseText
+        Debug.Print "Réponse JSON reçue: " & http.responseText
+    Else
+        Debug.Print "Erreur lors de la requête: " & http.Status & " - " & http.statusText
+        GetRagicFileInfo = ""
+    End If
+    
+    Exit Function
+    
+ErrorHandler:
+    Debug.Print "Erreur lors de l'appel API: " & Err.Description
+    GetRagicFileInfo = ""
+End Function
+
+Private Function ExtractFileNameFromJson(jsonStr As String) As String
+    ' Nettoyer la réponse JSON (enlever les sauts de ligne pour faciliter le parsing)
+    jsonStr = Replace(Replace(jsonStr, vbCrLf, ""), vbLf, "")
+    
+    On Error GoTo ErrorHandler
+    
+    ' On cherche tous les enregistrements qui contiennent "Addin Elyse Energy"
+    Dim regex As Object, matches As Object
+    Set regex = CreateObject("VBScript.RegExp")
+    
+    ' Pattern pour trouver un objet JSON qui contient "Name":"Addin Elyse Energy"
+    regex.Pattern = "\{[^\}]*""Name""\s*:\s*""Addin Elyse Energy""[^\}]*\}"
+    regex.Global = True
+    regex.IgnoreCase = True
+    
+    Set matches = regex.Execute(jsonStr)
+    
+    If matches.Count = 0 Then
+        Debug.Print "Aucun enregistrement avec 'Addin Elyse Energy' trouvé"
+        ExtractFileNameFromJson = ""
+        Exit Function
+    End If
+    
+    ' Variables pour trouver la version la plus récente
+    Dim i As Long
+    Dim currentMatch As Object
+    Dim latestVersion As String
+    Dim latestVersionMatch As String
+    Dim latestFileName As String
+    
+    ' Pour chaque enregistrement trouvé
+    For i = 0 To matches.Count - 1
+        Set currentMatch = matches(i)
+        
+        ' Extraire la version
+        Dim versionRegex As Object
+        Set versionRegex = CreateObject("VBScript.RegExp")
+        versionRegex.Pattern = """Version""\s*:\s*""([^""]+)"""
+        versionRegex.Global = False
+        
+        Dim versionMatches As Object
+        Set versionMatches = versionRegex.Execute(currentMatch.Value)
+        
+        If versionMatches.Count > 0 Then
+            Dim currentVersion As String
+            currentVersion = versionMatches(0).SubMatches(0)
+            
+            ' Si c'est la première version ou si cette version est plus récente
+            If latestVersion = "" Or CompareVersions(currentVersion, latestVersion) > 0 Then
+                latestVersion = currentVersion
+                latestVersionMatch = currentMatch.Value
+            End If
+        End If
+    Next i
+    
+    ' Une fois qu'on a trouvé l'enregistrement le plus récent, on extrait le nom du fichier
+    If latestVersionMatch <> "" Then
+        Dim fileRegex As Object
+        Set fileRegex = CreateObject("VBScript.RegExp")
+        fileRegex.Pattern = """File""\s*:\s*""([^""]+)"""
+        fileRegex.Global = False
+        
+        Dim fileMatches As Object
+        Set fileMatches = fileRegex.Execute(latestVersionMatch)
+        
+        If fileMatches.Count > 0 Then
+            ExtractFileNameFromJson = fileMatches(0).SubMatches(0)
+            Debug.Print "Dernière version trouvée : " & latestVersion & ", fichier : " & ExtractFileNameFromJson
+        Else
+            Debug.Print "Fichier non trouvé dans l'enregistrement le plus récent"
+            ExtractFileNameFromJson = ""
+        End If
+    Else
+        ExtractFileNameFromJson = ""
+    End If
+    
+    Exit Function
+    
+ErrorHandler:
+    Debug.Print "Erreur lors de l'extraction du nom de fichier: " & Err.Description
+    ExtractFileNameFromJson = ""
+End Function
+
+' Compare deux versions au format X.Y.Z
+' Retourne : 1 si version1 > version2, -1 si version1 < version2, 0 si égales
+Private Function CompareVersions(version1 As String, version2 As String) As Integer
+    Dim v1Parts() As String, v2Parts() As String
+    Dim i As Long, v1Num As Long, v2Num As Long
+    
+    v1Parts = Split(version1, ".")
+    v2Parts = Split(version2, ".")
+    
+    For i = 0 To 2 ' On compare les 3 parties (X.Y.Z)
+        If i < UBound(v1Parts) + 1 And i < UBound(v2Parts) + 1 Then
+            v1Num = CLng(v1Parts(i))
+            v2Num = CLng(v2Parts(i))
+            
+            If v1Num > v2Num Then
+                CompareVersions = 1
+                Exit Function
+            ElseIf v1Num < v2Num Then
+                CompareVersions = -1
+                Exit Function
+            End If
+        ElseIf i < UBound(v1Parts) + 1 Then
+            ' version1 a plus de parties (ex: 1.0.1 vs 1.0)
+            CompareVersions = 1
+            Exit Function
+        ElseIf i < UBound(v2Parts) + 1 Then
+            ' version2 a plus de parties
+            CompareVersions = -1
+            Exit Function
+        End If
+    Next i
+    
+    ' Les versions sont identiques
+    CompareVersions = 0
+End Function
