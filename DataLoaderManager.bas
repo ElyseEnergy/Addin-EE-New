@@ -107,6 +107,43 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
             ProcessCategorySimplified = False
             Exit Function
         End If
+    Else
+        ' Table exists, but check if it has data
+        If lo.DataBodyRange Is Nothing Then
+            Log "debug", "Table exists but is empty, forcing refresh...", WARNING_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
+            
+            ' Force refresh the table
+            On Error Resume Next
+            lo.QueryTable.Refresh BackgroundQuery:=False
+            On Error GoTo ErrorHandler
+            
+            ' Double-check after refresh
+            If lo.DataBodyRange Is Nothing Then
+                Log "debug", "Table still empty after refresh, trying to reload completely...", WARNING_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
+                
+                ' Delete and recreate the table
+                lo.Delete
+                
+                Dim lastCol As Long
+                lastCol = Utilities.GetLastColumn(wsPQData)
+                LoadQueries.LoadQuery categoryInfo.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+                
+                On Error Resume Next
+                Set lo = wsPQData.ListObjects(tableName)
+                On Error GoTo ErrorHandler
+                
+                If lo Is Nothing Or lo.DataBodyRange Is Nothing Then
+                    Log "debug", "CRITICAL: Cannot load table data even after recreating", ERROR_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
+                    Application.Cursor = xlDefault
+                    Application.StatusBar = False
+                    MsgBox "Impossible de charger les données de '" & categoryInfo.PowerQueryName & "'" & vbCrLf & _
+                           "La requête PowerQuery fonctionne mais le tableau Excel reste vide.", vbExclamation
+                    ProcessCategorySimplified = False
+                    Exit Function
+                End If
+            End If
+            Log "debug", "Table refresh successful", INFO_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
+        End If
     End If
     
     Application.Cursor = xlDefault
@@ -377,28 +414,40 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
             Set GetSelectedValuesWithMode = Nothing
             Exit Function
         End If
-    End If
-    
-    ' Validate table has data
-    If lo.DataBodyRange Is Nothing Then
-        Log "debug_selection", "Table has no data, attempting refresh...", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-        
-        ' Try to refresh the table
-        On Error Resume Next
-        lo.QueryTable.Refresh BackgroundQuery:=False
-        On Error GoTo ErrorHandler
-        
-        ' Check again after refresh
+    Else
+        ' Table exists, but force refresh if empty to sync with PowerQuery
         If lo.DataBodyRange Is Nothing Then
-            MsgBox "La table '" & Category.DisplayName & "' ne contient aucune donn�e apr�s actualisation." & vbCrLf & _
-                   "V�rifiez les Niveaux de Confidentialit� dans Donn�es > Options de la requ�te > Confidentialit�.", vbExclamation, "Aucune donn�e"
-            Log "debug_selection", "Table still has no data after refresh - possible privacy level issue", ERROR_LEVEL, PROC_NAME, MODULE_NAME
-            Set GetSelectedValuesWithMode = Nothing
-            Exit Function
-        Else
-            Log "debug_selection", "Table refresh successful, now has data", INFO_LEVEL, PROC_NAME, MODULE_NAME
+            Log "debug_selection", "Table exists but is empty, forcing refresh...", WARNING_LEVEL, PROC_NAME, MODULE_NAME
+            
+            On Error Resume Next
+            lo.QueryTable.Refresh BackgroundQuery:=False
+            On Error GoTo ErrorHandler
+            
+            ' If still empty after refresh, recreate the table
+            If lo.DataBodyRange Is Nothing Then
+                Log "debug_selection", "Table still empty, recreating...", WARNING_LEVEL, PROC_NAME, MODULE_NAME
+                lo.Delete
+                
+                Dim lastCol As Long
+                lastCol = Utilities.GetLastColumn(wsPQData)
+                LoadQueries.LoadQuery Category.PowerQueryName, wsPQData, wsPQData.Cells(1, lastCol + 1)
+                
+                On Error Resume Next
+                Set lo = wsPQData.ListObjects(tableName)
+                On Error GoTo ErrorHandler
+                
+                If lo Is Nothing Or lo.DataBodyRange Is Nothing Then
+                    MsgBox "La table '" & Category.DisplayName & "' ne peut pas être chargée." & vbCrLf & _
+                           "La requête PowerQuery fonctionne mais le tableau Excel reste vide.", vbExclamation, "Erreur de synchronisation"
+                    Log "debug_selection", "CRITICAL: Table recreation failed", ERROR_LEVEL, PROC_NAME, MODULE_NAME
+                    Set GetSelectedValuesWithMode = Nothing
+                    Exit Function
+                End If
+            End If
         End If
     End If
+    
+    ' Note: Table existence and data validation is now handled above in the improved logic
     
     Log "debug_selection", "Table loaded successfully with " & lo.DataBodyRange.Rows.count & " rows", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
