@@ -16,7 +16,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     Const PROC_NAME As String = "ProcessCategory"
     Const MODULE_NAME As String = "DataLoaderManager"
     
-    Log "dataloader", "Début ProcessCategory | Catégorie demandée: " & categoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "dataloader", "Dï¿½but ProcessCategory | Catï¿½gorie demandï¿½e: " & categoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' Initialize categories if needed
     If CategoriesCount = 0 Then InitCategories
@@ -26,8 +26,8 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     categoryInfo = GetCategoryByName(categoryName)
     
     If categoryInfo.DisplayName = "" Then
-        MsgBox "Catégorie '" & categoryName & "' non trouvée", vbExclamation
-        Log "dataloader", "ERREUR: Catégorie non trouvée: " & categoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        MsgBox "Catï¿½gorie '" & categoryName & "' non trouvï¿½e", vbExclamation
+        Log "dataloader", "ERREUR: Catï¿½gorie non trouvï¿½e: " & categoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
         ProcessCategory = False
         Exit Function
     End If
@@ -44,7 +44,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de la catégorie " & categoryName & ": " & Err.Description
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de la catï¿½gorie " & categoryName & ": " & Err.Description
     ' Only show error message for actual errors, not for False results
     ProcessCategory = False
 End Function
@@ -55,8 +55,8 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     
     Log "debug", "=== ProcessCategorySimplified START ===", DEBUG_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
     
-    ' Step 1: Ensure PQ_DATA sheet exists
-    Set wsPQData = GetOrCreatePQDataSheet()
+    ' Step 1: Ensure PQ_DATA sheet exists in the active workbook
+    Set wsPQData = GetOrCreatePQDataSheet(ActiveWorkbook)
     If wsPQData Is Nothing Then
         Log "debug", "ERROR: GetOrCreatePQDataSheet failed", ERROR_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
         MsgBox "Erreur lors de l'initialisation de la feuille PQ_DATA", vbExclamation
@@ -68,7 +68,7 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     ' Step 2: Ensure PowerQuery exists
     If Not PQQueryManager.EnsurePQQueryExists(categoryInfo) Then
         Log "debug", "ERROR: EnsurePQQueryExists failed", ERROR_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
-        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
+        MsgBox "Erreur lors de la crï¿½ation de la requï¿½te PowerQuery", vbExclamation
         ProcessCategorySimplified = False
         Exit Function
     End If
@@ -76,15 +76,16 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     
     ' Step 3: Set status and load data
     Application.Cursor = xlWait
-    Application.StatusBar = "Téléchargement des données pour '" & categoryInfo.DisplayName & "' en cours..."
+    Application.StatusBar = "Tï¿½lï¿½chargement des donnï¿½es pour '" & categoryInfo.DisplayName & "' en cours..."
     DoEvents
     
-    ' Ensure table is loaded
+    ' Ensure table is loaded in the correct workbook
     Dim tableName As String
     tableName = "Table_" & Utilities.SanitizeTableName(categoryInfo.PowerQueryName)
     
     Dim lo As ListObject
     On Error Resume Next
+    ' Utilise wsPQData qui pointe maintenant vers la feuille de l'addin
     Set lo = wsPQData.ListObjects(tableName)
     On Error GoTo ErrorHandler
     
@@ -310,15 +311,19 @@ End Function
 ' ADD these missing functions to DataLoaderManager.bas
 
 ' Fonction utilitaire pour garantir l'existence de la feuille PQ_DATA et la variable globale
-Public Function GetOrCreatePQDataSheet() As Worksheet
+Private Function GetOrCreatePQDataSheet(targetWb As Workbook) As Worksheet
     On Error Resume Next
-    Set GetOrCreatePQDataSheet = Worksheets("PQ_DATA")
-    On Error GoTo 0
-    If GetOrCreatePQDataSheet Is Nothing Then
-        Utilities.InitializePQData
-        Set GetOrCreatePQDataSheet = Worksheets("PQ_DATA")
+    Dim ws As Worksheet
+    ' Cible le classeur passï¿½ en paramï¿½tre (qui sera ActiveWorkbook)
+    Set ws = targetWb.Worksheets("PQ_DATA")
+    
+    If ws Is Nothing Then
+        Set ws = targetWb.Worksheets.Add
+        ws.Name = "PQ_DATA"
+        ' Pas besoin de cacher la feuille car elle est dans le classeur de l'utilisateur
     End If
-    Set wsPQData = GetOrCreatePQDataSheet
+    
+    Set GetOrCreatePQDataSheet = ws
 End Function
 
 ' UPDATED: GetSelectedValues function that now handles both category selection and mode selection
@@ -344,7 +349,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
     
     ' Ensure wsPQData exists
     If wsPQData Is Nothing Then
-        Set wsPQData = GetOrCreatePQDataSheet()
+        Set wsPQData = GetOrCreatePQDataSheet(ActiveWorkbook)
     End If
     
     ' Find or create the table
@@ -367,7 +372,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
         
         If lo Is Nothing Then
             MsgBox "Impossible de charger la table PowerQuery '" & Category.PowerQueryName & "'" & vbCrLf & _
-                   "Vérifiez votre connexion réseau et réessayez.", vbExclamation, "Erreur de chargement"
+                   "Vï¿½rifiez votre connexion rï¿½seau et rï¿½essayez.", vbExclamation, "Erreur de chargement"
             Log "debug_selection", "CRITICAL: Could not load table after LoadQuery", ERROR_LEVEL, PROC_NAME, MODULE_NAME
             Set GetSelectedValuesWithMode = Nothing
             Exit Function
@@ -376,10 +381,23 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
     
     ' Validate table has data
     If lo.DataBodyRange Is Nothing Then
-        MsgBox "La table '" & Category.DisplayName & "' ne contient aucune donnée.", vbExclamation, "Aucune donnée"
-        Log "debug_selection", "Table has no data", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-        Set GetSelectedValuesWithMode = Nothing
-        Exit Function
+        Log "debug_selection", "Table has no data, attempting refresh...", WARNING_LEVEL, PROC_NAME, MODULE_NAME
+        
+        ' Try to refresh the table
+        On Error Resume Next
+        lo.QueryTable.Refresh BackgroundQuery:=False
+        On Error GoTo ErrorHandler
+        
+        ' Check again after refresh
+        If lo.DataBodyRange Is Nothing Then
+            MsgBox "La table '" & Category.DisplayName & "' ne contient aucune donnï¿½e aprï¿½s actualisation." & vbCrLf & _
+                   "Vï¿½rifiez les Niveaux de Confidentialitï¿½ dans Donnï¿½es > Options de la requï¿½te > Confidentialitï¿½.", vbExclamation, "Aucune donnï¿½e"
+            Log "debug_selection", "Table still has no data after refresh - possible privacy level issue", ERROR_LEVEL, PROC_NAME, MODULE_NAME
+            Set GetSelectedValuesWithMode = Nothing
+            Exit Function
+        Else
+            Log "debug_selection", "Table refresh successful, now has data", INFO_LEVEL, PROC_NAME, MODULE_NAME
+        End If
     End If
     
     Log "debug_selection", "Table loaded successfully with " & lo.DataBodyRange.Rows.count & " rows", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
@@ -479,7 +497,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
             
             If categoryResult.count = 0 Then
                 Log "debug_selection", "No items selected in category form", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-                MsgBox "Veuillez sélectionner au moins un élément.", vbExclamation, "Aucune sélection"
+                MsgBox "Veuillez sï¿½lectionner au moins un ï¿½lï¿½ment.", vbExclamation, "Aucune sï¿½lection"
                 ' Loop will continue to show category form again
             Else
                 ' We have selections, show Mode Selection Form
@@ -550,9 +568,9 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
         Log "debug_selection", "Using InputBox for filtered category: " & Category.FilterLevel, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         
         Dim fallbackInput As String
-        fallbackInput = InputBox("Sélection simplifiée pour " & Category.DisplayName & vbCrLf & _
-                               "Entrez 'all' pour sélectionner tous les éléments:", _
-                               "Sélection " & Category.DisplayName, "all")
+        fallbackInput = InputBox("Sï¿½lection simplifiï¿½e pour " & Category.DisplayName & vbCrLf & _
+                               "Entrez 'all' pour sï¿½lectionner tous les ï¿½lï¿½ments:", _
+                               "Sï¿½lection " & Category.DisplayName, "all")
         
         If fallbackInput = "" Then
             Log "debug_selection", "User cancelled InputBox", WARNING_LEVEL, PROC_NAME, MODULE_NAME
@@ -634,7 +652,7 @@ Public Function ProcessDataToRange(Category As categoryInfo, selectedValues As C
     
     ' Make sure wsPQData is available
     If wsPQData Is Nothing Then
-        Set wsPQData = GetOrCreatePQDataSheet()
+        Set wsPQData = GetOrCreatePQDataSheet(ActiveWorkbook)
     End If
     
     On Error Resume Next
