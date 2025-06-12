@@ -236,7 +236,7 @@ def build_xlam():
         # 7. Nettoyage
         if excel:
             logging.debug("Nettoyage d'Excel...")
-            excel.DisplayAlerts = True
+            excel.DisplayAlerts = False
             # Ferme tous les classeurs restants sans sauvegarder avant de quitter
             for wb in excel.Workbooks:
                 try:

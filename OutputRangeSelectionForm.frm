@@ -421,15 +421,6 @@ Private Sub btnContinue_Click()
     If success Then
         m_wasDataProcessed = True
         
-        ' Show success message
-        ShowMessage "Energy equipment table created successfully!" & vbCrLf & vbCrLf & _
-                   "Table features:" & vbCrLf & _
-                   "? Professional Elyse Energy formatting" & vbCrLf & _
-                   "? Equipment specifications and coefficients" & vbCrLf & _
-                   "? Performance equations and ranges" & vbCrLf & _
-                   "? Excel table format for easy data management" & vbCrLf & vbCrLf & _
-                   "Title cell is now selected to show the full summary.", "Export Complete"
-        
         Me.Hide
     Else
         ShowError "Table creation failed. Please check your data and try again."
@@ -721,7 +712,7 @@ Public Function ProcessDataToRange(outputRange As Range, categoryDisplayName As 
     
     ' Copy data and create table using enhanced approach
     Dim success As Boolean
-    success = CreateElyseEnergyTable(sourceTable, selectedItems, outputRange, modeTransposed, progressForm)
+    success = CreateElyseEnergyTable(sourceTable, selectedItems, outputRange, modeTransposed, categoryDisplayName, progressForm)
     
     ' Update progress
     If Not progressForm Is Nothing Then
@@ -739,7 +730,7 @@ End Function
 ' ENHANCED TABLE CREATION WITH ELYSE ENERGY STYLING
 ' ========================================
 
-Private Function CreateElyseEnergyTable(sourceTable As ListObject, selectedItems As Collection, outputRange As Range, modeTransposed As Boolean, Optional progressForm As OutputRangeSelectionForm = Nothing) As Boolean
+Private Function CreateElyseEnergyTable(sourceTable As ListObject, selectedItems As Collection, outputRange As Range, modeTransposed As Boolean, categoryDisplayName As String, Optional progressForm As OutputRangeSelectionForm = Nothing) As Boolean
     On Error GoTo ErrorHandler
     
     Dim destSheet As Worksheet
@@ -767,17 +758,15 @@ Private Function CreateElyseEnergyTable(sourceTable As ListObject, selectedItems
         tableCols = filteredCols.count
     End If
     
-    ' Clear and prepare the area
+    ' Create summary header and get table start position
+    Dim tableStartRange As Range
+    Set tableStartRange = CreateSummaryHeader(outputRange, selectedItems.count, modeTransposed, sourceTable, selectedItems, categoryDisplayName)
+    
+    ' Clear and prepare the area for the table
     Dim tableRange As Range
-    Set tableRange = outputRange.Resize(tableRows, tableCols)
+    Set tableRange = tableStartRange.Resize(tableRows, tableCols)
     tableRange.Clear
     tableRange.ClearFormats
-    
-    ' Add summary header above the table (with dynamic content)
-    Call CreateSummaryHeader(outputRange, selectedItems.count, modeTransposed, sourceTable, selectedItems)
-    
-    ' Adjust table range to start below summary (reduced offset)
-    Set tableRange = outputRange.Resize(tableRows, tableCols)
     
     ' Update progress
     If Not progressForm Is Nothing Then
@@ -822,9 +811,7 @@ Private Function CreateElyseEnergyTable(sourceTable As ListObject, selectedItems
     ' SELECT THE TITLE CELL AT THE VERY END OF TABLE CREATION
     ' This ensures nothing else overrides our selection
     Application.ScreenUpdating = False
-    Dim titleCell As Range
-    Set titleCell = outputRange.Offset(-4, 0)
-    titleCell.Select
+    outputRange.Select ' The title is now in outputRange (the originally selected cell)
     Application.ScreenUpdating = True
     
     CreateElyseEnergyTable = True
@@ -835,7 +822,7 @@ ErrorHandler:
     CreateElyseEnergyTable = False
 End Function
 
-Private Sub CreateSummaryHeader(startRange As Range, itemCount As Long, isTransposed As Boolean, sourceTable As ListObject, selectedItems As Collection)
+Private Function CreateSummaryHeader(startRange As Range, itemCount As Long, isTransposed As Boolean, sourceTable As ListObject, selectedItems As Collection, categoryDisplayName As String) As Range
     Dim ws As Worksheet
     Set ws = startRange.Parent
     
@@ -847,58 +834,60 @@ Private Sub CreateSummaryHeader(startRange As Range, itemCount As Long, isTransp
         summaryData = ExtractSummaryFromTableData(sourceTable, firstItem)
     End If
     
-    ' Calculate the number of columns for merging
+    ' Calculate the number of columns for table
     Dim filteredCols As Collection
     Set filteredCols = GetFilteredColumns(sourceTable)
-    Dim mergeWidth As Long
-    mergeWidth = filteredCols.count
+    Dim tableWidth As Long
+    tableWidth = filteredCols.count
+    If tableWidth = 0 Then tableWidth = 10 ' Default width for clearing if no columns
     
-    ' Title (merge across table width)
-    Dim titleRange As Range
-    Set titleRange = ws.Range(startRange.Offset(-4, 0), startRange.Offset(-4, mergeWidth - 1))
-    With titleRange
-        .Merge
-        .Value = "ELYSE ENERGY - EQUIPMENT SPECIFICATIONS"
+    ' Clear area for header to avoid leftover formatting (approx. 5 rows)
+    startRange.Resize(5, tableWidth).Clear
+    
+    Dim currentRowOffset As Long
+    currentRowOffset = 0
+    
+    ' Title (in the first cell of the row, no merge)
+    With ws.Cells(startRange.Row + currentRowOffset, startRange.Column)
+        .Value = "ELYSE ENERGY - " & UCase(categoryDisplayName)
         .Font.Bold = True
         .Font.Size = 14
         .Font.Color = RGB(17, 36, 148)
-        .HorizontalAlignment = xlLeft
         .VerticalAlignment = xlCenter
-        .RowHeight = 25
     End With
+    ws.Rows(startRange.Row + currentRowOffset).RowHeight = 25
+    currentRowOffset = 1
     
-    ' Equipment info (merge across table width)
-    Dim infoRange As Range
-    Set infoRange = ws.Range(startRange.Offset(-3, 0), startRange.Offset(-3, mergeWidth - 1))
-    With infoRange
-        .Merge
+    ' Equipment info (in the first cell of the row, no merge)
+    With ws.Cells(startRange.Row + currentRowOffset, startRange.Column)
         .Value = "Equipment Count: " & itemCount & " | Layout: " & IIf(isTransposed, "Transposed", "Standard") & " | Generated: " & Format(Now, "yyyy-mm-dd hh:mm")
         .Font.Size = 10
         .Font.Color = RGB(67, 67, 67)
-        .HorizontalAlignment = xlLeft
         .VerticalAlignment = xlCenter
-        .RowHeight = 20
     End With
+    ws.Rows(startRange.Row + currentRowOffset).RowHeight = 20
+    currentRowOffset = 2
     
-    ' Dynamic summary from table data (merge across table width with proper height)
+    ' Dynamic summary from table data (in the first cell, spills over)
     If summaryData <> "" Then
-        Dim summaryRange As Range
-        Set summaryRange = ws.Range(startRange.Offset(-2, 0), startRange.Offset(-1, mergeWidth - 1))  ' Use 2 rows for height
-        With summaryRange
-            .Merge
+        With ws.Cells(startRange.Row + currentRowOffset, startRange.Column)
             .Value = summaryData
             .Font.Size = 9
             .Font.Color = RGB(100, 100, 100)
-            .HorizontalAlignment = xlLeft
             .VerticalAlignment = xlTop
-            .WrapText = True
-            .RowHeight = 50  ' Increased height for better readability
         End With
-        
-        ' Adjust table start position
-        Set startRange = startRange.Offset(1, 0)  ' Move table start down by 1 more row
+        ws.Rows(startRange.Row + currentRowOffset).RowHeight = 30  ' Give it some space
+        currentRowOffset = 3
+    Else
+        currentRowOffset = 3 ' Keep spacing consistent
     End If
-End Sub
+    
+    ' Blank row for spacing before the table
+    currentRowOffset = 4
+    
+    ' Return the starting cell for the table
+    Set CreateSummaryHeader = startRange.Offset(currentRowOffset, 0)
+End Function
 
 Private Function ExtractSummaryFromTableData(sourceTable As ListObject, selectedItem As Variant) As String
     On Error Resume Next
@@ -1217,6 +1206,13 @@ Private Function GetOrCreatePQDataSheet() As Worksheet
         Application.Run "Utilities.InitializePQData"
         On Error GoTo 0
         Set GetOrCreatePQDataSheet = Worksheets("PQ_DATA")
+    End If
+    
+    ' Ensure the sheet is very hidden
+    If Not GetOrCreatePQDataSheet Is Nothing Then
+        If GetOrCreatePQDataSheet.Visible <> xlSheetVeryHidden Then
+            GetOrCreatePQDataSheet.Visible = xlSheetVeryHidden
+        End If
     End If
 End Function
 

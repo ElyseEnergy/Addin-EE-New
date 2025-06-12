@@ -16,7 +16,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     Const PROC_NAME As String = "ProcessCategory"
     Const MODULE_NAME As String = "DataLoaderManager"
     
-    Log "dataloader", "D�but ProcessCategory | Cat�gorie demand�e: " & categoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    Log "dataloader", "Début ProcessCategory | Catégorie demandée: " & categoryName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' Initialize categories if needed
     If CategoriesCount = 0 Then InitCategories
@@ -26,8 +26,8 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     categoryInfo = GetCategoryByName(categoryName)
     
     If categoryInfo.DisplayName = "" Then
-        MsgBox "Cat�gorie '" & categoryName & "' non trouv�e", vbExclamation
-        Log "dataloader", "ERREUR: Cat�gorie non trouv�e: " & categoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        MsgBox "Catégorie '" & categoryName & "' non trouvée", vbExclamation
+        Log "dataloader", "ERREUR: Catégorie non trouvée: " & categoryName, ERROR_LEVEL, PROC_NAME, MODULE_NAME
         ProcessCategory = False
         Exit Function
     End If
@@ -44,7 +44,7 @@ Public Function ProcessCategory(categoryName As String, Optional errorMessage As
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de la cat�gorie " & categoryName & ": " & Err.Description
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de la catégorie " & categoryName & ": " & Err.Description
     ' Only show error message for actual errors, not for False results
     ProcessCategory = False
 End Function
@@ -69,7 +69,7 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     ' Step 2: Ensure PowerQuery exists
     If Not PQQueryManager.EnsurePQQueryExists(categoryInfo) Then
         Log "debug", "ERROR: EnsurePQQueryExists failed", ERROR_LEVEL, "ProcessCategorySimplified", "DataLoaderManager"
-        MsgBox "Erreur lors de la cr�ation de la requ�te PowerQuery", vbExclamation
+        MsgBox "Erreur lors de la création de la requête PowerQuery", vbExclamation
         ProcessCategorySimplified = False
         Exit Function
     End If
@@ -77,7 +77,7 @@ Private Function ProcessCategorySimplified(categoryInfo As categoryInfo) As Bool
     
     ' Step 3: Set status and load data
     Application.Cursor = xlWait
-    Application.StatusBar = "T�l�chargement des donn�es pour '" & categoryInfo.DisplayName & "' en cours..."
+    Application.StatusBar = "Téléchargement des données pour '" & categoryInfo.DisplayName & "' en cours..."
     DoEvents
     
     ' Ensure table is loaded in the correct workbook
@@ -352,7 +352,7 @@ End Function
 Private Function GetOrCreatePQDataSheet(targetWb As Workbook) As Worksheet
     On Error Resume Next
     Dim ws As Worksheet
-    ' Cible le classeur pass� en param�tre (qui sera ActiveWorkbook)
+    ' Cible le classeur passé en paramètre (qui sera ActiveWorkbook)
     Set ws = targetWb.Worksheets("PQ_DATA")
     
     If ws Is Nothing Then
@@ -411,7 +411,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
         
         If lo Is Nothing Then
             MsgBox "Impossible de charger la table PowerQuery '" & Category.PowerQueryName & "'" & vbCrLf & _
-                   "V�rifiez votre connexion r�seau et r�essayez.", vbExclamation, "Erreur de chargement"
+                   "Vérifiez votre connexion réseau et réessayez.", vbExclamation, "Erreur de chargement"
             Log "debug_selection", "CRITICAL: Could not load table after LoadQuery", ERROR_LEVEL, PROC_NAME, MODULE_NAME
             Set GetSelectedValuesWithMode = Nothing
             Exit Function
@@ -547,7 +547,7 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
             
             If categoryResult.count = 0 Then
                 Log "debug_selection", "No items selected in category form", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-                MsgBox "Veuillez s�lectionner au moins un �l�ment.", vbExclamation, "Aucune s�lection"
+                MsgBox "Veuillez sélectionner au moins un élément.", vbExclamation, "Aucune sélection"
                 ' Loop will continue to show category form again
             Else
                 ' We have selections, show Mode Selection Form
@@ -614,47 +614,97 @@ Private Function GetSelectedValuesWithMode(Category As categoryInfo, ByRef modeT
         End If
         
     Else
-        ' For filtered categories, use InputBox fallback for now
-        Log "debug_selection", "Using InputBox for filtered category: " & Category.FilterLevel, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        ' =================================================================
+        ' NEW 2-STEP FILTERING LOGIC (replaces InputBox fallback)
+        ' =================================================================
+        Log "debug_selection", "Using 2-step filtering for: " & Category.FilterLevel, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+
+        Dim filterColumnName As String
+        filterColumnName = Category.FilterLevel
+
+        ' --- STEP 1: Select Filter Values (e.g., Brands) ---
         
-        Dim fallbackInput As String
-        fallbackInput = InputBox("S�lection simplifi�e pour " & Category.DisplayName & vbCrLf & _
-                               "Entrez 'all' pour s�lectionner tous les �l�ments:", _
-                               "S�lection " & Category.DisplayName, "all")
-        
-        If fallbackInput = "" Then
-            Log "debug_selection", "User cancelled InputBox", WARNING_LEVEL, PROC_NAME, MODULE_NAME
+        ' Get unique values from the filter column
+        Dim filterValues As Collection
+        Set filterValues = GetUniqueColumnValues(lo, filterColumnName)
+
+        If filterValues Is Nothing Or filterValues.count = 0 Then
+            MsgBox "Could not find the filter column '" & filterColumnName & "' or it is empty.", vbExclamation, "Filter Error"
             Set GetSelectedValuesWithMode = Nothing
             Exit Function
-        ElseIf LCase(fallbackInput) = "all" Then
-            ' Select all items
-            Set GetSelectedValuesWithMode = New Collection
-            For i = 1 To lo.DataBodyRange.Rows.count
-                GetSelectedValuesWithMode.Add CStr(lo.DataBodyRange.Cells(i, 1).Value)
-            Next i
-            Log "debug_selection", "Fallback: Selected all " & GetSelectedValuesWithMode.count & " items", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-            
-            ' Show mode selection for fallback too
+        End If
+
+        ' Show form to select filter values
+        Dim filterSelectionForm As CategorySelectionForm
+        Set filterSelectionForm = New CategorySelectionForm
+        filterSelectionForm.SetupForm filterColumnName, CollectionToArray(filterValues)
+        filterSelectionForm.Show vbModal
+
+        ' Check result from filter selection
+        If filterSelectionForm.WasCancelled Then
+            Set GetSelectedValuesWithMode = Nothing
+            Unload filterSelectionForm
+            Exit Function
+        End If
+
+        Dim selectedFilters As Collection
+        Set selectedFilters = filterSelectionForm.GetSelectedValues
+        Unload filterSelectionForm
+        
+        If selectedFilters.count = 0 Then
+             Set GetSelectedValuesWithMode = Nothing
+             Exit Function
+        End If
+
+
+        ' --- STEP 2: Select Final Items based on Filter ---
+
+        ' Get items that match the selected filters
+        Dim finalItems As Collection
+        Set finalItems = GetFilteredItems(lo, filterColumnName, selectedFilters)
+
+        If finalItems.count = 0 Then
+            MsgBox "No items found for the selected " & filterColumnName & "(s).", vbInformation, "No Results"
+            Set GetSelectedValuesWithMode = Nothing
+            Exit Function
+        End If
+
+        ' Show form again to select final items
+        Dim itemSelectionForm As CategorySelectionForm
+        Set itemSelectionForm = New CategorySelectionForm
+        itemSelectionForm.SetupForm Category.DisplayName, CollectionToArray(finalItems)
+        itemSelectionForm.Show vbModal
+
+        ' Check result from final selection
+        If itemSelectionForm.WasCancelled Then
+            Set GetSelectedValuesWithMode = Nothing
+            Unload itemSelectionForm
+            Exit Function
+        End If
+
+        Dim selectedItems As Collection
+        Set selectedItems = itemSelectionForm.GetSelectedValues
+        Unload itemSelectionForm
+        
+        ' Convert display names back to IDs (the final result)
+        Set GetSelectedValuesWithMode = ConvertDisplayItemsToIDs(lo, selectedItems)
+        
+        ' After getting the final selection, now show the mode form
+        If Not GetSelectedValuesWithMode Is Nothing And GetSelectedValuesWithMode.count > 0 Then
             Dim fallbackModeForm As ModeSelectionForm
             Set fallbackModeForm = New ModeSelectionForm
-            
             fallbackModeForm.Show vbModal
-            
+
             If fallbackModeForm.WasCancelled Then
-                Log "debug_selection", "User cancelled mode selection in fallback", WARNING_LEVEL, PROC_NAME, MODULE_NAME
                 Set GetSelectedValuesWithMode = Nothing
-                Unload fallbackModeForm
-                Set fallbackModeForm = Nothing
-                Exit Function
+            Else
+                modeTransposed = fallbackModeForm.isTransposed
             End If
             
-            modeTransposed = fallbackModeForm.isTransposed
             Unload fallbackModeForm
             Set fallbackModeForm = Nothing
         Else
-            Log "debug_selection", "Invalid input in fallback", WARNING_LEVEL, PROC_NAME, MODULE_NAME
-            Set GetSelectedValuesWithMode = Nothing
-            Exit Function
+             Set GetSelectedValuesWithMode = Nothing
         End If
     End If
     
@@ -676,11 +726,116 @@ ErrorHandler:
         Unload modeForm
         Set modeForm = Nothing
     End If
-    If Not fallbackModeForm Is Nothing Then
-        Unload fallbackModeForm
-        Set fallbackModeForm = Nothing
+    If Not filterSelectionForm Is Nothing Then
+        Unload filterSelectionForm
+        Set filterSelectionForm = Nothing
+    End If
+    If Not itemSelectionForm Is Nothing Then
+        Unload itemSelectionForm
+        Set itemSelectionForm = Nothing
     End If
     On Error GoTo 0
+End Function
+
+' >>> ADD THE FOLLOWING NEW HELPER FUNCTIONS AT THE END OF THE MODULE <<<
+
+Private Function GetUniqueColumnValues(sourceTable As ListObject, columnName As String) As Collection
+    On Error GoTo ErrorHandler
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    Dim col As ListColumn
+    Set col = sourceTable.ListColumns(columnName)
+    
+    Dim cell As Range
+    For Each cell In col.DataBodyRange
+        If Not IsEmpty(cell.Value) And Trim(CStr(cell.Value)) <> "" Then
+            dict(CStr(cell.Value)) = 1
+        End If
+    Next cell
+    
+    Set GetUniqueColumnValues = New Collection
+    Dim key As Variant
+    For Each key In dict.Keys
+        GetUniqueColumnValues.Add key
+    Next key
+    
+    Exit Function
+ErrorHandler:
+    Set GetUniqueColumnValues = Nothing
+End Function
+
+Private Function CollectionToArray(col As Collection) As String()
+    On Error Resume Next
+    Dim arr() As String
+    ReDim arr(1 To col.count)
+    
+    Dim i As Long
+    For i = 1 To col.count
+        arr(i) = CStr(col(i))
+    Next i
+    
+    CollectionToArray = arr
+End Function
+
+Private Function GetFilteredItems(sourceTable As ListObject, filterColumnName As String, selectedFilters As Collection) As Collection
+    Dim results As New Collection
+    Dim dictSelectedFilters As Object
+    Set dictSelectedFilters = CreateObject("Scripting.Dictionary")
+    
+    Dim filter As Variant
+    For Each filter In selectedFilters
+        dictSelectedFilters(CStr(filter)) = 1
+    Next filter
+    
+    Dim filterCol As ListColumn
+    Set filterCol = sourceTable.ListColumns(filterColumnName)
+    
+    Dim idCol As ListColumn
+    Set idCol = sourceTable.ListColumns(1)
+    
+    Dim r As Long
+    For r = 1 To sourceTable.DataBodyRange.Rows.count
+        Dim filterValue As String
+        filterValue = CStr(sourceTable.DataBodyRange.Cells(r, filterCol.Index).Value)
+        
+        If dictSelectedFilters.Exists(filterValue) Then
+            Dim id As String, itemType As String, reference As String
+            On Error Resume Next
+            id = CStr(sourceTable.DataBodyRange.Cells(r, 1).Value)
+            If sourceTable.ListColumns.count >= 2 Then itemType = CStr(sourceTable.DataBodyRange.Cells(r, 2).Value)
+            If sourceTable.ListColumns.count >= 3 Then reference = CStr(sourceTable.DataBodyRange.Cells(r, 3).Value)
+            On Error GoTo 0
+
+            If itemType <> "" And reference <> "" Then
+                results.Add id & " - " & itemType & " (" & reference & ")"
+            ElseIf itemType <> "" Then
+                results.Add id & " - " & itemType
+            Else
+                results.Add "Item " & id
+            End If
+        End If
+    Next r
+    
+    Set GetFilteredItems = results
+End Function
+
+Private Function ConvertDisplayItemsToIDs(sourceTable As ListObject, selectedItems As Collection) As Collection
+    Dim results As New Collection
+    If selectedItems Is Nothing Or selectedItems.count = 0 Then
+        Set ConvertDisplayItemsToIDs = results
+        Exit Function
+    End If
+    
+    Dim item As Variant
+    For Each item In selectedItems
+        ' Extract the ID, which is the part before the first " - "
+        Dim id As String
+        id = Trim(Split(CStr(item), " - ")(0))
+        results.Add id
+    Next item
+    
+    Set ConvertDisplayItemsToIDs = results
 End Function
 
 ' Add this function to your DataLoaderManager.bas module
