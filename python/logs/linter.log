@@ -1,0 +1,350 @@
+--- Linter Log - 2025-06-11 22:12:59.697468 ---
+
+[WARNING] Dans 'AccessProfiles.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 19): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 28): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 32): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 36): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 40): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 44): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 48): Appel à 'addprofile' avec 3 arguments, mais entre 7 et 7 attendus.
+[CRITICAL] Dans 'AccessProfiles.bas', procédure 'initializedemoprofiles' (ligne 58): Appel à 'initializedemoprofiles' avec 2 arguments, mais entre 0 et 0 attendus.
+[WARNING] Dans 'CategoryManager.bas': 'Option Explicit' est manquant ou mal placé.
+[WARNING] Dans 'DataFormatter.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 31): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 41): Appel à 'log' avec 8 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 41): Appel à 'getcellprocessinginfo' avec 8 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 41): Appel à 'getcellprocessinginfo' avec 2 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 88): Appel à 'getcellprocessinginfo' avec 5 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'DataFormatter.bas', procédure 'getcellprocessinginfo' (ligne 88): Appel à 'getcellprocessinginfo' avec 2 arguments, mais entre 4 et 4 attendus.
+[WARNING] Dans 'DataInteraction.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'DataInteraction.bas', procédure 'getuniquevaluesforfilter' (ligne 185): Appel à 'getuniquevaluesforfilter' avec 1 arguments, mais entre 2 et 4 attendus.
+[WARNING] Dans 'DataLoaderManager.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 22): Appel à 'processdataload' avec 4 arguments, mais entre 1 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 33): Appel à 'ensurepqqueryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 49): Appel à 'queryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 57): Appel à 'ensurepqqueryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 60): Appel à 'ensurepqqueryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 65): Appel à 'ensurepqqueryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 74): Appel à 'loadquery' avec 1 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 75): Appel à 'loadquery' avec 4 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 90): Appel à 'loadquery' avec 1 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 91): Appel à 'loadquery' avec 4 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processdataload' (ligne 146): Appel à 'processdataload' avec 5 arguments, mais entre 1 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'cleanuppowerquery' (ligne 154): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processcategory' (ligne 189): Appel à 'processcategory' avec 4 arguments, mais entre 1 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processcategory' (ligne 209): Appel à 'processdataload' avec 4 arguments, mais entre 1 et 3 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processcategory' (ligne 210): Appel à 'queryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'processcategory' (ligne 222): Appel à 'processcategory' avec 5 arguments, mais entre 1 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'reloadselectedtable' (ligne 299): Appel à 'pastedata' avec 0 arguments, mais entre 1 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'reloadselectedtable' (ligne 312): Appel à 'reloadselectedtable' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'reloadalltables' (ligne 375): Appel à 'reloadalltables' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'reloadtable' (ligne 419): Appel à 'reloadtable' avec 5 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'reloadcurrenttableinternal' (ligne 479): Appel à 'reloadcurrenttableinternal' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'deletecurrenttable' (ligne 539): Appel à 'deletecurrenttable' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'getnormalsourcerange' (ligne 587): Appel à 'getnormalsourcerange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'getnormaltargetrange' (ligne 602): Appel à 'getnormaltargetrange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'gettransposedsourcerange' (ligne 646): Appel à 'gettransposedsourcerange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataLoaderManager.bas', procédure 'gettransposedtargetrange' (ligne 661): Appel à 'gettransposedtargetrange' avec 5 arguments, mais entre 2 et 2 attendus.
+[WARNING] Dans 'DataPasting.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'pastedata' (ligne 71): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'pastedata' (ligne 115): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'pastedata' (ligne 200): Appel à 'pastedata' avec 4 arguments, mais entre 1 et 2 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'pastedata' (ligne 204): Appel à 'pastedata' avec 5 arguments, mais entre 1 et 2 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'getnormalsourcerange' (ligne 272): Appel à 'getnormalsourcerange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'getnormaltargetrange' (ligne 286): Appel à 'getnormaltargetrange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'gettransposedsourcerange' (ligne 329): Appel à 'gettransposedsourcerange' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'DataPasting.bas', procédure 'gettransposedtargetrange' (ligne 343): Appel à 'gettransposedtargetrange' avec 5 arguments, mais entre 2 et 2 attendus.
+[WARNING] Dans 'Diagnostics.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'starttimer' (ligne 9): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'starttimer' (ligne 16): Appel à 'starttimer' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'stoptimer' (ligne 24): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'stoptimer' (ligne 42): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'stoptimer' (ligne 42): Appel à 'stoptimer' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtime' (ligne 50): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtime' (ligne 71): Appel à 'logtime' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtime' (ligne 77): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'waitandlogcalculation' (ligne 81): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'waitandlogcalculation' (ligne 101): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'waitandlogcalculation' (ligne 101): Appel à 'waitandlogcalculation' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'waitandlogcalculation' (ligne 110): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtosheet' (ligne 111): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtosheet' (ligne 122): Appel à 'log' avec 2 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtosheet' (ligne 143): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtosheet' (ligne 151): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logtosheet' (ligne 165): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Diagnostics.bas', procédure 'logleveltostring' (ligne 166): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[WARNING] Dans 'env.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'env.bas', procédure 'getragicapikey' (ligne 41): Appel à 'getragicapikey' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'env.bas', procédure 'getragicapikey' (ligne 41): Appel à 'getragicapikey' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'env.bas', procédure 'getragicapiparams' (ligne 60): Appel à 'getragicapiparams' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'env.bas', procédure 'getenvironmentvariable' (ligne 82): Appel à 'getenvironmentvariable' avec 5 arguments, mais entre 1 et 1 attendus.
+[WARNING] Dans 'FileManager.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'FileManager.bas', procédure 'processfileupload' (ligne 16): Appel à 'processfileupload' avec 5 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 29): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 37): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 37): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 53): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 60): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 69): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 78): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 84): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 87): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 101): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 107): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'uploadcurrentfile' (ligne 108): Appel à 'uploadcurrentfile' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'deletefile' (ligne 111): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'FileManager.bas', procédure 'getname' (ligne 124): Appel à 'getname' avec 5 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'FileManager.bas', procédure 'getfilename' (ligne 246): Appel à 'getfilename' avec 5 arguments, mais entre 1 et 1 attendus.
+[WARNING] Dans 'IdentityTester.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testvbanativemethods' (ligne 113): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getcurrentuserapi' (ligne 202): Appel à 'getcurrentuserapi' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getcomputernameapi' (ligne 219): Appel à 'getcomputernameapi' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getwmicomputersystem' (ligne 304): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getwmioperatingsystem' (ligne 334): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getwmiloggedonusers' (ligne 362): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testofficeinfo' (ligne 395): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testregistryinfo' (ligne 430): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testactivedirectory' (ligne 457): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testextendeduserinfo' (ligne 497): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getlocalgroups' (ligne 519): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'getsessioninfo' (ligne 572): Appel à 'getsessioninfo' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'savereporttofile' (ligne 578): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestusername' (ligne 606): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestusername' (ligne 615): Appel à 'quicktestusername' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestenvironment' (ligne 618): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestenvironment' (ligne 627): Appel à 'quicktestenvironment' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestapi' (ligne 630): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestapi' (ligne 638): Appel à 'quicktestapi' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestwmi' (ligne 641): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'quicktestwmi' (ligne 651): Appel à 'quicktestwmi' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'diagnoseissues' (ligne 705): Appel à 'diagnoseissues' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testragicapikey' (ligne 758): Appel à 'testragicapikey' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'IdentityTester.bas', procédure 'testgetusernameformats' (ligne 806): Appel à 'testgetusernameformats' avec 1 arguments, mais entre 0 et 0 attendus.
+[WARNING] Dans 'LoadQueries.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 7): Appel à 'loadquery' avec 2 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 12): Appel à 'loadquery' avec 2 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 17): Appel à 'loadquery' avec 2 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 25): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 58): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 63): Appel à 'loadquery' avec 2 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'LoadQueries.bas', procédure 'loadquery' (ligne 64): Appel à 'loadquery' avec 2 arguments, mais entre 3 et 3 attendus.
+[WARNING] Dans 'MiscCallbacks.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onopex' (ligne 15): Appel à 'onopex' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'reloadalltablescallback' (ligne 25): Appel à 'reloadalltablescallback' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'reloadcurrenttableclick' (ligne 36): Appel à 'reloadcurrenttableclick' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'deletecurrenttableclick' (ligne 47): Appel à 'deletecurrenttableclick' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onserverfiles' (ligne 57): Appel à 'onserverfiles' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'ontechecoanalysis' (ligne 67): Appel à 'ontechecoanalysis' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onbusinessplan' (ligne 77): Appel à 'onbusinessplan' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onelecoptim' (ligne 87): Appel à 'onelecoptim' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onlca' (ligne 97): Appel à 'onlca' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'MiscCallbacks.bas', procédure 'onsummarysheets' (ligne 107): Appel à 'onsummarysheets' avec 4 arguments, mais entre 1 et 1 attendus.
+[WARNING] Dans 'PQDebugTools.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 28): Appel à 'processinjectallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 29): Appel à 'processinjectallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 33): Appel à 'processinjectallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 38): Appel à 'processinjectallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 42): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processinjectallpowerqueries' (ligne 42): Appel à 'processinjectallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processcleanupallpowerqueries' (ligne 76): Appel à 'processcleanupallpowerqueries' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 115): Appel à 'processdebugragicdictionary' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 120): Appel à 'processdebugragicdictionary' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 125): Appel à 'processdebugragicdictionary' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 132): Appel à 'processdebugragicdictionary' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 134): Appel à 'testfield' avec 1 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 137): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'PQDebugTools.bas', procédure 'processdebugragicdictionary' (ligne 137): Appel à 'processdebugragicdictionary' avec 2 arguments, mais entre 1 et 1 attendus.
+[WARNING] Dans 'PQQueryManager.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'ensurepqqueryexists' (ligne 7): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'ensurepqqueryexists' (ligne 52): Appel à 'ensurepqqueryexists' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'ensurepqqueryexists' (ligne 52): Appel à 'ensurepqqueryexists' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'queryexists' (ligne 57): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'queryexists' (ligne 69): Appel à 'log' avec 2 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'addquerytopowerquery' (ligne 73): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'PQQueryManager.bas', procédure 'storecolumntypes' (ligne 117): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[WARNING] Dans 'RagicDictionary.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 114): Appel à 'tableexists' avec 1 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 118): Appel à 'tableexists' avec 4 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 118): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 123): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 123): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 124): Appel à 'tableexists' avec 4 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 124): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 128): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 140): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 147): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 156): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 167): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 179): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 192): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 198): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 200): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 209): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 222): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'loadragicdictionary' (ligne 228): Appel à 'loadragicdictionary' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'findbestrowforfield' (ligne 270): Appel à 'findbestrowforfield' avec 5 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'findbestrowforfield' (ligne 270): Appel à 'findbestrowforfield' avec 2 arguments, mais entre 3 et 3 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getvaluefromrow' (ligne 304): Appel à 'getvaluefromrow' avec 5 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getvaluefromrow' (ligne 304): Appel à 'getvaluefromrow' avec 2 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getvaluefromrow' (ligne 308): Appel à 'getvaluefromrow' avec 5 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getvaluefromrow' (ligne 308): Appel à 'getvaluefromrow' avec 2 arguments, mais entre 4 et 4 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'isfieldhidden' (ligne 342): Appel à 'isfieldhidden' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'isfieldhidden' (ligne 345): Appel à 'isfieldhidden' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'isfieldhidden' (ligne 350): Appel à 'isfieldhidden' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getorcreatepqdictsheet' (ligne 462): Appel à 'getorcreatepqdictsheet' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getorcreatepqdictsheet' (ligne 464): Appel à 'getorcreatepqdictsheet' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getorcreatepqdictsheet' (ligne 471): Appel à 'getorcreatepqdictsheet' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'testisfieldhiddenbudgetgroupes' (ligne 514): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getfieldragictype' (ligne 549): Appel à 'getfieldragictype' avec 5 arguments, mais entre 2 et 2 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getfieldragictype' (ligne 552): Appel à 'log' avec 6 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'RagicDictionary.bas', procédure 'getfieldragictype' (ligne 552): Appel à 'getfieldragictype' avec 6 arguments, mais entre 2 et 2 attendus.
+[WARNING] Dans 'RibbonVisibility.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'RibbonVisibility.bas', procédure 'ribbon_load' (ligne 21): Appel à 'delayedinitialization' avec 1 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'RibbonVisibility.bas', procédure 'delayedinitialization' (ligne 37): Appel à 'ribbon_load' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'RibbonVisibility.bas', procédure 'onselectdemoprofile' (ligne 81): Appel à 'onselectdemoprofile' avec 4 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'RibbonVisibility.bas', procédure 'invalidateribbon' (ligne 279): Appel à 'invalidateribbon' avec 4 arguments, mais entre 0 et 0 attendus.
+[WARNING] Dans 'SheetManager.bas': 'Option Explicit' est manquant ou mal placé.
+[WARNING] Dans 'SYS_ErrorHandler.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'initializeerrorhandler' (ligne 32): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'shutdownerrorhandler' (ligne 45): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'handleerror' (ligne 64): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'determineerrorseverity' (ligne 99): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'showerrormessage' (ligne 128): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'builderrorlogmessage' (ligne 164): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_ErrorHandler.bas', procédure 'getuserfriendlyerrorexplanation' (ligne 175): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[WARNING] Dans 'SYS_Logger.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'initializelogger' (ligne 36): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'initializelogger' (ligne 41): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'initializelogger' (ligne 47): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'initializelogger' (ligne 54): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'initializelogger' (ligne 55): Appel à 'initializelogger' avec 2 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'ensurelogfolderexists' (ligne 68): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'ensurelogfolderexists' (ligne 79): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'ensurelogfolderexists' (ligne 82): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'writetologfile' (ligne 83): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'writetologfile' (ligne 106): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'log' (ligne 109): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'log' (ligne 121): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'log' (ligne 156): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'jsonescape' (ligne 191): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'logtoragic' (ligne 192): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'setloglevel' (ligne 227): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'setloglevel' (ligne 233): Appel à 'log' avec 2 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'setloglevel' (ligne 237): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'setloglevel' (ligne 240): Appel à 'log' avec 0 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'purgeoldlogs' (ligne 241): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'SYS_Logger.bas', procédure 'purgeoldlogs' (ligne 265): Appel à 'purgeoldlogs' avec 2 arguments, mais entre 0 et 1 attendus.
+[WARNING] Dans 'TableManager.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'TableManager.bas', procédure 'tableexists' (ligne 46): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'TableManager.bas', procédure 'tableexists' (ligne 67): Appel à 'tableexists' avec 1 arguments, mais entre 2 et 2 attendus.
+[WARNING] Dans 'TableMetadata.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'TableMetadata.bas', procédure 'serializeloadinfo' (ligne 56): Appel à 'serializeloadinfo' avec 4 arguments, mais entre 1 et 1 attendus.
+[WARNING] Dans 'Technologies_Manager.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processh2electrolysismain' (ligne 5): Appel à 'processh2electrolysis' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processco2capturemain' (ligne 9): Appel à 'processco2capture' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processco2generalmain' (ligne 13): Appel à 'processco2general' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcompressionmain' (ligne 17): Appel à 'processcompression' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processh2generalmain' (ligne 21): Appel à 'processh2general' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmeohco2main' (ligne 25): Appel à 'processmeohco2' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmeohbiomassmain' (ligne 29): Appel à 'processmeohbiomass' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processsafbtjmain' (ligne 33): Appel à 'processsafbtj' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processsafmtjmain' (ligne 37): Appel à 'processsafmtj' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processchillermain' (ligne 41): Appel à 'processchiller' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcoolingwatermain' (ligne 45): Appel à 'processcoolingwater' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processheatprodmain' (ligne 49): Appel à 'processheatprod' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processotherutilmain' (ligne 53): Appel à 'processotherutil' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processpowerlossmain' (ligne 57): Appel à 'processpowerloss' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processwastewatermain' (ligne 61): Appel à 'processwastewater' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processwatertreatmain' (ligne 65): Appel à 'processwatertreat' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesbasemain' (ligne 70): Appel à 'processmetriquesbase' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesexpertmain' (ligne 74): Appel à 'processmetriquesexpert' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processtimingsreferencemain' (ligne 78): Appel à 'processtimingsreference' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesredmain' (ligne 82): Appel à 'processmetriquesred' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processemissionsmain' (ligne 86): Appel à 'processemissions' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralogmain' (ligne 90): Appel à 'processinfralog' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processbudgetcorpomain' (ligne 94): Appel à 'processbudgetcorpo' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdibmain' (ligne 98): Appel à 'processdib' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdemandesachatmain' (ligne 102): Appel à 'processdemandesachat' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processreceptionsmain' (ligne 106): Appel à 'processreceptions' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processscenariosmain' (ligne 110): Appel à 'processscenarios' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processplanningphasesmain' (ligne 114): Appel à 'processplanningphases' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processplanningsousmain' (ligne 118): Appel à 'processplanningsous' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdevexmain' (ligne 122): Appel à 'processdevex' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcapexmain' (ligne 126): Appel à 'processcapex' avec 2 arguments, mais entre 1 et 1 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processh2electrolysis' (ligne 129): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processco2capture' (ligne 142): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processco2general' (ligne 155): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcompression' (ligne 168): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processh2general' (ligne 181): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmeohco2' (ligne 194): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmeohbiomass' (ligne 207): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processsafbtj' (ligne 220): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processsafmtj' (ligne 233): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processchiller' (ligne 246): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcoolingwater' (ligne 259): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processheatprod' (ligne 272): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processotherutil' (ligne 285): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processpowerloss' (ligne 298): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processwastewater' (ligne 311): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processwatertreat' (ligne 324): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesbase' (ligne 337): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesexpert' (ligne 350): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processtimingsreference' (ligne 363): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processmetriquesred' (ligne 376): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processemissions' (ligne 389): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralog' (ligne 402): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralog' (ligne 407): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralog' (ligne 408): Appel à 'log' avec 2 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralog' (ligne 408): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processinfralog' (ligne 409): Appel à 'log' avec 1 arguments, mais entre 3 et 5 attendus.
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processbudgetcorpo' (ligne 415): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdib' (ligne 428): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdemandesachat' (ligne 441): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processreceptions' (ligne 454): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processscenarios' (ligne 467): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processplanningphases' (ligne 480): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processplanningsous' (ligne 493): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processbudgetprojet' (ligne 506): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processdevex' (ligne 518): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcapex' (ligne 531): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Technologies_Manager.bas', procédure 'processcapexepc' (ligne 544): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'ThisWorkbook.cls': L'attribut 'VB_Name' est manquant en début de fichier.
+[WARNING] Dans 'ThisWorkbook.cls': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'ThisWorkbook.cls', procédure 'workbook_sheetselectionchange' (ligne 9): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'ThisWorkbook.cls', procédure 'workbook_open' (ligne 18): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'ThisWorkbook.cls', procédure 'workbook_beforeclose' (ligne 26): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[WARNING] Dans 'Types.bas': 'Option Explicit' est manquant ou mal placé.
+[WARNING] Dans 'Utilities.bas': 'Option Explicit' est manquant ou mal placé.
+[CRITICAL] Dans 'Utilities.bas', procédure 'runstartuptasks' (ligne 21): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'runstartuptasks' (ligne 26): Appel à 'runstartuptasks' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'runstartuptasks' (ligne 34): Appel à 'runstartuptasks' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 42): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 52): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 62): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 66): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 70): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 74): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 80): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 85): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 90): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 97): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 102): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 107): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 113): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 120): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 123): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 126): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 129): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 137): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 139): Appel à 'warmuppowerqueryengine' avec 4 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'warmuppowerqueryengine' (ligne 144): Appel à 'warmuppowerqueryengine' avec 6 arguments, mais entre 0 et 0 attendus.
+[CRITICAL] Dans 'Utilities.bas', procédure 'initializepqdata' (ligne 151): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'getlastcolumn' (ligne 169): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'truncatewithellipsis' (ligne 178): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'sanitizetablename' (ligne 191): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'removediacritics' (ligne 246): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'getuseremail' (ligne 258): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'getuserupn' (ligne 279): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'getaddinversion' (ligne 297): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).
+[CRITICAL] Dans 'Utilities.bas', procédure 'getaddinversionsupertip' (ligne 306): semble ne pas avoir de gestion d'erreur complète (On Error GoTo, ErrorHandler:, Log, HandleError).

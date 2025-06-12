@@ -29,12 +29,16 @@ Public Const SECTION_HEADER_DEFAULT_FONT_COLOR As Long = 8421504 ' Medium Gray, 
 '==================================================================================================
 
 Public Function GetCellProcessingInfo(originalValue As Variant, sourceNumberFormat As String, fieldName As String, categorySheetName As String) As FormattedCellOutput
+    Const PROC_NAME As String = "GetCellProcessingInfo"
+    Const MODULE_NAME As String = "DataFormatter"
+    On Error GoTo ErrorHandler
+
     Dim out As FormattedCellOutput
     Dim ragicType As String
 
     ' Get the Ragic field type
     ragicType = RagicDictionary.GetFieldRagicType(categorySheetName, fieldName)
-    Log "GetCellProcessingInfo", "Category: '" & categorySheetName & "', Field: '" & fieldName & "', OriginalValue: '" & CStr(originalValue) & "', RagicType: '" & ragicType & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
+    SYS_Logger.Log "GetCellProcessingInfo", "Category: '" & categorySheetName & "', Field: '" & fieldName & "', OriginalValue: '" & CStr(originalValue) & "', RagicType: '" & ragicType & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
 
     ' Initialize default output values
     out.IsSectionHeader = False
@@ -73,7 +77,7 @@ Public Function GetCellProcessingInfo(originalValue As Variant, sourceNumberForm
                 out.FinalValue = originalValue
             End If
             out.NumberFormatString = "General" ' Permet d'utiliser les paramètres locaux pour les séparateurs
-            Log "GetCellProcessingInfo", "Conversion numérique: Original='" & CStr(originalValue) & "' -> Final='" & CStr(out.FinalValue) & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
+            SYS_Logger.Log "GetCellProcessingInfo", "Conversion numérique: Original='" & CStr(originalValue) & "' -> Final='" & CStr(out.FinalValue) & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
 
         Case "Text"
             ' Default is already Text format ("@") and original value
@@ -81,11 +85,22 @@ Public Function GetCellProcessingInfo(originalValue As Variant, sourceNumberForm
             out.NumberFormatString = "@"
             
         Case Else ' Includes any unknown types, treat as Text
-            Log "GetCellProcessingInfo", "Unknown RagicType: '" & ragicType & "' for field '" & fieldName & "'. Defaulting to Text.", WARNING_LEVEL, "GetCellProcessingInfo", "DataFormatter"
+            SYS_Logger.Log "GetCellProcessingInfo", "Unknown RagicType: '" & ragicType & "' for field '" & fieldName & "'. Defaulting to Text.", WARNING_LEVEL, "GetCellProcessingInfo", "DataFormatter"
             out.FinalValue = CStr(originalValue) ' Ensure it's a string
             out.NumberFormatString = "@"
     End Select
     
-    Log "GetCellProcessingInfo", "Output for '" & fieldName & "': FinalValue='" & CStr(out.FinalValue) & "', NumberFormat='" & out.NumberFormatString & "', IsSection=" & out.IsSectionHeader, DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
+    SYS_Logger.Log "GetCellProcessingInfo", "Output for '" & fieldName & "': FinalValue='" & CStr(out.FinalValue) & "', NumberFormat='" & out.NumberFormatString & "', IsSection=" & out.IsSectionHeader, DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
+    
     GetCellProcessingInfo = out
+    Exit Function
+
+ErrorHandler:
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Failed to process cell info for field '" & fieldName & "'."
+    ' En cas d'erreur, retourner un objet 'out' par défaut pour éviter de planter l'appelant
+    Dim defaultOut As FormattedCellOutput
+    defaultOut.FinalValue = "ERROR"
+    defaultOut.NumberFormatString = "@"
+    defaultOut.IsSectionHeader = False
+    GetCellProcessingInfo = defaultOut
 End Function

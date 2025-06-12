@@ -1,6 +1,4 @@
 Attribute VB_Name = "PQQueryManager"
-' Module: PQQueryManager
-' Gère la création et la vérification des requêtes PowerQuery
 Option Explicit
 
 Private mColumnTypes As Object ' Dictionnaire pour stocker les types de colonnes
@@ -57,30 +55,40 @@ End Function
 
 ' Vérifie si une requête PowerQuery existe
 Public Function QueryExists(queryName As String) As Boolean
-    On Error Resume Next
+    Const PROC_NAME As String = "QueryExists"
+    Const MODULE_NAME As String = "PQQueryManager"
+    On Error GoTo ErrorHandler
+    
     Dim query As Object
     Set query = ThisWorkbook.Queries(queryName)
     QueryExists = (Err.Number = 0)
-    On Error GoTo 0
+    Exit Function
+
+ErrorHandler:
+    QueryExists = False
+    ' Pas de log ici, la fonction est juste une vérification silencieuse
 End Function
 
 ' Ajoute une requête PowerQuery
 Public Function AddQueryToPowerQuery(queryName As String, query As String) As Boolean
-    On Error Resume Next
+    Const PROC_NAME As String = "AddQueryToPowerQuery"
+    Const MODULE_NAME As String = "PQQueryManager"
+    On Error GoTo ErrorHandler
+
     ThisWorkbook.Queries.Add queryName, query
-    Dim errNum As Long
-    errNum = Err.Number
-    If errNum <> 0 Then
-        Log "pq_add", "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, ERROR_LEVEL, "AddQueryToPowerQuery", "PQQueryManager"
-        AddQueryToPowerQuery = False
-    Else
-        AddQueryToPowerQuery = True
-    End If
-    On Error GoTo 0
+    AddQueryToPowerQuery = True
+    Exit Function
+
+ErrorHandler:
+    Log "pq_add_error", "Erreur lors de l'ajout de la requête " & queryName & ": " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    AddQueryToPowerQuery = False
 End Function
 
 ' Génère le template de requête PowerQuery
 Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
+    Const PROC_NAME As String = "GeneratePQQueryTemplate"
+    Const MODULE_NAME As String = "PQQueryManager"
+    On Error GoTo ErrorHandler
     Dim template As String
     ' Template de base pour charger les données depuis l'API Ragic avec réorganisation des colonnes
     template = "let" & vbCrLf & _
@@ -98,8 +106,12 @@ Private Function GeneratePQQueryTemplate(Category As CategoryInfo) As String
           "    TypedTable"
     
     GeneratePQQueryTemplate = template
+    Exit Function
+ErrorHandler:
+    SYS_Logger.Log "pq_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération du template PQ."
+    GeneratePQQueryTemplate = ""
 End Function
-
 
 ' Fonction pour stocker les types de colonnes d'une requête
 Private Sub StoreColumnTypes(queryName As String)
@@ -131,10 +143,20 @@ End Sub
 
 ' Fonction pour récupérer le type d'une colonne
 Public Function GetStoredColumnType(queryName As String, columnName As String) As String
+    Const PROC_NAME As String = "GetStoredColumnType"
+    Const MODULE_NAME As String = "PQQueryManager"
+    On Error GoTo ErrorHandler
+
     If mColumnTypes Is Nothing Then Exit Function
     If Not mColumnTypes.Exists(queryName) Then Exit Function
     If Not mColumnTypes(queryName).Exists(columnName) Then Exit Function
     
     GetStoredColumnType = mColumnTypes(queryName)(columnName)
+    Exit Function
+
+ErrorHandler:
+    GetStoredColumnType = "" ' Retourner une chaîne vide en cas d'erreur
+    SYS_Logger.Log "pq_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Failed to get stored column type for " & queryName & ":" & columnName
 End Function
 

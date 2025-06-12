@@ -53,19 +53,20 @@ Public Function SerializeLoadInfo(loadInfo As DataLoadInfo) As String
     Next j
 
     SerializeLoadInfo = Join(tempArray, META_DELIM)
+    SYS_Logger.Log PROC_NAME, "Métadonnées sérialisées: " & SerializeLoadInfo, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur de sérialisation"
+    SYS_Logger.Log "metadata_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur de sérialisation"
     SerializeLoadInfo = ""
 End Function
 
 ' Désérialise une chaîne de caractères en un objet DataLoadInfo.
-Public Function DeserializeLoadInfo(ByVal metadata As String) As DataLoadInfo
+Public Sub DeserializeLoadInfo(ByVal metadata As String, ByRef outLoadInfo As DataLoadInfo)
     On Error GoTo ErrorHandler
     Const PROC_NAME As String = "DeserializeLoadInfo"
-    
-    Dim outLoadInfo As DataLoadInfo
+    SYS_Logger.Log PROC_NAME, "Désérialisation des métadonnées: '" & metadata & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     
     ' S'assurer que les catégories sont initialisées avant de chercher dedans.
     If CategoryManager.CategoriesCount = 0 Then CategoryManager.InitCategories
@@ -87,8 +88,9 @@ Public Function DeserializeLoadInfo(ByVal metadata As String) As DataLoadInfo
         
         Select Case kvp(0)
             Case "CategoryName"
-                ' Retrouver la catégorie complète à partir du nom
-                outLoadInfo.Category = CategoryManager.GetCategoryByName(kvp(1))
+                ' Retrouver la catégorie complète à partir du nom interne (plus fiable)
+                outLoadInfo.Category = CategoryManager.GetCategoryByCategoryName(kvp(1))
+                SYS_Logger.Log PROC_NAME, "  > Catégorie trouvée: " & outLoadInfo.Category.DisplayName, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                 
             Case "SelectedValues"
                 If kvp(1) <> "" Then
@@ -98,20 +100,20 @@ Public Function DeserializeLoadInfo(ByVal metadata As String) As DataLoadInfo
                     For Each val In vals
                         outLoadInfo.SelectedValues.Add val
                     Next val
+                    SYS_Logger.Log PROC_NAME, "  > Valeurs sélectionnées: " & kvp(1), DEBUG_LEVEL, PROC_NAME, MODULE_NAME
                 End If
                 
             Case "ModeTransposed"
                 outLoadInfo.ModeTransposed = (LCase(kvp(1)) = "true")
+                SYS_Logger.Log PROC_NAME, "  > Mode transposé: " & outLoadInfo.ModeTransposed, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
         End Select
 NextPart:
     Next part
     
-    Set DeserializeLoadInfo = outLoadInfo
-    Exit Function
+    Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur de désérialisation"
-    ' En cas d'erreur, retourner un objet vide pour éviter les plantages
-    Dim emptyInfo As DataLoadInfo
-    Set DeserializeLoadInfo = emptyInfo
-End Function 
+    SYS_Logger.Log "metadata_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur de désérialisation"
+    ' Laisser outLoadInfo partiellement rempli ou vide en cas d'erreur
+End Sub

@@ -1,9 +1,6 @@
 Attribute VB_Name = "Types"
-' Module : Types.bas
-' Centralise tous les types personnalisés du projet
 Option Explicit
 
-' Type pour stocker les informations de catégorie
 Public Type CategoryInfo
     CategoryName As String        ' Technologies ou Utilities
     FilterLevel As String         ' Niveau de filtrage (Molecule Type, Brand, Type, etc.)

@@ -9,236 +9,223 @@ Option Explicit
 ' ==========================================
 
 Private Const MODULE_NAME As String = "DataPasting"
-Private m_tableComment As Comment ' Variable partagée pour la gestion des commentaires
 
 ' Colle les données avec la méthode optimisée
 Public Function PasteData(loadInfo As DataLoadInfo, Optional TargetTableName As String = "") As Boolean
     On Error GoTo ErrorHandler
     Const PROC_NAME As String = "PasteData"
     
-    ' Désactiver les mises à jour pour la performance
+    ' --- Déclarations ---
+    Dim destSheet As Worksheet
+    Dim sourceTable As ListObject
+    Dim visibleSourceColIndices As Collection
+    Dim headerProcessingInfo As Object ' Dictionary
+    Dim destRow As Long, destCol As Long
+    Dim colIdx As Long, i As Long, j As Long, k As Long
+    Dim v As Variant
+    Dim headerName As String
+    Dim sourceRowIndex As Long
+    Dim cellValue As Variant
+    Dim cellInfo As FormattedCellOutput
+    Dim finalRange As Range
+    Dim numRows As Long, numCols As Long
+    Dim lo As ListObject
+    Dim m_tableComment As Comment
+    
+    ' --- SETUP ---
+    SYS_Logger.Log PROC_NAME, "Début du collage pour la catégorie: " & loadInfo.Category.DisplayName & ". Mode transposé: " & loadInfo.ModeTransposed, INFO_LEVEL, PROC_NAME, MODULE_NAME
     Application.ScreenUpdating = False
     Application.Calculation = xlCalculationManual
     Application.EnableEvents = False
     
-    ' Récupérer la feuille de destination
-    Dim destSheet As Worksheet
     Set destSheet = loadInfo.FinalDestination.Parent
-    
-    ' Déprotéger la feuille pour les modifications
     destSheet.Unprotect
     
-    ' Récupérer la table source
-    Dim sourceTable As ListObject
     Set sourceTable = DataLoaderManager.GetOrCreatePQDataSheet.ListObjects("Table_" & Utilities.SanitizeTableName(loadInfo.Category.PowerQueryName))
     
-    ' Préparer les plages source et cible
-    Dim sourceRange As Range
-    Dim targetRange As Range
+    ' --- PRÉ-CALCUL DES COLONNES VISIBLES ---
+    Set visibleSourceColIndices = New Collection
+    Set headerProcessingInfo = CreateObject("Scripting.Dictionary")
     
-    ' Déterminer les plages en fonction du mode (normal ou transposé)
+    For colIdx = 1 To sourceTable.ListColumns.Count
+        headerName = CStr(sourceTable.HeaderRowRange.Cells(1, colIdx).Value)
+        
+        If Not RagicDictionary.IsFieldHidden(loadInfo.Category.SheetName, headerName) Then
+            visibleSourceColIndices.Add colIdx
+            headerProcessingInfo(headerName) = RagicDictionary.GetFieldRagicType(loadInfo.Category.SheetName, headerName)
+        End If
+    Next colIdx
+    Log PROC_NAME, "Pré-calcul terminé. " & visibleSourceColIndices.Count & " colonnes visibles à traiter.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+    
+    ' --- COLLAGE DES DONNÉES ---
+    destRow = loadInfo.FinalDestination.Row
+    destCol = loadInfo.FinalDestination.Column
+    
     If loadInfo.ModeTransposed Then
-        ' Mode transposé : les fiches deviennent des colonnes
-        Set sourceRange = GetTransposedSourceRange(sourceTable, loadInfo.SelectedValues)
-        Set targetRange = GetTransposedTargetRange(loadInfo.FinalDestination, sourceRange)
+        ' --- MODE TRANSPOSÉ ---
+        
+        ' 1. Coller les en-têtes de ligne
+        For i = 1 To visibleSourceColIndices.Count
+            colIdx = visibleSourceColIndices(i)
+            headerName = sourceTable.HeaderRowRange.Cells(1, colIdx).Value
+            Log PROC_NAME, "Collage en-tête transposé: '" & headerName & "' en " & destSheet.Cells(destRow + i - 1, destCol).Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+            With destSheet.Cells(destRow + i - 1, destCol)
+                .Value = headerName
+                .NumberFormat = "@"
+                If headerProcessingInfo(headerName) = "Section" Then
+                    .Font.Bold = True
+                    .Font.Size = .Font.Size + 3
+                    .Font.Color = DataFormatter.SECTION_HEADER_DEFAULT_FONT_COLOR
+                End If
+            End With
+        Next i
+        
+        ' 2. Coller les données
+        k = 0
+        For Each v In loadInfo.SelectedValues
+            k = k + 1
+            sourceRowIndex = FindRowIndexInTable(sourceTable, v)
+            
+            If sourceRowIndex > 0 Then
+                Log PROC_NAME, "Traitement ID " & v & " (ligne source " & sourceRowIndex & ")", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+                For i = 1 To visibleSourceColIndices.Count
+                    colIdx = visibleSourceColIndices(i)
+                    headerName = sourceTable.HeaderRowRange.Cells(1, colIdx).Value
+                    cellValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, colIdx).Value
+                    
+                    cellInfo = DataFormatter.GetCellProcessingInfo(cellValue, "", headerName, loadInfo.Category.SheetName)
+                    Log PROC_NAME, "  > Champ '" & headerName & "': Valeur='" & cellInfo.FinalValue & "', Format='" & cellInfo.NumberFormatString & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+                    
+                    With destSheet.Cells(destRow + i - 1, destCol + k)
+                        .Value = cellInfo.FinalValue
+                        .NumberFormat = cellInfo.NumberFormatString
+                    End With
+                Next i
+            Else
+                Log PROC_NAME, "ID non trouvé dans la table source: " & v, WARNING_LEVEL, PROC_NAME, MODULE_NAME
+            End If
+        Next v
     Else
-        ' Mode normal : les fiches restent des lignes
-        Set sourceRange = GetNormalSourceRange(sourceTable, loadInfo.SelectedValues)
-        Set targetRange = GetNormalTargetRange(loadInfo.FinalDestination, sourceRange)
+        ' --- MODE NORMAL ---
+        
+        ' 1. Coller les en-têtes de colonne
+        For i = 1 To visibleSourceColIndices.Count
+            colIdx = visibleSourceColIndices(i)
+            headerName = sourceTable.HeaderRowRange.Cells(1, colIdx).Value
+            Log PROC_NAME, "Collage en-tête normal: '" & headerName & "' en " & destSheet.Cells(destRow, destCol + i - 1).Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+            With destSheet.Cells(destRow, destCol + i - 1)
+                .Value = headerName
+                .NumberFormat = "@"
+                If headerProcessingInfo(headerName) = "Section" Then
+                    .Font.Bold = True
+                    .Font.Size = .Font.Size + 3
+                    .Font.Color = DataFormatter.SECTION_HEADER_DEFAULT_FONT_COLOR
+                End If
+            End With
+        Next i
+        
+        ' 2. Coller les données
+        k = 0
+        For Each v In loadInfo.SelectedValues
+            k = k + 1
+            sourceRowIndex = FindRowIndexInTable(sourceTable, v)
+            
+            If sourceRowIndex > 0 Then
+                Log PROC_NAME, "Traitement ID " & v & " (ligne source " & sourceRowIndex & ")", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+                For i = 1 To visibleSourceColIndices.Count
+                    colIdx = visibleSourceColIndices(i)
+                    headerName = sourceTable.HeaderRowRange.Cells(1, colIdx).Value
+                    cellValue = sourceTable.DataBodyRange.Cells(sourceRowIndex, colIdx).Value
+                    
+                    cellInfo = DataFormatter.GetCellProcessingInfo(cellValue, "", headerName, loadInfo.Category.SheetName)
+                    Log PROC_NAME, "  > Champ '" & headerName & "': Valeur='" & cellInfo.FinalValue & "', Format='" & cellInfo.NumberFormatString & "'", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+                    
+                    With destSheet.Cells(destRow + k, destCol + i - 1)
+                        .Value = cellInfo.FinalValue
+                        .NumberFormat = cellInfo.NumberFormatString
+                    End With
+                Next i
+            Else
+                Log PROC_NAME, "ID non trouvé dans la table source: " & v, WARNING_LEVEL, PROC_NAME, MODULE_NAME
+            End If
+        Next v
     End If
     
-    ' Coller les données
+    ' --- CRÉATION/MISE À JOUR DU TABLEAU EXCEL ---
     If loadInfo.ModeTransposed Then
-        ' En mode transposé, on doit copier puis transposer
-        sourceRange.Copy
-        targetRange.PasteSpecial Paste:=xlPasteAll, Operation:=xlNone, SkipBlanks:=False, Transpose:=True
+        numRows = visibleSourceColIndices.Count
+        numCols = loadInfo.SelectedValues.Count + 1
     Else
-        ' En mode normal, simple copier-coller
-        sourceRange.Copy targetRange
+        numRows = loadInfo.SelectedValues.Count + 1
+        numCols = visibleSourceColIndices.Count
     End If
     
-    ' Nettoyer le presse-papiers
-    Application.CutCopyMode = False
+    Set finalRange = destSheet.Range(loadInfo.FinalDestination, loadInfo.FinalDestination.Offset(numRows - 1, numCols - 1))
     
-    ' Créer ou mettre à jour le ListObject
-    Dim lo As ListObject
-    Dim existingTable As ListObject
-    
-    ' Vérifier si le tableau existe déjà
     On Error Resume Next
-    If TargetTableName <> "" Then
-        Set existingTable = destSheet.ListObjects(TargetTableName)
-    End If
+    Set lo = destSheet.ListObjects(TargetTableName)
     On Error GoTo ErrorHandler
-
-    If Not existingTable Is Nothing Then
-        ' --- MISE À JOUR NON-DESTRUCTIVE ---
-        Set lo = existingTable
-        ' 1. Vider les anciennes données et en-têtes sans supprimer le ListObject
-        lo.DataBodyRange.ClearContents
-        lo.HeaderRowRange.ClearContents
-        ' 2. Redimensionner le tableau pour les nouvelles données
-        lo.Resize targetRange
-    Else
-        ' --- CRÉATION CLASSIQUE ---
-        Set lo = destSheet.ListObjects.Add(xlSrcRange, targetRange, , xlYes)
+    
+    If lo Is Nothing Then
+        Log PROC_NAME, "Création d'un nouveau tableau Excel dans la plage " & finalRange.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        Set lo = destSheet.ListObjects.Add(xlSrcRange, finalRange, , xlYes)
         If TargetTableName <> "" Then
             lo.Name = TargetTableName
         Else
             lo.Name = TableManager.GetUniqueTableName(loadInfo.Category.CategoryName)
         End If
+    Else
+        Log PROC_NAME, "Mise à jour du tableau existant '" & lo.Name & "' vers la plage " & finalRange.Address, DEBUG_LEVEL, PROC_NAME, MODULE_NAME
+        lo.Resize finalRange
     End If
-    
-    ' Le reste du collage des données (qui se fait sur la feuille) est déjà fait avant.
-    ' Ici on s'assure juste que le ListObject est bien défini.
 
-    ' Appliquer le style de tableau par défaut
     lo.TableStyle = "TableStyleMedium2"
-    
-    ' Verrouiller le nouveau tableau
     lo.Range.Locked = True
     
-    ' Protéger la feuille avec les paramètres standard
-    destSheet.Protect UserInterfaceOnly:=True, _
-        AllowFormattingCells:=True, _
-        AllowFormattingColumns:=True, _
-        AllowFormattingRows:=True, _
-        AllowInsertingColumns:=True, _
-        AllowInsertingRows:=True, _
-        AllowInsertingHyperlinks:=True, _
-        AllowDeletingColumns:=True, _
-        AllowDeletingRows:=True, _
-        AllowSorting:=True, _
-        AllowFiltering:=True, _
-        AllowUsingPivotTables:=True
-    
-    ' Sauvegarder les métadonnées dans un commentaire
+    ' Sauvegarder les métadonnées
     Set m_tableComment = lo.Range.Cells(1, 1).Comment
     If Not m_tableComment Is Nothing Then m_tableComment.Delete
     Set m_tableComment = lo.Range.Cells(1, 1).AddComment
     m_tableComment.Text TableMetadata.SerializeLoadInfo(loadInfo)
+    Log PROC_NAME, "Métadonnées sauvegardées dans le commentaire du tableau '" & lo.Name & "'.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME
     m_tableComment.Visible = False
 
     PasteData = True
 
 CleanupAndExit:
+    destSheet.Protect UserInterfaceOnly:=True, AllowFiltering:=True, AllowSorting:=True
     Application.ScreenUpdating = True
     Application.Calculation = xlCalculationAutomatic
     Application.EnableEvents = True
+    Log PROC_NAME, "Collage terminé. Statut du succès: " & PasteData, INFO_LEVEL, PROC_NAME, MODULE_NAME
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du collage des données"
+    SYS_Logger.Log "pasting_error", "Erreur VBA dans PasteData - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors du collage des données"
     PasteData = False
     Resume CleanupAndExit
 End Function
 
-' Obtient la plage source pour le mode normal (lignes)
-Private Function GetNormalSourceRange(ByVal sourceTable As ListObject, ByVal selectedValues As Collection) As Range
-    Const PROC_NAME As String = "GetNormalSourceRange"
-    On Error GoTo ErrorHandler
-    
-    ' Créer une collection pour stocker les lignes à inclure
-    Dim selectedRows As Collection
-    Set selectedRows = New Collection
-    
-    ' Ajouter la ligne d'en-tête
-    selectedRows.Add 1
-    
-    ' Trouver les lignes correspondant aux valeurs sélectionnées
-    Dim v As Variant
-    Dim rowIndex As Long
-    For Each v In selectedValues
-        For rowIndex = 1 To sourceTable.DataBodyRange.Rows.Count
-            If CStr(sourceTable.DataBodyRange.Cells(rowIndex, 1).Value) = CStr(v) Then
-                selectedRows.Add rowIndex + 1 ' +1 car la ligne d'en-tête est 1
-                Exit For
-            End If
-        Next rowIndex
-    Next v
-    
-    ' Créer un tableau pour stocker les adresses des lignes
-    Dim rowAddresses() As String
-    ReDim rowAddresses(1 To selectedRows.Count)
-    
-    ' Construire les adresses des lignes
-    Dim i As Long
-    For i = 1 To selectedRows.Count
-        rowAddresses(i) = sourceTable.Range.Rows(selectedRows(i)).Address
-    Next i
-    
-    ' Créer la plage union
-    Set GetNormalSourceRange = Application.Union(sourceTable.Range.Worksheet.Range(Join(rowAddresses, ",")))
-    
-    Exit Function
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création de la plage source en mode normal"
-End Function
+' --- Fonctions d'aide privées ---
 
-' Obtient la plage cible pour le mode normal (lignes)
-Private Function GetNormalTargetRange(ByVal targetCell As Range, ByVal sourceRange As Range) As Range
-    Const PROC_NAME As String = "GetNormalTargetRange"
+' Trouve l'index de ligne dans une table source basé sur une valeur ID
+Private Function FindRowIndexInTable(ByVal table As ListObject, ByVal idValue As Variant) As Long
+    Const PROC_NAME As String = "FindRowIndexInTable"
     On Error GoTo ErrorHandler
     
-    ' La plage cible a la même taille que la plage source
-    Set GetNormalTargetRange = targetCell.Resize(sourceRange.Rows.Count, sourceRange.Columns.Count)
+    FindRowIndexInTable = Application.WorksheetFunction.Match(CLng(idValue), table.ListColumns(1).DataBodyRange, 0)
     
     Exit Function
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création de la plage cible en mode normal"
+    ' Si Match ne trouve rien, il déclenche une erreur. C'est le comportement attendu.
+    ' On retourne 0 pour indiquer "non trouvé".
+    If Err.Number = 1004 Then ' Erreur "Unable to get the Match property of the WorksheetFunction class"
+        FindRowIndexInTable = 0
+    Else
+        ' Pour toute autre erreur, on logue et on la remonte.
+        SYS_Logger.Log "pasting_error", "Erreur VBA inattendue dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+        SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la recherche de la ligne pour l'ID " & idValue
+        FindRowIndexInTable = 0 ' Retourner 0 en cas d'erreur
+    End If
 End Function
-
-' Obtient la plage source pour le mode transposé (colonnes)
-Private Function GetTransposedSourceRange(ByVal sourceTable As ListObject, ByVal selectedValues As Collection) As Range
-    Const PROC_NAME As String = "GetTransposedSourceRange"
-    On Error GoTo ErrorHandler
-    
-    ' Créer une collection pour stocker les lignes à inclure
-    Dim selectedRows As Collection
-    Set selectedRows = New Collection
-    
-    ' Ajouter la ligne d'en-tête
-    selectedRows.Add 1
-    
-    ' Trouver les lignes correspondant aux valeurs sélectionnées
-    Dim v As Variant
-    Dim rowIndex As Long
-    For Each v In selectedValues
-        For rowIndex = 1 To sourceTable.DataBodyRange.Rows.Count
-            If CStr(sourceTable.DataBodyRange.Cells(rowIndex, 1).Value) = CStr(v) Then
-                selectedRows.Add rowIndex + 1 ' +1 car la ligne d'en-tête est 1
-                Exit For
-            End If
-        Next rowIndex
-    Next v
-    
-    ' Créer un tableau pour stocker les adresses des lignes
-    Dim rowAddresses() As String
-    ReDim rowAddresses(1 To selectedRows.Count)
-    
-    ' Construire les adresses des lignes
-    Dim i As Long
-    For i = 1 To selectedRows.Count
-        rowAddresses(i) = sourceTable.Range.Rows(selectedRows(i)).Address
-    Next i
-    
-    ' Créer la plage union
-    Set GetTransposedSourceRange = Application.Union(sourceTable.Range.Worksheet.Range(Join(rowAddresses, ",")))
-    
-    Exit Function
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création de la plage source en mode transposé"
-End Function
-
-' Obtient la plage cible pour le mode transposé (colonnes)
-Private Function GetTransposedTargetRange(ByVal targetCell As Range, ByVal sourceRange As Range) As Range
-    Const PROC_NAME As String = "GetTransposedTargetRange"
-    On Error GoTo ErrorHandler
-    
-    ' En mode transposé, on inverse les dimensions
-    Set GetTransposedTargetRange = targetCell.Resize(sourceRange.Columns.Count, sourceRange.Rows.Count)
-    
-    Exit Function
-ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création de la plage cible en mode transposé"
-End Function 

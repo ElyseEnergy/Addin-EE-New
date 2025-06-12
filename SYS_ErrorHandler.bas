@@ -33,7 +33,7 @@ Public Function InitializeErrorHandler() As Boolean
     On Error GoTo ErrorHandler
     
     mErrorHandlerActive = True
-    Log "error_handler_init", "Error handler initialized", INFO_LEVEL
+    SYS_Logger.Log "error_handler_init", "Error handler initialized", INFO_LEVEL
     
     InitializeErrorHandler = True
     Exit Function
@@ -43,10 +43,19 @@ ErrorHandler:
 End Function
 
 Public Sub ShutdownErrorHandler()
+    Const PROC_NAME As String = "ShutdownErrorHandler"
+    Const MODULE_NAME As String = "SYS_ErrorHandler"
+    On Error GoTo ErrorHandler
+
     If Not mErrorHandlerActive Then Exit Sub
     
-    Log "error_handler_shutdown", "Error handler shutdown", INFO_LEVEL
+    SYS_Logger.Log "error_handler_shutdown", "Error handler shutdown", INFO_LEVEL
     mErrorHandlerActive = False
+    Exit Sub
+
+ErrorHandler:
+    ' Ne pas appeler HandleError ici pour éviter une boucle infinie.
+    Debug.Print "CRITICAL ERROR in " & MODULE_NAME & "." & PROC_NAME & ": " & Err.Description
 End Sub
 
 ' ============================================================================
@@ -72,7 +81,7 @@ Public Sub HandleError(ByVal moduleName As String, ByVal procedureName As String
     severity = DetermineErrorSeverity(errorCtx)
     
     ' Loguer l'erreur
-    Log "error_occurred", BuildErrorLogMessage(errorCtx), severity
+    SYS_Logger.Log "error_occurred", BuildErrorLogMessage(errorCtx), ConvertSeverityToLogLevel(severity)
     
     ' Afficher le message approprié
     ShowErrorMessage errorCtx, severity
@@ -88,7 +97,22 @@ End Sub
 ' FONCTIONS UTILITAIRES
 ' ============================================================================
 
+Private Function ConvertSeverityToLogLevel(ByVal severity As ErrorSeverity) As LogLevel
+    Select Case severity
+        Case LOW_SEVERITY
+            ConvertSeverityToLogLevel = WARNING_LEVEL
+        Case MEDIUM_SEVERITY
+            ConvertSeverityToLogLevel = ERROR_LEVEL
+        Case HIGH_SEVERITY, CRITICAL_SEVERITY
+            ConvertSeverityToLogLevel = CRITICAL_LEVEL
+        Case Else
+            ConvertSeverityToLogLevel = INFO_LEVEL
+    End Select
+End Function
+
 Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeverity
+    Const PROC_NAME As String = "DetermineErrorSeverity"
+    On Error GoTo ErrorHandler
     Select Case errorCtx.errorNumber
         Case 1004, 1016 ' Erreurs de plage
             DetermineErrorSeverity = LOW_SEVERITY
@@ -110,9 +134,14 @@ Private Function DetermineErrorSeverity(errorCtx As ErrorContext) As ErrorSeveri
                 DetermineErrorSeverity = MEDIUM_SEVERITY
             End If
     End Select
+    Exit Function
+ErrorHandler:
+    DetermineErrorSeverity = CRITICAL_SEVERITY ' Si la détermination échoue, on est prudent
 End Function
 
 Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity)
+    Const PROC_NAME As String = "ShowErrorMessage"
+    On Error GoTo ErrorHandler
     Dim title As String
     Dim message As String
     
@@ -141,15 +170,25 @@ Private Sub ShowErrorMessage(errorCtx As ErrorContext, severity As ErrorSeverity
     
     ' Afficher le message
     MsgBox message, IIf(severity >= HIGH_SEVERITY, vbCritical, vbExclamation), title
+    Exit Sub
+ErrorHandler:
+    MsgBox "Erreur lors de l'affichage du message d'erreur. " & Err.Description, vbCritical
 End Sub
 
 Private Function BuildErrorLogMessage(errorCtx As ErrorContext) As String
+    Const PROC_NAME As String = "BuildErrorLogMessage"
+    On Error GoTo ErrorHandler
     BuildErrorLogMessage = "Error " & errorCtx.errorNumber & " in " & _
                           errorCtx.moduleName & "." & errorCtx.procedureName & ": " & _
                           errorCtx.ErrorDescription
+    Exit Function
+ErrorHandler:
+    BuildErrorLogMessage = "Failed to build error log message."
 End Function
 
 Private Function GetUserFriendlyErrorExplanation(errorNumber As Long) As String
+    Const PROC_NAME As String = "GetUserFriendlyErrorExplanation"
+    On Error GoTo ErrorHandler
     Select Case errorNumber
         Case 1004
             GetUserFriendlyErrorExplanation = "La plage ou la cellule spécifiée n'a pas été trouvée. Veuillez vérifier que les données existent et réessayer."
@@ -178,5 +217,8 @@ Private Function GetUserFriendlyErrorExplanation(errorNumber As Long) As String
         Case Else
             GetUserFriendlyErrorExplanation = ""
     End Select
+    Exit Function
+ErrorHandler:
+    GetUserFriendlyErrorExplanation = "Erreur lors de la récupération de l'explication."
 End Function
 

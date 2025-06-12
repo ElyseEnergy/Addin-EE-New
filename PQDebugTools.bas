@@ -1,17 +1,11 @@
 Attribute VB_Name = "PQDebugTools"
-' ========================================================================
-' Module: PQDebugTools
-' ------------------------------------------------------------------------
-' Outils de débogage pour les requêtes PowerQuery
-' Auteurs:
-' Date de création: 2024-03-01
-' ========================================================================
 Option Explicit
 
-' Module de debug pour tester les requêtes PowerQuery dans l'éditeur
+Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessInjectAllPowerQueries"
+    Const MODULE_NAME As String = "PQDebugTools"
+    On Error GoTo ErrorHandler
 
-' Force l'injection et le chargement de toutes les requêtes PowerQuery
-Public Sub ProcessInjectAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
     ' Initialiser les catégories
     CategoryManager.InitCategories
     
@@ -54,10 +48,19 @@ NextCategory:
            "Succès: " & successCount & vbCrLf & _
            "Échecs: " & failureCount, _
            vbInformation, "Injection PowerQuery"
+    Exit Sub
+
+ErrorHandler:
+    SYS_Logger.Log "pq_debug_error", "Erreur VBA dans " & MODULE_NAME & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Failed during PowerQuery injection process."
 End Sub
 
 ' Efface toutes les requêtes PowerQuery et leurs tableaux associés
-Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessCleanupAllPowerQueries"
+    Const MODULE_NAME As String = "PQDebugTools"
+    On Error GoTo ErrorHandler
+
     ' Initialiser les catégories
     CategoryManager.InitCategories
     
@@ -93,18 +96,27 @@ Public Sub ProcessCleanupAllPowerQueries(ByVal control As IRibbonControl, Option
     Next i
     
     MsgBox "Nettoyage terminé", vbInformation
+    Exit Sub
+
+ErrorHandler:
+    SYS_Logger.Log "pq_debug_error", "Erreur VBA dans " & MODULE_NAME & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Failed during PowerQuery cleanup process."
 End Sub
 
 ' Test et debug du RagicDictionary
-Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional ByRef returnValue As Variant)
+Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessDebugRagicDictionary"
+    Const MODULE_NAME As String = "PQDebugTools"
+    On Error GoTo ErrorHandler
+
     Log "debug_ragic", "=== Test du RagicDictionary ===", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     
     ' 1. Charger le dictionnaire
     Log "debug_ragic", "1. Chargement du dictionnaire...", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
-    LoadRagicDictionary
+    RagicDictionary.LoadRagicDictionary
     
     ' 2. Vérifier si le dictionnaire a été chargé
-    If RagicFieldDict Is Nothing Then
+    If RagicDictionary.RagicFieldDict Is Nothing Then
         Log "debug_ragic", "ERREUR: Le dictionnaire n'a pas été chargé", ERROR_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
         Exit Sub
     End If
@@ -112,24 +124,36 @@ Public Sub ProcessDebugRagicDictionary(ByVal control As IRibbonControl, Optional
     ' 3. Afficher le contenu du dictionnaire
     Log "debug_ragic", "2. Contenu du dictionnaire :", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     Dim key As Variant
-    For Each key In RagicFieldDict.Keys
-        Log "debug_ragic", "  " & key & " => " & RagicFieldDict(key), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
+    For Each key In RagicDictionary.RagicFieldDict.Keys
+        Log "debug_ragic", "  " & key & " => " & RagicDictionary.RagicFieldDict(key), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     Next key
     
     ' 4. Tester quelques champs
     Log "debug_ragic", "3. Test de quelques champs :", DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
-    TestField "CO2 Capture", "Brand"
-    TestField "H2 waters electrolysis", "Specific Electricity Consumption (SEC) [MWhe/kgH2]"
-    TestField "MeOH - CO2-to-Methanol Synthesis", "CO2 Conversion [%]"
+    Call TestField("CO2 Capture", "Brand")
+    Call TestField("H2 waters electrolysis", "Specific Electricity Consumption (SEC) [MWhe/kgH2]")
+    Call TestField("MeOH - CO2-to-Methanol Synthesis", "CO2 Conversion [%]")
     
     Log "debug_ragic", String(50, "-"), DEBUG_LEVEL, "ProcessDebugRagicDictionary", "PQDebugTools"
     MsgBox "Test du RagicDictionary terminé. Voir la fenêtre de debug pour les détails.", vbInformation
+    Exit Sub
+
+ErrorHandler:
+    SYS_Logger.Log "pq_debug_error", "Erreur VBA dans " & MODULE_NAME & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Failed during RagicDictionary debug process."
 End Sub
 
 ' Fonction utilitaire pour tester un champ
 Private Sub TestField(SheetName As String, fieldName As String)
+    Const PROC_NAME As String = "TestField"
+    Const MODULE_NAME As String = "PQDebugTools"
+    On Error GoTo ErrorHandler
     Log "test_field", "Test de " & SheetName & "|" & fieldName & " :", DEBUG_LEVEL, "TestField", "PQDebugTools"
-    Log "test_field", "  Hidden = " & IsFieldHidden(SheetName, fieldName), DEBUG_LEVEL, "TestField", "PQDebugTools"
+    Log "test_field", "  Hidden = " & RagicDictionary.IsFieldHidden(SheetName, fieldName), DEBUG_LEVEL, "TestField", "PQDebugTools"
+    Exit Sub
+ErrorHandler:
+    SYS_Logger.Log "pq_debug_error", "Erreur VBA dans " & MODULE_NAME & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du test du champ " & fieldName
 End Sub
 
 

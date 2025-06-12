@@ -5,8 +5,16 @@ Option Explicit
 ' SYS_Logger - Système de Logging Simplifié
 ' ============================================================================
 
-' Chemin absolu du dossier de logs
-Private Const LOG_FOLDER_PATH As String = "c:\Users\JulienFernandez\OneDrive\Coding\_Projets de code\2025.05 New addin EE perso\logs"
+' Chemin du dossier de logs, relatif au classeur de l'addin
+Private Function GetLogFolderPath() As String
+    On Error Resume Next
+    GetLogFolderPath = ThisWorkbook.Path & "\logs"
+    If Err.Number <> 0 Then
+        ' Fallback sur le dossier temporaire si le chemin n'est pas disponible (par exemple, fichier non sauvegardé)
+        GetLogFolderPath = Environ("TEMP") & "\ElyseEnergyAddinLogs"
+    End If
+End Function
+
 Private Const LOG_FILE_NAME As String = "elyse_energy.log"
 
 ' Niveaux de log
@@ -34,6 +42,10 @@ Private mCurrentLogLevel As LogLevel
 
 ' Nettoyer le log au lancement, puis append pour chaque message
 Public Sub InitializeLogger()
+    Const PROC_NAME As String = "InitializeLogger"
+    Const MODULE_NAME As String = "SYS_Logger"
+    On Error GoTo ErrorHandler
+
     ' Initialisation du niveau de log par défaut
     mCurrentLogLevel = DEBUG_LEVEL
     
@@ -43,12 +55,17 @@ Public Sub InitializeLogger()
     ' Nettoyer le fichier de log au lancement
     Dim fso As Object, logFilePath As String, logFile As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
-    logFilePath = LOG_FOLDER_PATH & "\" & LOG_FILE_NAME
+    logFilePath = GetLogFolderPath() & "\" & LOG_FILE_NAME
     Set logFile = fso.OpenTextFile(logFilePath, 2, True, -1) ' 2 = ForWriting, efface tout
     logFile.Close
     
     ' Log d'initialisation
     Log "sys_init", "Système de logging initialisé (niveau DEBUG)", INFO_LEVEL, "InitializeLogger", "SYS_Logger"
+    Exit Sub
+
+ErrorHandler:
+    ' Ne peut pas utiliser le logger ici, il n'est pas encore initialisé
+    Debug.Print "CRITICAL ERROR in " & MODULE_NAME & "." & PROC_NAME & ": " & Err.Description
 End Sub
 
 ' ============================================================================
@@ -57,22 +74,29 @@ End Sub
 
 ' Assure que le dossier de logs existe
 Private Sub EnsureLogFolderExists()
+    Const PROC_NAME As String = "EnsureLogFolderExists"
+    On Error GoTo ErrorHandler
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    If Not fso.FolderExists(LOG_FOLDER_PATH) Then
-        fso.CreateFolder LOG_FOLDER_PATH
+    If Not fso.FolderExists(GetLogFolderPath()) Then
+        fso.CreateFolder GetLogFolderPath()
     End If
+    Exit Sub
+ErrorHandler:
+    Debug.Print "CRITICAL: Could not create log folder in " & PROC_NAME & ": " & Err.Description
 End Sub
 
 ' Écrit dans le fichier de log (append)
 Private Sub WriteToLogFile(logMessage As String)
+    Const PROC_NAME As String = "WriteToLogFile"
+    On Error GoTo ErrorHandler
     Dim fso As Object
     Dim logFile As Object
     Dim logFilePath As String
     
     Set fso = CreateObject("Scripting.FileSystemObject")
-    logFilePath = LOG_FOLDER_PATH & "\" & LOG_FILE_NAME
+    logFilePath = GetLogFolderPath() & "\" & LOG_FILE_NAME
     
     ' S'assurer que le dossier existe
     EnsureLogFolderExists
@@ -85,10 +109,16 @@ Private Sub WriteToLogFile(logMessage As String)
     
     ' Fermer le fichier
     logFile.Close
+    Exit Sub
+ErrorHandler:
+    Debug.Print "CRITICAL: Could not write to log file in " & PROC_NAME & ": " & Err.Description
 End Sub
 
 Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     Optional ByVal procedureName As String = "", Optional ByVal moduleName As String = "")
+    Const PROC_NAME As String = "Log"
+    Const MODULE_NAME As String = "SYS_Logger"
+    On Error GoTo ErrorHandler
     
     If level < mCurrentLogLevel Then Exit Sub
     
@@ -140,6 +170,11 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
         LogToRagic logMessage
         On Error GoTo 0
     End If
+    Exit Sub
+
+ErrorHandler:
+    ' En cas d'erreur dans le logger lui-même, on ne peut que faire un Debug.Print
+    Debug.Print "CRITICAL: The logger itself has failed. Error in " & PROC_NAME & ": " & Err.Description
 End Sub
 
 ' ============================================================================
@@ -148,9 +183,21 @@ End Sub
 
 ' Échappe une chaîne de caractères pour être valide dans un JSON.
 Private Function JsonEscape(ByVal text As String) As String
+    Const PROC_NAME As String = "JsonEscape"
+    On Error GoTo ErrorHandler
+    
+    ' Remplacer les backslashes
     text = Replace(text, "\", "\\")
+    ' Remplacer les guillemets
     text = Replace(text, """", "\""")
+    
     JsonEscape = text
+    Exit Function
+    
+ErrorHandler:
+    ' IMPORTANT : Ne PAS utiliser Log ou HandleError ici pour éviter une boucle infinie.
+    Debug.Print "CRITICAL: Error in " & PROC_NAME & ": " & Err.Description
+    JsonEscape = "JSON_ESCAPE_ERROR"
 End Function
 
 ' Envoie le message de log formaté à la base de données Ragic.
@@ -190,12 +237,24 @@ End Sub
 ' ============================================================================
 
 Public Sub SetLogLevel(level As LogLevel)
+    Const PROC_NAME As String = "SetLogLevel"
+    Const MODULE_NAME As String = "SYS_Logger"
+    On Error GoTo ErrorHandler
+
     mCurrentLogLevel = level
     Log "log_level_changed", "Niveau de log défini à: " & level, INFO_LEVEL
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed to set log level."
 End Sub
 
 ' Purge les anciens fichiers de log
 Public Sub PurgeOldLogs(Optional ByVal daysToKeep As Integer = 30)
+    Const PROC_NAME As String = "PurgeOldLogs"
+    Const MODULE_NAME As String = "SYS_Logger"
+    On Error GoTo ErrorHandler
+
     Dim fso As Object
     Dim folder As Object
     Dim file As Object
@@ -207,7 +266,7 @@ Public Sub PurgeOldLogs(Optional ByVal daysToKeep As Integer = 30)
     ' S'assurer que le dossier existe
     EnsureLogFolderExists
     
-    Set folder = fso.GetFolder(LOG_FOLDER_PATH)
+    Set folder = fso.GetFolder(GetLogFolderPath())
     currentDate = Now
     cutoffDate = DateAdd("d", -daysToKeep, currentDate)
     
@@ -219,5 +278,9 @@ Public Sub PurgeOldLogs(Optional ByVal daysToKeep As Integer = 30)
             file.Delete
         End If
     Next file
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed to purge old logs."
 End Sub
 

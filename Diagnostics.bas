@@ -7,13 +7,25 @@ Private Const LOG_SHEET_NAME As String = "App_Logs"
 
 ' Démarre le chronomètre global pour un processus donné
 Public Sub StartTimer(processName As String)
+    Const PROC_NAME As String = "StartTimer"
+    Const MODULE_NAME As String = "Diagnostics"
+    On Error GoTo ErrorHandler
+
     startTime = Timer
     lastTime = startTime
     Log "PERF_LOG", "--- DÉBUT: " & processName & " ---", INFO_LEVEL, "StartTimer", "Diagnostics"
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed to start timer for process '" & processName & "'."
 End Sub
 
 ' Arrête le chronomètre global et loggue la durée totale
 Public Sub StopTimer(processName As String)
+    Const PROC_NAME As String = "StopTimer"
+    Const MODULE_NAME As String = "Diagnostics"
+    On Error GoTo ErrorHandler
+
     ' On loggue une dernière étape avant le calcul total
     LogTime "FIN DU CODE VBA pour " & processName
     
@@ -28,10 +40,18 @@ Public Sub StopTimer(processName As String)
     End If
     
     Log "PERF_LOG", "--- FIN: " & processName & ". Durée totale du code VBA: " & Format(elapsedTotal, "0.000s") & " ---", INFO_LEVEL, "StopTimer", "Diagnostics"
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed to stop timer for process '" & processName & "'."
 End Sub
 
 ' Loggue le temps écoulé pour une étape spécifique
 Public Sub LogTime(stepName As String)
+    Const PROC_NAME As String = "LogTime"
+    Const MODULE_NAME As String = "Diagnostics"
+    On Error GoTo ErrorHandler
+
     Dim currentTime As Double
     currentTime = Timer
 
@@ -51,11 +71,19 @@ Public Sub LogTime(stepName As String)
     Log "PERF_LOG", logMessage, INFO_LEVEL, "LogTime", "Diagnostics"
     
     lastTime = currentTime
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed to log time for step '" & stepName & "'."
 End Sub
 
 ' Attend la fin des calculs Excel et loggue le temps d'attente
 Public Sub WaitAndLogCalculation()
-    LogTime "Avant attente des calculs Excel"
+    Const PROC_NAME As String = "WaitAndLogCalculation"
+    Const MODULE_NAME As String = "Diagnostics"
+    On Error GoTo ErrorHandler
+
+    Call LogTime("Avant attente des calculs Excel")
     
     Dim calcStartTime As Double
     calcStartTime = Timer
@@ -72,7 +100,11 @@ Public Sub WaitAndLogCalculation()
     
     Log "PERF_LOG", "Temps de recalcul/rendu Excel: " & Format(elapsedCalc, "0.000s"), INFO_LEVEL, "WaitAndLogCalculation", "Diagnostics"
     
-    LogTime "FIN TOTALE (main réellement rendue)"
+    Call LogTime("FIN TOTALE (main réellement rendue)")
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Failed during WaitAndLogCalculation."
 End Sub
 
 ' Routine de log qui écrit dans une feuille de calcul
@@ -132,6 +164,7 @@ End Sub
 
 ' Fonction utilitaire pour convertir le niveau de log en string
 Private Function LogLevelToString(level As LogLevel) As String
+    On Error GoTo ErrorHandler
     Select Case level
         Case 0: LogLevelToString = "DEBUG"
         Case 1: LogLevelToString = "INFO"
@@ -139,4 +172,7 @@ Private Function LogLevelToString(level As LogLevel) As String
         Case 3: LogLevelToString = "ERROR"
         Case Else: LogLevelToString = "UNKNOWN"
     End Select
+    Exit Function
+ErrorHandler:
+    LogLevelToString = "CONVERSION_ERROR"
 End Function 

@@ -52,7 +52,7 @@
                 <ns0:group id="grpFiles" label="Files">
                     <ns0:button id="btnUploadCurrentFile" 
                               label="Upload fichier courant" 
-                              onAction="FileManager.ProcessFileUpload" 
+                              onAction="ProcessFileUpload" 
                               getVisible="GetUploadButtonVisibility"
                               image="uploader"
                               size="large"/>
@@ -108,7 +108,7 @@
                         label="Recharger le tableau courant" 
                         imageMso="RefreshAll"
                         size="large"
-                        onAction="ReloadCurrentTable_Click"
+                        onAction="ReloadCurrentTableClick"
                         getEnabled="GetReloadCurrentEnabled"
                         getVisible="GetReloadButtonsVisible"
                         screentip="Recharge les données du tableau actuellement sélectionné"
@@ -128,7 +128,7 @@
                         label="Supprimer le tableau courant" 
                         imageMso="DeleteTable"
                         size="large"
-                        onAction="DeleteCurrentTable_Click"
+                        onAction="DeleteCurrentTableClick"
                         getEnabled="GetReloadCurrentEnabled"
                         getVisible="GetReloadButtonsVisible"
                         screentip="Supprime le tableau actuellement sélectionné"

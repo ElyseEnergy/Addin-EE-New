@@ -42,7 +42,8 @@ Public Function GetOrCreatePQDataSheet() As Worksheet
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création/récupération de la feuille PQ_DATA"
+    SYS_Logger.Log "sheet_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la création/récupération de la feuille PQ_DATA"
     Set GetOrCreatePQDataSheet = Nothing
 End Function
 
@@ -67,7 +68,8 @@ Public Sub ProtectSheetWithStandardSettings(ByVal ws As Worksheet)
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la protection de la feuille"
+    SYS_Logger.Log "sheet_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la protection de la feuille"
 End Sub
 
 ' Déprotège une feuille de manière sécurisée.
@@ -82,7 +84,8 @@ Public Sub UnprotectSheetSafely(ByVal ws As Worksheet)
     Exit Sub
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la déprotection de la feuille"
+    SYS_Logger.Log "sheet_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la déprotection de la feuille"
 End Sub
 
 ' Liste tous les noms de tableaux dans une feuille donnée.
@@ -103,6 +106,7 @@ Public Function ListAllTableNames(ByVal ws As Worksheet) As String
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la liste des noms de tableaux"
+    SYS_Logger.Log "sheet_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la liste des noms de tableaux"
     ListAllTableNames = ""
-End Function 
+End Function

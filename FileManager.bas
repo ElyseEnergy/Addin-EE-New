@@ -2,14 +2,19 @@ Attribute VB_Name = "FileManager"
 
 Option Explicit
 
-Private Const PROC_NAME As String = "FileManager"
 Private Const MODULE_NAME As String = "FileManager"
 Private Const TEMP_FILE_PREFIX As String = "TEMP_UPLOAD_"
 Private Const BOUNDARY As String = "------------------------boundary123456789"
 
 ' Callback pour le bouton d'upload
 Public Sub ProcessFileUpload(ByVal control As IRibbonControl)
+    Const PROC_NAME As String = "ProcessFileUpload"
+    On Error GoTo ErrorHandler
     UploadCurrentFile
+    Exit Sub
+ErrorHandler:
+    SYS_Logger.Log "upload_error", "Erreur VBA dans ProcessFileUpload - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du traitement de l'upload."
 End Sub
 
 Private Sub UploadCurrentFile()
@@ -21,7 +26,7 @@ Private Sub UploadCurrentFile()
     ' Récupérer le fichier actif
     Dim currentFile As String
     currentFile = ActiveWorkbook.FullName
-    Log "upload", "Fichier à uploader : " & currentFile, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+    SYS_Logger.Log "upload", "Fichier à uploader : " & currentFile, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
     
     ' Vérifier si c'est un fichier SharePoint (commence par http ou https)
     If LCase(Left(currentFile, 4)) = "http" Then
@@ -29,7 +34,7 @@ Private Sub UploadCurrentFile()
         tempFilePath = Environ("TEMP") & "\" & TEMP_FILE_PREFIX & Format(Now, "yyyymmddhhnnss") & ".xlsm"
         ActiveWorkbook.SaveCopyAs tempFilePath
         currentFile = tempFilePath
-        Log "upload", "Fichier SharePoint détecté, copie temporaire créée : " & currentFile, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+        SYS_Logger.Log "upload", "Fichier SharePoint détecté, copie temporaire créée : " & currentFile, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
     End If
     
     ' Demander la version
@@ -52,16 +57,16 @@ Private Sub UploadCurrentFile()
         .Add Array("1001067", "average per year") ' Main timescale
     End With
     
-    Log "upload", "Données préparées pour l'upload :", DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+    SYS_Logger.Log "upload", "Données préparées pour l'upload :", DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
     Dim item As Variant
     For Each item In data
-        Log "upload", "  " & item(0) & " = " & item(1), DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+        SYS_Logger.Log "upload", "  " & item(0) & " = " & item(1), DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
     Next item
     
     ' Appeler l'API Ragic
     Dim result As String
     result = UploadToRagic(currentFile, data)
-    Log "upload", "Réponse Ragic : " & result, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+    SYS_Logger.Log "upload", "Réponse Ragic : " & result, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
     
     ' --- LOGIQUE DE NETTOYAGE ET DE REPONSE AMELIOREE ---
     
@@ -70,16 +75,16 @@ Private Sub UploadCurrentFile()
         Dim killError As Long
         killError = DeleteFile(tempFilePath)
         If killError = 0 Then
-            Log "upload", "Fichier temporaire supprimé : " & tempFilePath, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+            SYS_Logger.Log "upload", "Fichier temporaire supprimé : " & tempFilePath, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
         End If
     End If
     
     ' 2. Gérer la réponse de Ragic sans utiliser Err.Raise pour les erreurs API
     If InStr(1, Replace(result, " ", ""), """status"":""SUCCESS""") > 0 Then
-        Log "upload", "Upload réussi !", INFO_LEVEL, "UploadCurrentFile", MODULE_NAME
+        SYS_Logger.Log "upload", "Upload réussi !", INFO_LEVEL, "UploadCurrentFile", MODULE_NAME
         MsgBox "Fichier uploadé avec succès !", vbInformation
     Else
-        Log "upload", "Erreur lors de l'upload : " & result, ERROR_LEVEL, "UploadCurrentFile", MODULE_NAME
+        SYS_Logger.Log "upload", "Erreur lors de l'upload : " & result, ERROR_LEVEL, "UploadCurrentFile", MODULE_NAME
         MsgBox "L'upload a échoué. La réponse du serveur était :" & vbCrLf & vbCrLf & result, vbCritical, "Echec de l'upload"
     End If
     Exit Sub
@@ -93,13 +98,14 @@ ErrorHandler:
             Dim killErrorOnError As Long
             killErrorOnError = DeleteFile(tempFilePath)
             If killErrorOnError = 0 Then
-                 Log "upload", "Fichier temporaire supprimé après erreur : " & tempFilePath, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
+                 SYS_Logger.Log "upload", "Fichier temporaire supprimé après erreur : " & tempFilePath, DEBUG_LEVEL, "UploadCurrentFile", MODULE_NAME
             End If
         End If
     End If
     
     ' Appel au gestionnaire centralisé
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de l'upload du fichier : " & Err.Description
+    SYS_Logger.Log "upload_error", "Erreur VBA inattendue dans UploadCurrentFile. Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, "UploadCurrentFile", MODULE_NAME
+    HandleError MODULE_NAME, "UploadCurrentFile", "Erreur lors de l'upload du fichier : " & Err.Description
 End Sub
 
 Private Function DeleteFile(ByVal filePath As String) As Long
@@ -110,13 +116,21 @@ Private Function DeleteFile(ByVal filePath As String) As Long
 End Function
 
 Private Function GetName() As String
+    Const PROC_NAME As String = "GetName"
+    On Error GoTo ErrorHandler
     GetName = Left(ActiveWorkbook.Name, InStrRev(ActiveWorkbook.Name, ".") - 1)
+    Exit Function
+ErrorHandler:
+    SYS_Logger.Log "filemanager_error", "Erreur VBA dans GetName - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Impossible de récupérer le nom du fichier."
+    GetName = "Unknown"
 End Function
 
 Private Function UploadToRagic(filePath As String, data As Collection) As String
+    Const PROC_NAME As String = "UploadToRagic"
     On Error GoTo ErrorHandler
     
-    Log "upload", "Début de l'upload vers Ragic...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Début de l'upload vers Ragic...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
     
     ' Créer l'objet HTTP
     Dim http As Object
@@ -126,7 +140,7 @@ Private Function UploadToRagic(filePath As String, data As Collection) As String
     On Error GoTo ErrorHandler
 
     If http Is Nothing Then
-        Log "upload", "Impossible de créer l'objet HTTP.", ERROR_LEVEL, "UploadToRagic", MODULE_NAME
+        SYS_Logger.Log "upload", "Impossible de créer l'objet HTTP.", ERROR_LEVEL, "UploadToRagic", MODULE_NAME
         UploadToRagic = "{""status"":""ERROR"",""msg"":""Impossible de créer l'objet HTTP""}"
         Exit Function
     End If
@@ -142,8 +156,8 @@ Private Function UploadToRagic(filePath As String, data As Collection) As String
     http.Open "POST", url, False
     http.SetRequestHeader "Authorization", "Basic " & apiKey
     http.SetRequestHeader "Content-Type", "multipart/form-data; boundary=" & BOUNDARY
-    Log "upload", "URL : " & url, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
-    Log "upload", "Authorization: Basic ...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "URL : " & url, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Authorization: Basic ...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
     
     ' --- CONSTRUCTION DU CORPS DE LA REQUETE (avec ADODB.Stream pour la fiabilité) ---
     Dim bodyStream As Object, textStream As Object, fileStream As Object
@@ -193,7 +207,7 @@ Private Function UploadToRagic(filePath As String, data As Collection) As String
     fileStream.Type = 1 ' adTypeBinary
     fileStream.Open
     fileStream.LoadFromFile filePath
-    Log "upload", "Fichier lu : " & filePath & " (" & fileStream.Size & " octets)", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Fichier lu : " & filePath & " (" & fileStream.Size & " octets)", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
     fileStream.CopyTo bodyStream
     fileStream.Close
     
@@ -205,23 +219,31 @@ Private Function UploadToRagic(filePath As String, data As Collection) As String
 
     ' Envoyer le flux binaire complet
     bodyStream.Position = 0
-    Log "upload", "Envoi de la requête (" & bodyStream.Size & " octets)...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Envoi de la requête (" & bodyStream.Size & " octets)...", DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
     http.Send bodyStream.Read
     bodyStream.Close
     
     ' Récupérer et logger la réponse
-    Log "upload", "Status : " & http.Status & " " & http.StatusText, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
-    Log "upload", "Headers : " & http.GetAllResponseHeaders(), DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
-    Log "upload", "Response : " & http.ResponseText, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Status : " & http.Status & " " & http.StatusText, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Headers : " & http.GetAllResponseHeaders(), DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload", "Response : " & http.ResponseText, DEBUG_LEVEL, "UploadToRagic", MODULE_NAME
     
     UploadToRagic = http.ResponseText
     Exit Function
 
 ErrorHandler:
-    Log "upload", "Erreur dans UploadToRagic : " & Err.Description, ERROR_LEVEL, "UploadToRagic", MODULE_NAME
+    SYS_Logger.Log "upload_error", "Erreur VBA dans " & MODULE_NAME & "." & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Erreur critique lors de la tentative d'upload vers Ragic."
     UploadToRagic = "{""status"":""ERROR"",""msg"":""" & Replace(Err.Description, """", "'") & """}"
 End Function
 
 Private Function GetFileName(filePath As String) As String
+    Const PROC_NAME As String = "GetFileName"
+    On Error GoTo ErrorHandler
     GetFileName = Mid(filePath, InStrRev(filePath, "\") + 1)
+    Exit Function
+ErrorHandler:
+    SYS_Logger.Log "filemanager_error", "Erreur VBA dans GetFileName - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    HandleError MODULE_NAME, PROC_NAME, "Impossible d'extraire le nom du fichier depuis le chemin."
+    GetFileName = "error.xlsm"
 End Function

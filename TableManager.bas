@@ -32,26 +32,41 @@ Public Function GetUniqueTableName(ByVal CategoryName As String) As String
     Next i
     
     ' Si on arrive ici, c'est qu'on n'a pas trouvé de nom disponible
-    HandleError MODULE_NAME, PROC_NAME, "Impossible de générer un nom unique pour le tableau '" & CategoryName & "'"
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Impossible de générer un nom unique pour le tableau '" & CategoryName & "'"
     GetUniqueTableName = ""
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération du nom du tableau"
+    SYS_Logger.Log "table_manager_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la génération du nom du tableau"
     GetUniqueTableName = ""
 End Function
 
 ' Vérifie si un tableau avec le nom spécifié existe déjà dans le classeur.
 Private Function TableExists(ByVal wb As Workbook, ByVal tableName As String) As Boolean
-    On Error Resume Next
+    Const PROC_NAME As String = "TableExists"
+    On Error GoTo ErrorHandler
     Dim ws As Worksheet
+    Dim lo As ListObject
+    
     For Each ws In wb.Worksheets
-        If Not ws.ListObjects(tableName) Is Nothing Then
+        On Error Resume Next
+        Set lo = ws.ListObjects(tableName)
+        On Error GoTo ErrorHandler ' Reset error handling after expected error
+        If Not lo Is Nothing Then
             TableExists = True
             Exit Function
         End If
+        Set lo = Nothing ' Réinitialiser pour la prochaine itération
     Next ws
+    
     TableExists = False
+    Exit Function
+ErrorHandler:
+    TableExists = False ' En cas d'erreur, considérer que la table n'existe pas
+    ' It's debatable whether to log an error here if the goal is just to check existence.
+    ' For now, let's assume a failure to check is an error condition.
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur dans TableExists pour le nom: " & tableName
 End Function
 
 ' Collecte tous les tableaux gérés par l'addin dans le classeur spécifié.
@@ -73,9 +88,9 @@ Public Function CollectManagedTables(ByVal wb As Workbook) As Collection
                 ' Vérifier le commentaire
                 Dim hasComment As Boolean
                 hasComment = False
-                On Error Resume Next
+                On Error Resume Next ' Expecting an error if comment doesn't exist
                 hasComment = (Len(lo.Range.Cells(1, 1).Comment.Text) > 0)
-                On Error GoTo ErrorHandler
+                On Error GoTo ErrorHandler ' Reset error handling
                 
                 If hasComment Then
                     ' Créer un dictionnaire avec les infos du tableau
@@ -91,7 +106,8 @@ Public Function CollectManagedTables(ByVal wb As Workbook) As Collection
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la collecte des tableaux gérés"
+    SYS_Logger.Log "table_manager_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors de la collecte des tableaux gérés"
     Set CollectManagedTables = New Collection
 End Function
 
@@ -104,6 +120,7 @@ Public Function CountManagedTables(ByVal wb As Workbook) As Long
     Exit Function
     
 ErrorHandler:
-    HandleError MODULE_NAME, PROC_NAME, "Erreur lors du comptage des tableaux gérés"
+    SYS_Logger.Log "table_manager_error", "Erreur VBA dans " & PROC_NAME & " - Numéro: " & CStr(Err.Number) & ", Description: " & Err.Description, ERROR_LEVEL, PROC_NAME, MODULE_NAME
+    SYS_ErrorHandler.HandleError MODULE_NAME, PROC_NAME, "Erreur lors du comptage des tableaux gérés"
     CountManagedTables = 0
-End Function 
+End Function

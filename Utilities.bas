@@ -1,42 +1,49 @@
 Attribute VB_Name = "Utilities"
+Option Explicit
 
+' --- Déclarations API Windows ---
+#If VBA7 Then
+    Private Declare PtrSafe Function GetUserNameEx Lib "secur32.dll" Alias "GetUserNameExA" (ByVal NameFormat As Long, ByVal lpNameBuffer As String, ByRef lpnSize As Long) As Long
+#Else
+    Private Declare Function GetUserNameEx Lib "secur32.dll" Alias "GetUserNameExA" (ByVal NameFormat As Long, ByVal lpNameBuffer As String, ByRef lpnSize As Long) As Long
+#End If
 
-Private Declare PtrSafe Function GetUserNameEx Lib "secur32.dll" Alias "GetUserNameExA" _
-    (ByVal NameFormat As Long, ByVal lpNameBuffer As String, ByRef nSize As Long) As Long
+Private Const NAME_USER_PRINCIPAL As Long = 8
 
-Private Const NameUserPrincipal As Long = 8
-
-Public wsPQData As Worksheet
+' --- Constantes du module ---
 Public Const ADDIN_VERSION_MAJOR As Integer = 1
 Public Const ADDIN_VERSION_MINOR As Integer = 0
 Public Const ADDIN_VERSION_PATCH As Integer = 0
+Private Const MODULE_NAME_STR As String = "Utilities"
+
+' Constantes pour la sanitization des noms
+Private Const ACCENTED_CHARS As String = "àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ"
+Private Const UNACCENTED_CHARS As String = "aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY"
+
+' --- Variables de module ---
+Public wsPQData As Worksheet
 
 ' --- NOUVELLES ROUTINES DE DÉMARRAGE ASYNCHRONE ---
 
 ' Tâche principale de démarrage, appelée de manière asynchrone.
 Public Sub RunStartupTasks()
-    ' On Error Resume Next ' Empêche tout crash si une tâche de fond échoue.
-    ' Const PROC_NAME As String = "RunStartupTasks"
-    ' Const MODULE_NAME_STR As String = "Utilities" ' Explicitly define module name for logger
-
-    ' SYS_Logger.Log "startup", "RunStartupTasks: Démarrage des tâches d'arrière-plan...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    Const PROC_NAME As String = "RunStartupTasks"
+    Const MODULE_NAME As String = "Utilities"
+    On Error GoTo ErrorHandler
+    
+    SYS_Logger.Log "startup", "RunStartupTasks: Démarrage des tâches d'arrière-plan...", INFO_LEVEL, PROC_NAME, MODULE_NAME
     
     ' 1. Préchauffe le moteur Power Query pour accélérer le premier vrai appel
-    ' SYS_Logger.Log "startup", "RunStartupTasks: Appel de WarmUpPowerQueryEngine...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
-    ' WarmUpPowerQueryEngine
-    ' SYS_Logger.Log "startup", "RunStartupTasks: WarmUpPowerQueryEngine terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    WarmUpPowerQueryEngine
     
-    ' ' 2. Charge le dictionnaire de données en arrière-plan
-    ' SYS_Logger.Log "startup", "RunStartupTasks: Appel de LoadRagicDictionary...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
-    ' LoadRagicDictionary ' Assurez-vous que cette fonction existe et est accessible
-    ' SYS_Logger.Log "startup", "RunStartupTasks: LoadRagicDictionary terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    ' 2. Initialise les profils d'accès
+    InitializeDemoProfiles
     
-    ' 3. Initialise les profils d'accès
-    SYS_Logger.Log "startup", "RunStartupTasks: Appel de InitializeDemoProfiles...", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
-    InitializeDemoProfiles ' Rétablir l'appel
-    SYS_Logger.Log "startup", "RunStartupTasks: InitializeDemoProfiles terminé.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
-    
-    ' SYS_Logger.Log "startup", "RunStartupTasks: Tâches d'arrière-plan terminées.", DEBUG_LEVEL, PROC_NAME, MODULE_NAME_STR
+    SYS_Logger.Log "startup", "RunStartupTasks: Tâches d'arrière-plan terminées.", INFO_LEVEL, PROC_NAME, MODULE_NAME
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Une erreur critique est survenue lors du démarrage des tâches de fond."
 End Sub
 
 ' Crée, rafraîchit et supprime une requête bidon pour forcer le moteur M à s'initialiser.
@@ -150,43 +157,72 @@ End Sub
 ' --- FONCTIONS EXISTANTES ---
 
 Public Sub InitializePQData()
-    On Error Resume Next
+    Const PROC_NAME As String = "InitializePQData"
+    Const MODULE_NAME As String = "Utilities"
+    On Error GoTo ErrorHandler
+
     Set wsPQData = ActiveWorkbook.Worksheets("PQ_DATA")
-    On Error GoTo 0
     
     ' Si la feuille n'existe pas, la créer
     If wsPQData Is Nothing Then
         Set wsPQData = ActiveWorkbook.Worksheets.Add
         wsPQData.Name = "PQ_DATA"
     End If
+    Exit Sub
+
+ErrorHandler:
+    HandleError MODULE_NAME, PROC_NAME, "Impossible de créer ou de trouver la feuille PQ_DATA."
 End Sub
 
 Function GetLastColumn(ws As Worksheet) As Long
+    On Error GoTo ErrorHandler
     GetLastColumn = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column + 1
+    Exit Function
+ErrorHandler:
+    GetLastColumn = 1 ' Retourner 1 en cas d'erreur
 End Function
 
 ' --- Utility function for smart truncation ---
 Function TruncateWithEllipsis(text As String, maxLen As Integer) As String
+    On Error GoTo ErrorHandler
     If Len(text) > maxLen Then
         TruncateWithEllipsis = Left(text, maxLen - 3) & "..."
     Else
         TruncateWithEllipsis = text
     End If
+    Exit Function
+ErrorHandler:
+    TruncateWithEllipsis = Left(text, maxLen)
+End Function
+
+' Fonction auxiliaire pour supprimer les accents
+' Source: https://stackoverflow.com/questions/11253628/vba-equivalent-of-excels-clean-and-trim-functions
+Private Function RemoveDiacritics(ByVal text As String) As String
+    On Error GoTo ErrorHandler
+    Dim i As Long
+    For i = 1 To Len(ACCENTED_CHARS)
+        text = Replace(text, Mid(ACCENTED_CHARS, i, 1), Mid(UNACCENTED_CHARS, i, 1))
+    Next i
+    RemoveDiacritics = text
+    Exit Function
+ErrorHandler:
+    SYS_Logger.Log "diacritics_error", "Erreur dans RemoveDiacritics", ERROR_LEVEL, "RemoveDiacritics", MODULE_NAME_STR
+    RemoveDiacritics = text ' Retourner le texte original en cas d'erreur
 End Function
 
 ' Nettoie une chaîne pour en faire un nom de tableau valide
 Public Function SanitizeTableName(ByVal inputName As String) As String
-    Dim result As String
+    On Error GoTo ErrorHandler
+    Const PROC_NAME As String = "SanitizeTableName"
+    
     Dim i As Long
-    Dim c As String
+    Dim result As String
     
-    ' Remplacer les caractères non valides par des underscores
-    result = inputName
+    ' Le nom de la fonction RemoveDiacritics est déjà explicite
+    result = RemoveDiacritics(LCase(inputName))
     
-    ' Remplacer les espaces par des underscores
+    ' Remplacer les caractères non autorisés par des underscores
     result = Replace(result, " ", "_")
-    
-    ' Remplacer les caractères spéciaux courants
     result = Replace(result, "-", "_")
     result = Replace(result, ".", "_")
     result = Replace(result, "(", "")
@@ -194,19 +230,21 @@ Public Function SanitizeTableName(ByVal inputName As String) As String
     result = Replace(result, "/", "_")
     result = Replace(result, "\", "_")
     
-    ' Supprimer les accents
-    result = RemoveDiacritics(result)
-    
     ' Ne garder que les caractères alphanumériques et underscores
     Dim cleanResult As String
     cleanResult = ""
     For i = 1 To Len(result)
+        Dim c As String
         c = Mid(result, i, 1)
-        If (c >= "a" And c <= "z") Or (c >= "A" And c <= "Z") Or _
-           (c >= "0" And c <= "9") Or c = "_" Then
+        If (c >= "a" And c <= "z") Or (c >= "0" And c <= "9") Or c = "_" Then
             cleanResult = cleanResult & c
         End If
     Next i
+    
+    ' Supprimer les underscores multiples
+    Do While InStr(cleanResult, "__")
+        cleanResult = Replace(cleanResult, "__", "_")
+    Loop
     
     ' Limiter la longueur à 250 caractères (garder de la marge pour les suffixes)
     If Len(cleanResult) > 250 Then
@@ -214,40 +252,66 @@ Public Function SanitizeTableName(ByVal inputName As String) As String
     End If
     
     SanitizeTableName = cleanResult
-End Function
+    Exit Function
 
-' Fonction auxiliaire pour supprimer les accents
-Private Function RemoveDiacritics(ByVal text As String) As String
-    Dim i As Long
-    Const AccentedChars = "àáâãäçèéêëìíîïñòóôõöùúûüýÿÀÁÂÃÄÇÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝ"
-    Const UnaccentedChars = "aaaaaceeeeiiiinooooouuuuyyAAAAACEEEEIIIINOOOOOUUUUY"
-    
-    For i = 1 To Len(AccentedChars)
-        text = Replace(text, Mid(AccentedChars, i, 1), Mid(UnaccentedChars, i, 1))
-    Next i
-    
-    RemoveDiacritics = text
+ErrorHandler:
+    SYS_Logger.Log "sanitize_error", "Erreur lors de la sanitization du nom de table - Num: " & CStr(Err.Number) & ", Desc: " & Err.Description & ", Src: " & Err.Source, ERROR_LEVEL, PROC_NAME, MODULE_NAME_STR
+    SanitizeTableName = "SanitizeTableName_Error"
 End Function
-
 
 Function GetUserEmail() As String
+    Const PROC_NAME As String = "GetUserEmail"
+    Const MODULE_NAME As String = "Utilities"
+    On Error GoTo ErrorHandler
+
     Dim buffer As String * 255
     Dim bufferSize As Long
     bufferSize = 255
-    If GetUserNameEx(NameUserPrincipal, buffer, bufferSize) <> 0 Then
+    If GetUserNameEx(NAME_USER_PRINCIPAL, buffer, bufferSize) <> 0 Then
         GetUserEmail = Left$(buffer, InStr(buffer, Chr$(0)) - 1)
     Else
         GetUserEmail = "Non disponible"
     End If
+    Exit Function
+
+ErrorHandler:
+    GetUserEmail = "Erreur"
+    HandleError MODULE_NAME, PROC_NAME, "Impossible de récupérer l'email de l'utilisateur."
+    GetUserEmail = Environ("USERNAME") ' Fallback
 End Function
 
-Function GetAddinVersion() As String
-    GetAddinVersion = ADDIN_VERSION_MAJOR & "." & ADDIN_VERSION_MINOR & "." & ADDIN_VERSION_PATCH
+Public Function GetUserUPN() As String
+    On Error GoTo ErrorHandler
+    Dim buffer As String
+    Dim size As Long
+    
+    size = 255
+    buffer = String(size, vbNullChar)
+    
+    If GetUserNameEx(NAME_USER_PRINCIPAL, buffer, size) <> 0 Then
+        GetUserUPN = Left(buffer, size - 1)
+    Else
+        GetUserUPN = ""
+    End If
+    Exit Function
+ErrorHandler:
+    GetUserUPN = ""
+End Function
+
+Public Function GetAddinVersion() As String
+    On Error GoTo ErrorHandler
+    GetAddinVersion = "v" & ADDIN_VERSION_MAJOR & "." & ADDIN_VERSION_MINOR & "." & ADDIN_VERSION_PATCH
+    Exit Function
+ErrorHandler:
+    GetAddinVersion = "v.Error"
 End Function
 
 ' Correction du callback pour getSupertip : doit être une Sub avec ByRef supertip
-Public Sub GetAddinVersionSupertip(control As IRibbonControl, ByRef supertip)
-    supertip = "Utilisateur : " & GetUserEmail() & Chr(10) & _
-        "Version addin : " & GetAddinVersion()
-End Sub
+Public Function GetAddinVersionSupertip(ByVal control As IRibbonControl, ByRef supertip As Variant)
+    On Error GoTo ErrorHandler
+    supertip = "Version " & GetAddinVersion() & " of the Elyse Energy Add-in."
+    Exit Function
+ErrorHandler:
+    supertip = "Could not retrieve version information."
+End Function
 

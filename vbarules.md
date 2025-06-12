@@ -373,6 +373,11 @@ ErrorHandler:
 End Sub
 ```
 
+**Exception à la règle :** Il n'est pas nécessaire d'ajouter ce pattern de gestion d'erreur à une procédure publique (`Sub` ou `Function`) si elle remplit les conditions suivantes :
+1.  Elle ne contient qu'**une seule ligne de code exécutable**.
+2.  Cette ligne est un appel à une autre procédure qui, elle, contient déjà une gestion d'erreur robuste.
+Typiquement, les callbacks du ruban qui servent uniquement à déléguer une action à un "Manager" sont dans ce cas.
+
 **⚠️ AVERTISSEMENT :** Ne jamais utiliser `On Error Resume Next` dans un bloc `ErrorHandler`. Cette instruction masquerait toutes les erreurs suivantes et empêcherait leur gestion correcte. Si vous avez besoin de gérer des erreurs spécifiques dans le bloc `ErrorHandler`, utilisez des conditions sur `Err.Number` à la place.
 La fonction `HandleError` (de `SYS_ErrorHandler.bas`) se charge de logger l'erreur et d'informer l'utilisateur si nécessaire.
 
@@ -426,10 +431,12 @@ La logique des callbacks est séparée en deux catégories :
     ```vba
     ' Technologies_Manager.bas
     Public Sub ProcessCompression(ByVal control As IRibbonControl)
-        ' Délègue immédiatement toute la logique au manager compétent
+        ' Délègue immédiatement toute la logique au manager compétent, qui gère les erreurs.
         DataLoaderManager.ProcessCategory "Compression", "Erreur lors du traitement..."
     End Sub
     ```
+
+**Important :** Cette séparation est clé. Les `onAction` sont des points d'entrée "muets", la logique et la gestion d'erreur sont centralisées dans les modules métier.
 
 ---
 
