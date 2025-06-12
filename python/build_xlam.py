@@ -7,6 +7,7 @@ import tempfile
 import re
 import sys
 import subprocess
+import zipfile
 
 # --- Configuration ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +15,7 @@ WORKSPACE_DIR = os.path.dirname(SCRIPT_DIR)
 
 # Fichier source et destination
 XLSM_SOURCE = os.path.join(WORKSPACE_DIR, "Addin Elyse Energy.xlsm")
-XLAM_DESTINATION = os.path.join(WORKSPACE_DIR, "build", "Addin Elyse Energy.xlam")
+XLAM_DESTINATION = os.path.join(WORKSPACE_DIR, "build", "EE Addin.xlam")
 
 # Module VBA à modifier pour désactiver le logging en production
 CONFIG_MODULE_BASENAME = "SYS_Logger.bas" 
@@ -87,6 +88,53 @@ def prepare_production_module(temp_dir):
         logging.error(f"Erreur lors de la préparation du module de production: {e}")
         return None
 
+def modify_ribbon_tab_name(excel_file):
+    """Modifie le nom de l'onglet dans le fichier customUI.xml de manière simple."""
+    logging.debug("Modification du nom de l'onglet Ribbon...")
+    
+    # Créer une copie temporaire
+    temp_file = excel_file + ".tmp"
+    shutil.copy2(excel_file, temp_file)
+    
+    try:
+        # Ouvrir le fichier comme un zip
+        with zipfile.ZipFile(temp_file, 'r') as z:
+            # Chercher le fichier customUI.xml
+            xml_files = [f for f in z.namelist() if 'customui.xml' in f.lower()]
+            if not xml_files:
+                logging.warning("Fichier customUI.xml non trouvé.")
+                return False
+                
+            xml_file = xml_files[0]
+            xml_content = z.read(xml_file).decode('utf-8')
+            
+            # Modifier le contenu
+            if "Elyse Energy" in xml_content:
+                new_content = xml_content.replace("Elyse Energy", "EE")
+                
+                # Créer un nouveau zip avec le contenu modifié
+                with zipfile.ZipFile(excel_file, 'w') as new_zip:
+                    # Copier tous les fichiers sauf le XML
+                    for item in z.filelist:
+                        if item.filename != xml_file:
+                            new_zip.writestr(item.filename, z.read(item.filename))
+                    # Ajouter le XML modifié
+                    new_zip.writestr(xml_file, new_content)
+                
+                logging.info("Nom de l'onglet modifié avec succès")
+                return True
+            else:
+                logging.warning("Label 'Elyse Energy' non trouvé dans le XML")
+                return False
+                
+    except Exception as e:
+        logging.error(f"Erreur lors de la modification du Ribbon: {e}")
+        return False
+    finally:
+        # Nettoyer le fichier temporaire
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
 def build_xlam():
     """Convertit le fichier XLSM en XLAM en mode production."""
     setup_logging()
@@ -139,8 +187,20 @@ def build_xlam():
         vba_project = workbook.VBProject
         module_name_in_vba = os.path.splitext(CONFIG_MODULE_BASENAME)[0]
         try:
-            logging.debug(f"Suppression de l'ancien module: {module_name_in_vba}")
-            vba_project.VBComponents.Remove(vba_project.VBComponents(module_name_in_vba))
+            # Essayer de trouver le module existant
+            existing_module = None
+            for component in vba_project.VBComponents:
+                if component.Name == module_name_in_vba:
+                    existing_module = component
+                    break
+            
+            # Si le module existe, le supprimer
+            if existing_module:
+                logging.debug(f"Suppression de l'ancien module: {module_name_in_vba}")
+                vba_project.VBComponents.Remove(existing_module)
+            else:
+                logging.debug(f"Module {module_name_in_vba} non trouvé dans le projet, on continue avec l'import")
+            
             logging.debug("Import du nouveau module...")
             vba_project.VBComponents.Import(prod_module_path)
             logging.info(f"Module '{module_name_in_vba}' remplacé par la version de production.")
@@ -157,6 +217,13 @@ def build_xlam():
         try:
             workbook.SaveAs(XLAM_DESTINATION, FileFormat=55)
             logging.info(f"Fichier XLAM généré avec succès: {XLAM_DESTINATION}")
+            
+            # 6. Modifier le nom de l'onglet dans le Ribbon
+            if modify_ribbon_tab_name(XLAM_DESTINATION):
+                logging.info("Modification du Ribbon réussie")
+            else:
+                logging.warning("La modification du Ribbon a échoué, mais le fichier XLAM a été généré")
+                
         except Exception as e:
             logging.error(f"Erreur lors de la sauvegarde du fichier XLAM: {str(e)}")
             raise
@@ -166,7 +233,7 @@ def build_xlam():
         if hasattr(e, 'exc_info'):
             logging.error(f"Détails de l'erreur: {e.exc_info}")
     finally:
-        # 6. Nettoyage
+        # 7. Nettoyage
         if excel:
             logging.debug("Nettoyage d'Excel...")
             excel.DisplayAlerts = True
