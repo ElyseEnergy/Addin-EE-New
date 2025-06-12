@@ -34,9 +34,7 @@ Public Function GetCellProcessingInfo(originalValue As Variant, sourceNumberForm
     On Error GoTo ErrorHandler
 
     Dim out As FormattedCellOutput
-    Dim ragicType As String
-
-    ' Get the Ragic field type
+    Dim ragicType As String    ' Get the Ragic field type
     ragicType = RagicDictionary.GetFieldRagicType(categorySheetName, fieldName)
     SYS_Logger.Log "GetCellProcessingInfo", "Category: '" & categorySheetName & "', Field: '" & fieldName & "', OriginalValue: '" & CStr(originalValue) & "', RagicType: '" & ragicType & "'", DEBUG_LEVEL, "GetCellProcessingInfo", "DataFormatter"
 

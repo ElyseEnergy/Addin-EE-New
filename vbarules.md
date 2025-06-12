@@ -131,10 +131,10 @@ End Function
 ## 3. Interaction avec les Données Externes et API
 
 ### Variables d'Environnement (`env.bas`)
-Le module `env.bas` centralise toutes les constantes et fonctions liées à l'environnement externe. Ne jamais coder en dur une URL ou une clé API ailleurs.
+Le module `env.bas` centralise toutes les constantes liées à l'environnement externe. Ne jamais coder en dur une URL ou une clé API ailleurs.
 - **`RAGIC_BASE_URL`**: URL de base pour toutes les requêtes vers l'API Ragic.
-- **`GetRagicApiKey()`**: Fonction qui retourne la clé API Ragic, chargée depuis une variable d'environnement.
-- **`GetRagicApiParams()`**: Fonction qui retourne les paramètres standards pour les URLs de lecture (`GET`), incluant la clé API.
+- **`RAGIC_API_KEY`**: Clé d'API unique pour l'authentification.
+- **`RAGIC_API_PARAMS`**: Paramètres standards à ajouter à la fin des URLs de lecture (`GET`), incluant la clé API.
 
 ### Bonne Pratique : Lire des Données depuis une URL CSV
 Pour lire des données, le pattern standard est d'utiliser le système Power Query intégré pour bénéficier de la mise en cache, de la performance et de la cohérence.
@@ -207,6 +207,7 @@ Option Explicit
 
 ' --- Constantes et Enums du module ---
 ' --- Variables privées du module ---
+
 ' --- Procédures publiques ---
 ' --- Procédures privées ---
 ```
@@ -266,6 +267,103 @@ For i = 1 To maCollection.Count
 Next i
 Debug.Print Join(monArray, ", ") ' OK : affiche "A, B"
 ```
+
+### Déclaration des Variables et Constantes
+- **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
+- **Déclaration des constantes** : Une constante (`Const`) doit être initialisée avec une **valeur littérale** (ex: `123`, `"texte"`) ou une autre constante. **Les appels de fonction (comme `RGB()`) sont interdits** car ils sont évalués à l'exécution, et non à la compilation.
+- **Éviter les doubles déclarations** : Toujours vérifier qu'une variable n'est pas déjà déclarée dans la même portée, que ce soit :
+  - Dans la même procédure
+  - Dans une boucle `For` (ex : ne pas redéclarer l'index `i` dans une boucle imbriquée)
+  - Dans les paramètres de la fonction
+  - En tant que variable de module
+
+**Exemple de ce qu'il ne faut PAS faire :**
+```vba
+Public Sub ProcessData(ByVal i As Long)  ' i est déjà un paramètre
+    Dim result As String
+    Dim i As Long  ' ERREUR : i est déjà déclaré comme paramètre !
+    
+    For i = 1 To 10
+        Dim j As Long
+        For j = 1 To 5
+            Dim i As Long  ' ERREUR : i est déjà l'index de la boucle externe !
+            ' ...
+        Next j
+    Next i
+End Sub
+```
+
+**Pattern correct :**
+```vba
+Public Sub ProcessData(ByVal inputIndex As Long)  ' Nom clair et unique
+    Dim result As String
+    Dim outerIndex As Long, innerIndex As Long  ' Indices distincts pour les boucles
+    
+    For outerIndex = 1 To 10
+        For innerIndex = 1 To 5
+            ' Utilisation des variables avec des noms uniques et explicites
+            result = result & outerIndex & "," & innerIndex
+        Next innerIndex
+    Next outerIndex
+End Sub
+```
+
+**Pattern correct pour les valeurs dynamiques :**
+Pour une valeur qui nécessite un calcul, utilisez une fonction publique qui retourne la valeur.
+
+**Exemple :**
+```vba
+' Interdit dans une déclaration Const :
+Private Const FORBIDDEN_COLOR As Long = RGB(128, 128, 128)
+
+' --- PATTERNS CORRECTS ---
+
+' 1. Utiliser la valeur littérale si elle est connue et fixe :
+Public Const CORRECT_COLOR As Long = 8421504 ' La valeur de RGB(128, 128, 128)
+
+' 2. Ou, pour garder la lisibilité, utiliser une fonction :
+Public Function GetMediumGrayColor() As Long
+    GetMediumGrayColor = RGB(128, 128, 128)
+End Function
+```
+
+### Conventions de Nommage
+- **Procédures (`Sub`, `Function`)** : `PascalCase` (ex: `ProcessCategory`, `GetLastColumn`).
+- **Variables locales** : `camelCase` (ex: `nextRow`, `sanitizedName`).
+- **Variables de niveau module (privées)** : `m_camelCase` (ex: `m_currentProfile`).
+- **Constantes** : `ALL_CAPS_WITH_UNDERSCORES` (ex: `PROC_NAME`, `LOG_SHEET_NAME`).
+- **Enums et Types** : `PascalCase` (ex: `LogLevel`, `CategoryInfo`).
+
+### Utilisation des `Enum`
+Pour des ensembles de constantes liées, utilisez une `Enum` pour améliorer la lisibilité et bénéficier de l'IntelliSense.
+
+**Exemple (`SYS_Logger.bas`) :**
+```vba
+Public Enum LogLevel
+    DEBUG_LEVEL = 0
+    INFO_LEVEL = 1
+    WARNING_LEVEL = 2
+    ERROR_LEVEL = 3
+End Enum
+```
+Utilisez `LogLevel.INFO_LEVEL` plutôt que le chiffre `1`.
+
+### Structure d'un Module
+Chaque module doit **obligatoirement** respecter la structure suivante pour la cohérence et la fiabilité, notamment pour l'import/export via des outils externes comme Git.
+
+```vba
+Attribute VB_Name = "NomDuModule"
+Option Explicit
+
+' --- Constantes et Enums du module ---
+' --- Variables privées du module ---
+
+' --- Procédures publiques ---
+' --- Procédures privées ---
+```
+
+1.  **`Attribute VB_Name = "NomDuModule"`** : Toujours en **première ligne**. Ne jamais l'oublier, sinon l'import peut échouer ou créer un module au nom incorrect (ex: `Module1`).
+2.  **`Option Explicit`** : Toujours en **deuxième ligne**. Force la déclaration de toutes les variables.
 
 ### Déclaration des Variables et Constantes
 - **Déclaration en haut de procédure** : Toutes les variables locales doivent être déclarées au début de la fonction ou de la `Sub` pour une meilleure lisibilité.
@@ -421,7 +519,8 @@ La logique des callbacks est séparée en deux catégories :
     ```
 
 2.  **Actions Métier (`*.bas`)**
-    Les callbacks `onAction` qui déclenchent un processus métier sont placées dans le module  approprié. Elles servent de simple point d'entrée.
+    Les callbacks `onAction` qui déclenchent un processus métier sont placées dans le module 
+     approprié. Elles servent de simple point d'entrée.
 
     **Exemple (`Technologies_Manager.bas`) :**
     ```xml
@@ -431,7 +530,7 @@ La logique des callbacks est séparée en deux catégories :
     ```vba
     ' Technologies_Manager.bas
     Public Sub ProcessCompression(ByVal control As IRibbonControl)
-        ' Délègue immédiatement toute la logique au manager compétent, qui gère les erreurs.
+        ' Délègue immédiatement toute la logique au manager compétent
         DataLoaderManager.ProcessCategory "Compression", "Erreur lors du traitement..."
     End Sub
     ```
