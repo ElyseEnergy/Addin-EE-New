@@ -15,7 +15,27 @@ WORKSPACE_DIR = os.path.dirname(SCRIPT_DIR)
 
 # Fichier source et destination
 XLSM_SOURCE = os.path.join(WORKSPACE_DIR, "Addin Elyse Energy.xlsm")
-XLAM_DESTINATION = os.path.join(WORKSPACE_DIR, "build", "EE Addin.xlam")
+
+# --- Extraction de la version depuis Utilities.bas ---
+def extract_version_from_utilities():
+    util_path = os.path.join(WORKSPACE_DIR, "Utilities.bas")
+    major = minor = patch = None
+    with open(util_path, encoding="utf-8") as f:
+        for line in f:
+            if "ADDIN_VERSION_MAJOR" in line:
+                major = line.split("=")[-1].strip()
+            elif "ADDIN_VERSION_MINOR" in line:
+                minor = line.split("=")[-1].strip()
+            elif "ADDIN_VERSION_PATCH" in line:
+                patch = line.split("=")[-1].strip()
+            if major and minor and patch:
+                break
+    if not (major and minor and patch):
+        raise RuntimeError("Impossible d'extraire la version depuis Utilities.bas")
+    return f"{major}.{minor}.{patch}"
+
+ADDIN_VERSION = extract_version_from_utilities()
+XLAM_DESTINATION = os.path.join(WORKSPACE_DIR, "build", f"EE Addin_v{ADDIN_VERSION}.xlam")
 
 # Module VBA à modifier pour désactiver le logging en production
 CONFIG_MODULE_BASENAME = "SYS_Logger.bas" 
