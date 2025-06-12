@@ -1,4 +1,5 @@
 Attribute VB_Name = "SYS_Logger"
+'#Const IS_ADDIN = 0
 Option Explicit
 
 ' ============================================================================
@@ -132,7 +133,9 @@ Public Sub Log(actionCode As String, message As String, level As LogLevel, _
     Debug.Print logMessage
     
     ' Écrire dans le fichier de log
-    WriteToLogFile logMessage
+    #If IS_ADDIN = 0 Then
+        WriteToLogFile logMessage
+    #End If
     
     ' === NOUVEAU: Logging vers Ragic pour les avertissements et erreurs ===
     If ENABLE_RAGIC_LOGGING And level >= WARNING_LEVEL Then
