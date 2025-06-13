@@ -1,7 +1,7 @@
 ﻿Option Explicit
 
 Private Const RAGIC_API_KEY As String = "WUJ1UllGWVVyUzRQY3I0Rm0rT2llMWxlOFZxTnQzc092ZlRSU1F0SkJpelFNVFludWQrWHBuamxQMldUVWNTWnJvK1B6RWYzNzR5SDJ6RjdsTTVUcmc9PQ=="
-Private Const RAGIC_CSV_URL As String = "https://ragic.elyse.energy/default/simulation-files/1.csv?f=all&APIKey=" & RAGIC_API_KEY
+Private Const RAGIC_CSV_URL As String = "https://ragic.elyse.energy/default/simulation-files/1.csv?f=all"
 
 Private Function GetTempFilePath(Optional extension As String = "") As String
     Dim fso As Object
@@ -182,10 +182,10 @@ Sub CheckRagicForUpdate()
     Dim nameIdx As Long, versionIdx As Long, fileIdx As Long
     nameIdx = GetColumnIndex(lines(0), "Name")
     versionIdx = GetColumnIndex(lines(0), "Version")
-    fileIdx = 1001040 ' ID fixe du champ File dans Ragic
+    fileIdx = GetColumnIndex(lines(0), "File")
     
-    If nameIdx = -1 Or versionIdx = -1 Then
-        MsgBox "Format CSV invalide : colonnes manquantes", vbCritical
+    If nameIdx = -1 Or versionIdx = -1 Or fileIdx = -1 Then
+        MsgBox "Format CSV invalide : colonnes 'Name', 'Version' ou 'File' manquantes.", vbCritical
         Exit Sub
     End If
     
@@ -294,6 +294,12 @@ Private Function DownloadText(url As String) As String
     Dim http As Object
     Set http = CreateObject("MSXML2.XMLHTTP")
     http.Open "GET", url, False
+    
+    ' Si l'URL pointe vers Ragic, ajouter le header d'authentification
+    If InStr(1, url, "ragic.elyse.energy", vbTextCompare) > 0 Then
+        http.setRequestHeader "Authorization", "Basic " & RAGIC_API_KEY
+    End If
+    
     http.send
     If http.Status = 200 Then
         DownloadText = http.responseText
@@ -308,50 +314,15 @@ Private Function DownloadFile(url As String, destPath As String) As Boolean
     Dim http As Object, ado As Object, arr() As Byte
     Set http = CreateObject("MSXML2.XMLHTTP")
     
-    ' Si l'URL pointe vers Ragic et contient file.jsp
-    If InStr(LCase(url), "ragic") > 0 And InStr(LCase(url), "file.jsp") > 0 Then
-        ' Pour les fichiers Ragic, on s'assure d'encoder correctement l'URL
-        Dim fileName As String, accountName As String
-        
-        ' Extraction du nom de fichier après le paramètre f=
-        Dim fPos As Long
-        fPos = InStr(url, "f=")
-        If fPos > 0 Then
-            fileName = Mid(url, fPos + 2)
-            ' Enlever tout ce qui suit un éventuel &
-            Dim ampPos As Long
-            ampPos = InStr(fileName, "&")
-            If ampPos > 0 Then
-                fileName = Left(fileName, ampPos - 1)
-            End If
-            ' URL encode le nom de fichier (uniquement la partie après @)
-            Dim atPos As Long
-            atPos = InStr(fileName, "@")
-            If atPos > 0 Then
-                fileName = Left(fileName, atPos) & URLEncode(Mid(fileName, atPos + 1))
-            End If
-        End If
-        
-        ' Extraction du nom de compte après le paramètre a=
-        Dim aPos As Long
-        aPos = InStr(url, "a=")
-        If aPos > 0 Then
-            accountName = Mid(url, aPos + 2)
-            ' Enlever tout ce qui suit un éventuel &
-            ampPos = InStr(accountName, "&")
-            If ampPos > 0 Then
-                accountName = Left(accountName, ampPos - 1)
-            End If
-            accountName = URLEncode(accountName)
-        End If
-        
-        ' Construction de l'URL finale
-        url = "https://ragic.elyse.energy/sims/file.jsp?a=" & accountName & "&f=" & fileName
+    http.Open "GET", url, False
+    
+    ' Si l'URL pointe vers Ragic, ajouter le header d'authentification
+    If InStr(1, url, "ragic.elyse.energy", vbTextCompare) > 0 Then
+        http.setRequestHeader "Authorization", "Basic " & RAGIC_API_KEY
     End If
     
     Debug.Print "URL de téléchargement: " & url
     
-    http.Open "GET", url, False
     http.send
     If http.Status = 200 Then
         arr = http.responseBody
@@ -613,7 +584,7 @@ Public Sub TestFileDownload()
     
     ' Construction de l'URL selon la doc Ragic
     Dim testFileUrl As String
-    testFileUrl = "https://ragic.elyse.energy/sims/file.jsp?a=julien.fernandez.work@gmail.com&f=" & fileName
+    testFileUrl = "https://ragic.elyse.energy/sims/file.jsp?a=default&f=" & fileName
     
     Debug.Print "Tentative de téléchargement depuis: " & testFileUrl
     
@@ -625,7 +596,7 @@ Public Sub TestFileDownload()
     If success Then
         If Dir(tempPath) <> "" Then
             Debug.Print "Test réussi : fichier téléchargé à " & tempPath
-            Kill tempPath ' Nettoyage
+            'Kill tempPath ' Nettoyage
         Else
             Debug.Print "Erreur : fichier non trouvé après téléchargement"
         End If
@@ -660,7 +631,7 @@ End Sub
 Private Function GetRagicFileInfo() As String
     ' Construction de l'URL pour obtenir les infos du fichier (JSON)
     Dim apiUrl As String
-    apiUrl = "https://ragic.elyse.energy/default/simulation-files/1?api&APIKey=" & RAGIC_API_KEY
+    apiUrl = "https://ragic.elyse.energy/default/simulation-files/1?api"
     
     ' Appel à l'API pour obtenir le JSON
     Dim http As Object
@@ -669,6 +640,7 @@ Private Function GetRagicFileInfo() As String
     On Error GoTo ErrorHandler
     
     http.Open "GET", apiUrl, False
+    http.setRequestHeader "Authorization", "Basic " & RAGIC_API_KEY
     http.send
     
     If http.Status = 200 Then
